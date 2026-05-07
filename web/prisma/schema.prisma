@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +5,209 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Language {
+  BG
+  EN
+}
+
+enum ProjectNewsType {
+  PROJECT
+  NEWS
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(EDITOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Global settings — singleton row
+// ---------------------------------------------------------------------------
+
+model SiteSetting {
+  id                    String   @id @default(cuid())
+  companyName           String
+  logoUrl               String?
+  address               String?
+  phones                String[]
+  email                 String?
+  workingHours          String?
+  googleMapsEmbed       String?
+  socialLinks           Json?
+  footerText            String?
+  defaultSeoTitle       String?
+  defaultSeoDescription String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Section content — one row per language
+// ---------------------------------------------------------------------------
+
+model HomeContent {
+  id           String   @id @default(cuid())
+  language     Language
+  headline     String
+  subheadline  String?
+  ctaLabel     String?
+  ctaTarget    String?
+  heroImageUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([language])
+}
+
+model AboutContent {
+  id         String   @id @default(cuid())
+  language   Language
+  title      String
+  subtitle   String?
+  content    String
+  imageUrl   String?
+  statistics Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([language])
+}
+
+// ---------------------------------------------------------------------------
+// Services — one row per language per service, linked by translationKey
+// ---------------------------------------------------------------------------
+
+model Service {
+  id               String   @id @default(cuid())
+  language         Language
+  translationKey   String
+  title            String
+  slug             String
+  shortDescription String?
+  content          String?
+  iconUrl          String?
+  featuredImageUrl String?
+  seoTitle         String?
+  seoDescription   String?
+  sortOrder        Int      @default(0)
+  published        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([language, slug])
+  @@unique([language, translationKey])
+}
+
+// ---------------------------------------------------------------------------
+// Projects / News — one row per language per item, linked by translationKey
+// ---------------------------------------------------------------------------
+
+model ProjectNewsItem {
+  id               String          @id @default(cuid())
+  language         Language
+  translationKey   String
+  type             ProjectNewsType
+  title            String
+  slug             String
+  excerpt          String?
+  content          String?
+  featuredImageUrl String?
+  images           String[]
+  category         String?
+  publishedAt      DateTime?
+  seoTitle         String?
+  seoDescription   String?
+  sortOrder        Int             @default(0)
+  published        Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@unique([language, slug])
+  @@unique([language, translationKey])
+}
+
+// ---------------------------------------------------------------------------
+// Partners — language-neutral
+// ---------------------------------------------------------------------------
+
+model Partner {
+  id         String   @id @default(cuid())
+  name       String
+  logoUrl    String
+  websiteUrl String?
+  sortOrder  Int      @default(0)
+  published  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Certificates — one row per language per certificate, linked by translationKey
+// ---------------------------------------------------------------------------
+
+model Certificate {
+  id             String    @id @default(cuid())
+  language       Language
+  translationKey String
+  title          String
+  issuer         String?
+  issueDate      DateTime?
+  fileUrl        String?
+  imageUrl       String?
+  description    String?
+  sortOrder      Int       @default(0)
+  published      Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([language, translationKey])
+}
+
+// ---------------------------------------------------------------------------
+// Media library — language-neutral
+// ---------------------------------------------------------------------------
+
+model Media {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String
+  altText   String?
+  mimeType  String
+  size      Int
+  createdAt DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Contact form submissions
+// ---------------------------------------------------------------------------
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  message   String
+  source    String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
