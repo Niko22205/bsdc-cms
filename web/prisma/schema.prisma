@@ -116,6 +116,7 @@ model Service {
 
   @@unique([language, slug])
   @@unique([language, translationKey])
+  @@index([language, published, sortOrder])
 }
 
 // ---------------------------------------------------------------------------
@@ -144,6 +145,7 @@ model ProjectNewsItem {
 
   @@unique([language, slug])
   @@unique([language, translationKey])
+  @@index([language, type, published, publishedAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -159,6 +161,8 @@ model Partner {
   published  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([published, sortOrder])
 }
 
 // ---------------------------------------------------------------------------
@@ -181,6 +185,7 @@ model Certificate {
   updatedAt      DateTime  @updatedAt
 
   @@unique([language, translationKey])
+  @@index([language, published, sortOrder])
 }
 
 // ---------------------------------------------------------------------------
@@ -202,12 +207,15 @@ model Media {
 // ---------------------------------------------------------------------------
 
 model ContactSubmission {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  phone     String?
-  message   String
-  source    String?
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  message     String
+  inquiryType String?
+  source      String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([read, createdAt])
 }
