@@ -60,3 +60,12 @@ export async function deletePartner(formData: FormData) {
   revalidatePath("/admin/partners")
   redirect("/admin/partners")
 }
+
+export async function reorderPartners(order: { id: string; sortOrder: number }[]) {
+  await Promise.all(
+    order.map(({ id, sortOrder }) =>
+      prisma.partner.update({ where: { id }, data: { sortOrder } })
+    )
+  )
+  revalidatePath("/admin/partners")
+}

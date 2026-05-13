@@ -1,11 +1,12 @@
-import { ProjectForm } from "../_components/ProjectForm"
+import { PageHeader } from "../../../_components/ui/PageHeader"
+import { ProjectDocumentEditor } from "../_components/ProjectDocumentEditor"
 import { createProjectNewsItem } from "../actions"
 
 export default function NewProjectPage() {
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900">New Project / News Item</h1>
-      <ProjectForm action={createProjectNewsItem} submitLabel="Create Item" />
+      <PageHeader title="New Project / News Item" description="Add a project or news post to display on the site." />
+      <ProjectDocumentEditor action={createProjectNewsItem} submitLabel="Create Item" />
     </div>
   )
 }

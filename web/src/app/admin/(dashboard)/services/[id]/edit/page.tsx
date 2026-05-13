@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { PageHeader } from "../../../../_components/ui/PageHeader"
 import { ServiceForm } from "../../_components/ServiceForm"
 import { updateService } from "../../actions"
 
@@ -16,7 +17,7 @@ export default async function EditServicePage({ params }: Props) {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900">Edit Service</h1>
+      <PageHeader title="Edit Service" description={service.title} />
       <ServiceForm action={action} initial={service} submitLabel="Save Changes" />
     </div>
   )

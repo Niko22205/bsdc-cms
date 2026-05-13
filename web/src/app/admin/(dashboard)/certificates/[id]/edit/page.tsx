@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
+import { PageHeader } from "../../../../_components/ui/PageHeader"
 import { CertificateForm } from "../../_components/CertificateForm"
 import { updateCertificate } from "../../actions"
 
@@ -21,8 +22,10 @@ export default async function EditCertificatePage({ params }: Props) {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900">Edit Certificate</h1>
-      <CertificateForm action={action} initial={initial} submitLabel="Save Changes" />
+      <PageHeader title="Edit Certificate" description={certificate.title} />
+      <div className="max-w-2xl rounded-xl border border-white/[0.07] bg-white/[0.04] p-8">
+        <CertificateForm action={action} initial={initial} submitLabel="Save Changes" />
+      </div>
     </div>
   )
 }

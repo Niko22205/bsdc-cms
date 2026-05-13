@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { ProjectForm } from "../../_components/ProjectForm"
+import { PageHeader } from "../../../../_components/ui/PageHeader"
+import { ProjectDocumentEditor } from "../../_components/ProjectDocumentEditor"
 import { updateProjectNewsItem } from "../../actions"
 
 type Props = {
@@ -21,8 +22,8 @@ export default async function EditProjectPage({ params }: Props) {
 
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900">Edit Project / News Item</h1>
-      <ProjectForm action={action} initial={initial} submitLabel="Save Changes" />
+      <PageHeader title="Edit Project / News Item" description={item.title} />
+      <ProjectDocumentEditor action={action} initial={initial} submitLabel="Save Changes" />
     </div>
   )
 }

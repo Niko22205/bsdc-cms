@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($content = Get-Content \"C:\\\\Users\\\\SmartKids\\\\Desktop\\\\BSDC\\\\web\\\\public\\\\uploads\\\\bsdc\\\\1778577198353-logoHero.svg\" -Raw; $svgTag = \\([regex]'<svg[^>]+>'\\).Match\\($content\\).Value; Write-Host $svgTag)"
+    ]
+  }
+}

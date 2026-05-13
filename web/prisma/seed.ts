@@ -1,12 +1,15 @@
 import "dotenv/config"
 import bcrypt from "bcryptjs"
-import { PrismaClient, UserRole } from "../src/generated/prisma/client"
+import { PrismaClient, UserRole, ProjectNewsType, Prisma } from "../src/generated/prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
+  // -----------------------------------------------------------------------
+  // Admin user
+  // -----------------------------------------------------------------------
   const email = process.env.ADMIN_EMAIL
   const password = process.env.ADMIN_PASSWORD
 
@@ -15,24 +18,275 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`Seeding admin user: ${email}`)
-
+  console.log("Seeding admin user…")
   const hashed = await bcrypt.hash(password, 12)
-
   const user = await prisma.user.upsert({
     where: { email },
+    update: { password: hashed, role: UserRole.ADMIN },
+    create: { email, password: hashed, role: UserRole.ADMIN },
+  })
+  console.log(`Admin ready: ${user.email}`)
+
+  // -----------------------------------------------------------------------
+  // Site Settings
+  // Source: https://www.bsdc.bg/contact/
+  // -----------------------------------------------------------------------
+  console.log("Seeding site settings…")
+  const settingsData = {
+    companyName: "Черноморски Водолазен Център ООД",
+    // Address from contact page. Full street address not listed on site — TODO: add when confirmed.
+    address: 'Пристанищен комплекс "Булпорт Логистик"',
+    phones: [
+      "+359 52 603433",
+      "+359 52 603432",
+      "+359 899 980 995",
+      "+359 899 993 312",
+      "+359 896 722 205",
+    ],
+    email: "office@bsdc.bg",
+    // TODO: add actual Facebook and YouTube profile URLs once confirmed
+    footerText: "В света на тишината, говорят действията!",
+    defaultSeoTitle: "BSDC | Черноморски Водолазен Център",
+    defaultSeoDescription:
+      "Специализирана компания в областта на подводното строителство, водолазните инспекции и ремонти от 2001 г.",
+  }
+  const existingSettings = await prisma.siteSetting.findFirst()
+  if (existingSettings) {
+    await prisma.siteSetting.update({ where: { id: existingSettings.id }, data: settingsData })
+  } else {
+    await prisma.siteSetting.create({ data: settingsData })
+  }
+
+  // -----------------------------------------------------------------------
+  // Home Content — BG
+  // Source: derived from company headline and motto across bsdc.bg
+  // -----------------------------------------------------------------------
+  console.log("Seeding home content (BG)…")
+  await prisma.homeContent.upsert({
+    where: { language: "BG" },
     update: {
-      password: hashed,
-      role: UserRole.ADMIN,
+      headline: "Черноморски Водолазен Център",
+      subheadline: "Намирането на трайно решение е нашата крайна цел!",
+      ctaLabel: "Нашите услуги",
+      ctaTarget: "#services",
+      // TODO: add hero image URL when confirmed
+      heroImageUrl: null,
     },
     create: {
-      email,
-      password: hashed,
-      role: UserRole.ADMIN,
+      language: "BG",
+      headline: "Черноморски Водолазен Център",
+      subheadline: "Намирането на трайно решение е нашата крайна цел!",
+      ctaLabel: "Нашите услуги",
+      ctaTarget: "#services",
+      heroImageUrl: null,
     },
   })
 
-  console.log(`Done. Admin user ready: ${user.email} (role: ${user.role})`)
+  // -----------------------------------------------------------------------
+  // About Content — BG
+  // Source: https://www.bsdc.bg/about/
+  // -----------------------------------------------------------------------
+  console.log("Seeding about content (BG)…")
+  await prisma.aboutContent.upsert({
+    where: { language: "BG" },
+    update: {
+      title: "За нас",
+      subtitle: "Висококачествени решения",
+      content: [
+        "Черноморски Водолазен Център ООД е специализирана компания в областта на подводното строителство, ремонти и инспекции, работеща от 2001 г.",
+        "Предлагаме широк спектър от услуги: подводно строителство и ремонти, водолазни и ROV инспекции, аварийно-спасителни операции, поддръжка на пристанища и плавателни съдове.",
+        "Работим с доказан професионализъм, планиране и дисциплина в управленско, оперативно и административно направление.",
+        "Предимствата ни: високо качество, гарантирана работа, операции по целия свят, консултации и достъпни цени.",
+      ].join("\n\n"),
+      // TODO: add company/team photo URL when confirmed
+      imageUrl: null,
+      // Statistics counters on bsdc.bg show placeholder 0 values — omitted until real figures are confirmed
+      statistics: Prisma.DbNull,
+    },
+    create: {
+      language: "BG",
+      title: "За нас",
+      subtitle: "Висококачествени решения",
+      content: [
+        "Черноморски Водолазен Център ООД е специализирана компания в областта на подводното строителство, ремонти и инспекции, работеща от 2001 г.",
+        "Предлагаме широк спектър от услуги: подводно строителство и ремонти, водолазни и ROV инспекции, аварийно-спасителни операции, поддръжка на пристанища и плавателни съдове.",
+        "Работим с доказан професионализъм, планиране и дисциплина в управленско, оперативно и административно направление.",
+        "Предимствата ни: високо качество, гарантирана работа, операции по целия свят, консултации и достъпни цени.",
+      ].join("\n\n"),
+      imageUrl: null,
+      statistics: Prisma.DbNull,
+    },
+  })
+
+  // -----------------------------------------------------------------------
+  // Services — BG
+  // Source: https://www.bsdc.bg/service/
+  // -----------------------------------------------------------------------
+  console.log("Seeding services (BG)…")
+  const services = [
+    {
+      translationKey: "diving-services",
+      slug: "diving-services",
+      title: "Водолазни Услуги",
+      shortDescription:
+        "Квалифицирани и мотивирани водолази, оборудвани със специализирана съвременна техника за комплексна подводна дейност.",
+      sortOrder: 0,
+    },
+    {
+      translationKey: "rov-services",
+      slug: "rov-services",
+      title: "ROV Услуги",
+      shortDescription:
+        "Специализирани услуги с дистанционно управляеми подводни апарати (ROV) с инспекционна апаратура.",
+      sortOrder: 1,
+    },
+    {
+      translationKey: "micro-dam-operation",
+      slug: "micro-dam-operation",
+      title: "Оператор на Микроязовири",
+      shortDescription:
+        "Технически екип, ръководен от квалифициран хидроспециалист, за поддръжка и обслужване на микроязовири.",
+      sortOrder: 2,
+    },
+    {
+      translationKey: "port-vessel-dam-repairs",
+      slug: "port-vessel-dam-repairs",
+      title: "Ремонти на Пристанища, Съдове и Язовири",
+      shortDescription:
+        "Хидротехническите съоръжения изискват редовна поддръжка поради постоянното им излагане на природни и климатични условия.",
+      sortOrder: 3,
+    },
+    {
+      translationKey: "bathymetry-hydrography",
+      slug: "bathymetry-hydrography",
+      title: "Батиметрия и Хидрография",
+      shortDescription:
+        "Прецизни батиметрични замервания и хидрографски изследвания с детайлни модели за мониторинг на ерозията.",
+      sortOrder: 4,
+    },
+    {
+      translationKey: "diving-courses",
+      slug: "diving-courses",
+      title: "Водолазни Курсове",
+      shortDescription:
+        "Водолазно обучение по системите NAUI и CMAS, включително пробни водолазни изживявания.",
+      sortOrder: 5,
+    },
+  ]
+
+  for (const s of services) {
+    await prisma.service.upsert({
+      where: { language_translationKey: { language: "BG", translationKey: s.translationKey } },
+      update: {
+        slug: s.slug,
+        title: s.title,
+        shortDescription: s.shortDescription,
+        sortOrder: s.sortOrder,
+        published: true,
+      },
+      create: {
+        language: "BG",
+        translationKey: s.translationKey,
+        slug: s.slug,
+        title: s.title,
+        shortDescription: s.shortDescription,
+        sortOrder: s.sortOrder,
+        published: true,
+      },
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // Projects — BG
+  // Source: https://www.bsdc.bg/news/
+  // All four items were published on the live site with confirmed dates.
+  // -----------------------------------------------------------------------
+  console.log("Seeding projects (BG)…")
+  const projects: Array<{
+    translationKey: string
+    slug: string
+    title: string
+    excerpt: string
+    publishedAt: Date
+    sortOrder: number
+  }> = [
+    {
+      translationKey: "yazlata-dam-rehabilitation-2022",
+      slug: "yazlata-dam-rehabilitation-2022",
+      title: 'Дейности по рехабилитация на язовир „Язлата" при с. Ясна Поляна',
+      excerpt:
+        'Язовирът се намира в близост до с. Ясна Поляна, Община Приморско, и се използва за напояване на земеделски земи. Проектът обхваща рехабилитация на основните изпускателни съоръжения.',
+      publishedAt: new Date("2022-12-10"),
+      sortOrder: 0,
+    },
+    {
+      translationKey: "kardzhali-dam-rov-inspection-2022",
+      slug: "kardzhali-dam-rov-inspection-2022",
+      title: 'Подводна инспекция на решетките на изпускателите на язовир „Кърджали"',
+      excerpt:
+        'Хидроенергийният комплекс „Кърджали" е горното стъпало на каскадата „Арда". Стената на язовира разполага с два основни тунелни изпускателя, подложени на подводна инспекция.',
+      publishedAt: new Date("2022-12-04"),
+      sortOrder: 1,
+    },
+    {
+      translationKey: "teshal-dam-devin-inspection-2022",
+      slug: "teshal-dam-devin-inspection-2022",
+      title: 'Подводна инспекция на язовир „Тешел" и водовземането за ВЕЦ „Девин"',
+      excerpt:
+        'Язовирите „Доспат" и „Тешел" са горните стъпала на каскадата Доспат–Въча. Извършена е подводна инспекция на основния изпускател и водовземателното съоръжение за ВЕЦ „Девин".',
+      publishedAt: new Date("2022-10-30"),
+      sortOrder: 2,
+    },
+    {
+      translationKey: "peshtera-hec-intake-inspection-2022",
+      slug: "peshtera-hec-intake-inspection-2022",
+      title: 'Подводна инспекция на водовземателна кула на ВЕЦ „Пещера"',
+      excerpt:
+        'Водовземателната кула се намира на 150 метра от оста на язовирната стена, в дясното поле на водохранилището, над входа на основния водопроводен тунел.',
+      publishedAt: new Date("2022-10-23"),
+      sortOrder: 3,
+    },
+  ]
+
+  for (const p of projects) {
+    await prisma.projectNewsItem.upsert({
+      where: { language_translationKey: { language: "BG", translationKey: p.translationKey } },
+      update: {
+        slug: p.slug,
+        title: p.title,
+        excerpt: p.excerpt,
+        type: ProjectNewsType.PROJECT,
+        publishedAt: p.publishedAt,
+        sortOrder: p.sortOrder,
+        published: true,
+      },
+      create: {
+        language: "BG",
+        translationKey: p.translationKey,
+        slug: p.slug,
+        title: p.title,
+        excerpt: p.excerpt,
+        type: ProjectNewsType.PROJECT,
+        publishedAt: p.publishedAt,
+        sortOrder: p.sortOrder,
+        published: true,
+      },
+    })
+  }
+
+  // -----------------------------------------------------------------------
+  // Certificates
+  // The bsdc.bg/about/ page references QM, UM, and environmental management
+  // certifications but does not list titles, issuing bodies, or dates.
+  // TODO: obtain certificate names, issuer, and dates from the company,
+  //       then add them here via prisma.certificate.upsert({
+  //         where: { language_translationKey: { language: "BG", translationKey: "..." } },
+  //         ...
+  //       })
+  // Certificates render as a subsection of About on the public frontend.
+  // -----------------------------------------------------------------------
+
+  console.log("Seed complete.")
 }
 
 main()

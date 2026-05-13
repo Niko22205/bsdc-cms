@@ -19,6 +19,10 @@ function parseForm(formData: FormData) {
     content: String(formData.get("content") ?? "").trim() || null,
     iconUrl: String(formData.get("iconUrl") ?? "").trim() || null,
     featuredImageUrl: String(formData.get("featuredImageUrl") ?? "").trim() || null,
+    images: String(formData.get("images") ?? "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
     seoTitle: String(formData.get("seoTitle") ?? "").trim() || null,
     seoDescription: String(formData.get("seoDescription") ?? "").trim() || null,
     sortOrder: Number(formData.get("sortOrder")) || 0,
@@ -87,4 +91,13 @@ export async function deleteService(formData: FormData) {
   await prisma.service.delete({ where: { id } })
   revalidatePath("/admin/services")
   redirect("/admin/services")
+}
+
+export async function reorderServices(order: { id: string; sortOrder: number }[]) {
+  await Promise.all(
+    order.map(({ id, sortOrder }) =>
+      prisma.service.update({ where: { id }, data: { sortOrder } })
+    )
+  )
+  revalidatePath("/admin/services")
 }

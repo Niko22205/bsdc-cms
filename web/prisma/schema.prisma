@@ -66,15 +66,18 @@ model SiteSetting {
 // ---------------------------------------------------------------------------
 
 model HomeContent {
-  id           String   @id @default(cuid())
-  language     Language
-  headline     String
-  subheadline  String?
-  ctaLabel     String?
-  ctaTarget    String?
-  heroImageUrl String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  language           Language
+  headline           String
+  subheadline        String?
+  eyebrow            String?
+  ctaLabel           String?
+  ctaTarget          String?
+  ctaSecondaryLabel  String?
+  ctaSecondaryTarget String?
+  heroImageUrl       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@unique([language])
 }
@@ -107,6 +110,7 @@ model Service {
   content          String?
   iconUrl          String?
   featuredImageUrl String?
+  images           String[]
   seoTitle         String?
   seoDescription   String?
   sortOrder        Int      @default(0)

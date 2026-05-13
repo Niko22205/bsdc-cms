@@ -1,6 +1,8 @@
 "use client"
 
 import { useActionState } from "react"
+import Link from "next/link"
+import { RichTextEditor } from "../../../_components/ui/RichTextEditor"
 import type { ProjectFormState } from "../actions"
 
 type ProjectFormInitial = {
@@ -28,21 +30,19 @@ type Props = {
 }
 
 const inputCls =
-  "rounded border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 w-full"
+  "w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50"
+
+const labelCls = "flex flex-col gap-1.5 text-sm font-medium text-zinc-700"
 
 export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState(action, {})
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-5">
       <div className="flex gap-4">
-        <label className="flex w-28 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} w-28`}>
           Language *
-          <select
-            name="language"
-            defaultValue={initial.language ?? "BG"}
-            className={inputCls}
-          >
+          <select name="language" defaultValue={initial.language ?? "BG"} className={inputCls}>
             <option value="BG">BG</option>
             <option value="EN">EN</option>
           </select>
@@ -51,13 +51,9 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
           )}
         </label>
 
-        <label className="flex w-36 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} w-36`}>
           Type *
-          <select
-            name="type"
-            defaultValue={initial.type ?? "PROJECT"}
-            className={inputCls}
-          >
+          <select name="type" defaultValue={initial.type ?? "PROJECT"} className={inputCls}>
             <option value="PROJECT">Project</option>
             <option value="NEWS">News</option>
           </select>
@@ -66,7 +62,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
           )}
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Translation Key *
           <input
             name="translationKey"
@@ -82,7 +78,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
       </div>
 
       <div className="flex gap-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Title *
           <input
             name="title"
@@ -95,7 +91,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
           )}
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Slug *
           <input
             name="slug"
@@ -111,7 +107,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
       </div>
 
       <div className="flex gap-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Category
           <input
             name="category"
@@ -122,7 +118,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
           />
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Published At
           <input
             name="publishedAt"
@@ -133,7 +129,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
         </label>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <label className={labelCls}>
         Excerpt
         <textarea
           name="excerpt"
@@ -143,29 +139,26 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
         />
       </label>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <div className={labelCls}>
         Content
-        <textarea
+        <RichTextEditor
           name="content"
           defaultValue={initial.content ?? ""}
-          rows={6}
-          className={`${inputCls} resize-y`}
+          placeholder="Write the full content for this item…"
+        />
+      </div>
+
+      <label className={labelCls}>
+        Featured Image URL
+        <input
+          name="featuredImageUrl"
+          type="text"
+          defaultValue={initial.featuredImageUrl ?? ""}
+          className={inputCls}
         />
       </label>
 
-      <div className="flex gap-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
-          Featured Image URL
-          <input
-            name="featuredImageUrl"
-            type="text"
-            defaultValue={initial.featuredImageUrl ?? ""}
-            className={inputCls}
-          />
-        </label>
-      </div>
-
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <label className={labelCls}>
         Image URLs
         <span className="text-xs font-normal text-zinc-400">One URL per line</span>
         <textarea
@@ -177,17 +170,12 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
       </label>
 
       <div className="flex gap-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           SEO Title
-          <input
-            name="seoTitle"
-            type="text"
-            defaultValue={initial.seoTitle ?? ""}
-            className={inputCls}
-          />
+          <input name="seoTitle" type="text" defaultValue={initial.seoTitle ?? ""} className={inputCls} />
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           SEO Description
           <textarea
             name="seoDescription"
@@ -199,7 +187,7 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
       </div>
 
       <div className="flex items-end gap-6">
-        <label className="flex w-28 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} w-28`}>
           Sort Order
           <input
             name="sortOrder"
@@ -214,23 +202,23 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
             name="published"
             type="checkbox"
             defaultChecked={initial.published ?? false}
-            className="h-4 w-4 rounded border-zinc-300"
+            className="h-4 w-4 rounded border-zinc-300 text-indigo-600 focus:ring-indigo-500"
           />
           Published
         </label>
       </div>
 
-      <div className="flex items-center gap-4 pt-2">
+      <div className="flex items-center gap-4 border-t border-zinc-100 pt-5">
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+          className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
         >
           {pending ? "Saving…" : submitLabel}
         </button>
-        <a href="/admin/projects" className="text-sm text-zinc-500 hover:text-zinc-700">
+        <Link href="/admin/projects" className="text-sm text-zinc-500 hover:text-zinc-700">
           Cancel
-        </a>
+        </Link>
       </div>
     </form>
   )

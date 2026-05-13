@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
+import Link from "next/link"
 import type { CertificateFormState } from "../actions"
 
 type CertificateFormInitial = {
@@ -23,30 +24,28 @@ type Props = {
 }
 
 const inputCls =
-  "rounded border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500 w-full"
+  "w-full rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-[#B87333]/50 focus:ring-1 focus:ring-[#B87333]/20"
+
+const labelCls = "flex flex-col gap-1.5 text-sm font-medium text-slate-300"
 
 export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState(action, {})
 
   return (
-    <form action={formAction} className="flex max-w-2xl flex-col gap-5">
+    <form action={formAction} className="flex flex-col gap-5">
       <div className="flex gap-4">
-        <label className="flex w-28 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} w-28`}>
           Language *
-          <select
-            name="language"
-            defaultValue={initial.language ?? "BG"}
-            className={inputCls}
-          >
+          <select name="language" defaultValue={initial.language ?? "BG"} className={inputCls}>
             <option value="BG">BG</option>
             <option value="EN">EN</option>
           </select>
           {state.errors?.language && (
-            <span className="text-xs text-red-500">{state.errors.language}</span>
+            <span className="text-xs text-red-400">{state.errors.language}</span>
           )}
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Translation Key *
           <input
             name="translationKey"
@@ -56,12 +55,12 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
             className={inputCls}
           />
           {state.errors?.translationKey && (
-            <span className="text-xs text-red-500">{state.errors.translationKey}</span>
+            <span className="text-xs text-red-400">{state.errors.translationKey}</span>
           )}
         </label>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <label className={labelCls}>
         Title *
         <input
           name="title"
@@ -70,12 +69,12 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
           className={inputCls}
         />
         {state.errors?.title && (
-          <span className="text-xs text-red-500">{state.errors.title}</span>
+          <span className="text-xs text-red-400">{state.errors.title}</span>
         )}
       </label>
 
       <div className="flex gap-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Issuer
           <input
             name="issuer"
@@ -86,7 +85,7 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
           />
         </label>
 
-        <label className="flex w-44 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} w-44`}>
           Issue Date
           <input
             name="issueDate"
@@ -98,7 +97,7 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
       </div>
 
       <div className="flex gap-4">
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           File URL
           <input
             name="fileUrl"
@@ -109,7 +108,7 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
           />
         </label>
 
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} flex-1`}>
           Image URL
           <input
             name="imageUrl"
@@ -121,7 +120,7 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
         </label>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+      <label className={labelCls}>
         Description
         <textarea
           name="description"
@@ -132,7 +131,7 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
       </label>
 
       <div className="flex items-end gap-6">
-        <label className="flex w-28 flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className={`${labelCls} w-28`}>
           Sort Order
           <input
             name="sortOrder"
@@ -142,28 +141,28 @@ export function CertificateForm({ action, initial = {}, submitLabel }: Props) {
           />
         </label>
 
-        <label className="flex items-center gap-2 pb-2 text-sm font-medium text-zinc-700">
+        <label className="flex items-center gap-2 pb-2 text-sm font-medium text-slate-300">
           <input
             name="published"
             type="checkbox"
             defaultChecked={initial.published ?? false}
-            className="h-4 w-4 rounded border-zinc-300"
+            className="h-4 w-4 rounded border-white/[0.20] bg-white/[0.08] accent-[#B87333]"
           />
           Published
         </label>
       </div>
 
-      <div className="flex items-center gap-4 pt-2">
+      <div className="flex items-center gap-4 border-t border-white/[0.06] pt-5">
         <button
           type="submit"
           disabled={pending}
-          className="rounded bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-700 disabled:opacity-50"
+          className="rounded-lg bg-[#B87333] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c8833a] disabled:opacity-50"
         >
           {pending ? "Saving…" : submitLabel}
         </button>
-        <a href="/admin/certificates" className="text-sm text-zinc-500 hover:text-zinc-700">
+        <Link href="/admin/certificates" className="text-sm text-slate-500 transition hover:text-slate-300">
           Cancel
-        </a>
+        </Link>
       </div>
     </form>
   )

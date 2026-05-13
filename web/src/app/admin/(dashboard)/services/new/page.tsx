@@ -1,10 +1,11 @@
+import { PageHeader } from "../../../_components/ui/PageHeader"
 import { ServiceForm } from "../_components/ServiceForm"
 import { createService } from "../actions"
 
 export default function NewServicePage() {
   return (
     <div>
-      <h1 className="mb-6 text-xl font-semibold text-zinc-900">New Service</h1>
+      <PageHeader title="New Service" description="Add a new service to display on the site." />
       <ServiceForm action={createService} submitLabel="Create Service" />
     </div>
   )
