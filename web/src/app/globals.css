@@ -149,3 +149,22 @@ body {
   opacity: 0.15;
   pointer-events: none;
 }
+
+/* ─── GSAP-animated elements: hidden by default to prevent SSR flash ─ */
+.hero-word,
+.hero-eyebrow,
+.hero-sub,
+.hero-cta,
+.hero-stats,
+.about-eyebrow,
+.about-title,
+.about-text,
+.about-image,
+.about-stats,
+.about-certs,
+.services-menu,
+.project-card,
+.contact-info,
+.contact-form {
+  opacity: 0;
+}

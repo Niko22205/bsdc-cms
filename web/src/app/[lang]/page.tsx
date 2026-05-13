@@ -21,7 +21,6 @@ async function fetchData(dbLang: Language) {
       prisma.projectNewsItem.findMany({
         where: { language: dbLang, published: true },
         orderBy: [{ publishedAt: "desc" }, { sortOrder: "asc" }],
-        take: 6,
       }),
       prisma.certificate.findMany({
         where: { language: dbLang, published: true },

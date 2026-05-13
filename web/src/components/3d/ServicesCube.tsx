@@ -163,7 +163,7 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
         mat.emissive.setHex(0xB87333)
         mat.emissiveIntensity = 0.1
       } else {
-        mat.color.setHex(0x0a1628)
+        mat.color.setHex(0x1a2744)
         mat.emissive.setHex(0x000000)
         mat.emissiveIntensity = 0
       }
@@ -208,7 +208,7 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
                 <planeGeometry args={[3, 3]} />
                 <meshStandardMaterial
                   ref={el => { faceMats.current[i] = el }}
-                  color="#0a1628"
+                  color="#1a2744"
                   side={THREE.DoubleSide}
                 />
               </mesh>
@@ -286,11 +286,13 @@ function DetailOverlay({ service, onClose }: { service: Service; onClose: () => 
     <div
       ref={overlayRef}
       className="absolute inset-0 z-50 bg-[#020617]/95 backdrop-blur-sm"
+      style={{ pointerEvents: "auto" }}
     >
       <button
         type="button"
         onClick={handleClose}
-        className="absolute right-8 top-8 z-10 flex h-10 w-10 items-center justify-center text-white/60 transition-colors hover:text-white"
+        className="absolute right-8 top-8 z-[51] flex h-10 w-10 cursor-pointer items-center justify-center text-white/60 transition-colors hover:text-white"
+        style={{ pointerEvents: "auto" }}
         aria-label="Затвори"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

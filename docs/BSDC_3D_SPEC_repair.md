@@ -1,390 +1,235 @@
-TASK: Public website revision and repair pass for BSDC
+TASK: Public website correction pass 2 after previous revision
 
 CONTEXT:
-This is the public one-page website for BSDC, connected to a custom CMS.
+This is a follow-up correction pass after the previous public website repair task.
+
 Do not rebuild from scratch.
-Do not touch admin CMS logic unless needed only to render existing CMS data.
 Do not change Prisma schema.
 Do not create migrations.
+Do not touch admin CMS logic.
 Do not start SEO.
 Do not deploy.
-Do not invent fake projects, fake clients, fake certificates, or fake business claims.
+Do not invent fake content.
 Keep BG/EN routing working.
-Keep all media paths local: /uploads/bsdc/*
+Use existing CMS data.
+Use only local media paths: /uploads/bsdc/*
 
-GOAL:
-Fix broken public website interactions, repair transitions, populate real service/project/news content from existing BSDC sources, and improve the premium presentation of Services and Projects/News.
-
-==================================================
-1. NAVIGATION
-==================================================
-
-Problems:
-- Navigation links do not work, except the language switch.
-- “Запитване” duplicates the Contact menu item.
-- The CTA behavior is not clear.
-
-Requirements:
-- Fix all navigation anchors:
-  - Начало
-  - За нас
-  - Услуги
-  - Проекти / Новини
-  - Контакти
-- Keep language switch working.
-- Change the “Запитване” button behavior:
-  - Do not scroll to the same Contact section.
-  - Open a contact/request modal instead.
-  - The modal should contain a compact inquiry form.
-  - The modal should feel premium, not like a default browser popup.
-- Do not duplicate the same action between “Контакти” and “Запитване”:
-  - “Контакти” scrolls to the Contact section.
-  - “Запитване” opens the inquiry modal.
-
-Expected result:
-All nav links work, language switch works, and the CTA has a separate useful behavior.
+IMPORTANT:
+Several issues from the previous task are still not fixed.
+This pass must focus on actual functionality, stable transitions, better service detail presentation, correct project/news loading, and contact/footer fixes.
 
 ==================================================
-2. HERO SECTION
-==================================================
-
-Problems:
-- The two hero buttons are not clickable.
-- Button links/actions do not work.
-
-Requirements:
-- Fix both hero CTA buttons.
-- Primary button should scroll/open the relevant inquiry/contact action.
-- Secondary button should scroll to Services or Projects depending on current label.
-- Make sure buttons work on desktop and mobile.
-- Do not leave decorative buttons without functionality.
-
-Expected result:
-Hero CTAs are clickable and perform clear actions.
-
-==================================================
-3. ABOUT SECTION / TRANSITIONS
+1. HERO SECTION — BROKEN CTA
 ==================================================
 
 Problem:
-- During the transition from Hero to About, the About section loads, then performs a strange second transition/flicker.
-- Similar bad transition behavior appears across the page: section appears, disappears/fades out, then appears again.
+One CTA in the Hero section still does not work.
+The broken CTA is the one that should lead to “За нас”.
 
 Requirements:
-- Audit all scroll reveal / animation logic.
-- Remove double-triggered animations.
-- Fix flicker caused by hydration, initial opacity, repeated IntersectionObserver triggers, or conflicting Framer Motion/CSS animations.
-- Sections should reveal once, smoothly.
-- No section should load visibly, disappear, then animate again.
-- Keep transitions premium, but stable and restrained.
+- Fix the Hero CTA that links/scrolls to the About section.
+- Make sure it works on desktop and mobile.
+- Make sure the target anchor is correct.
+- Make sure the CTA is not blocked by overlay, z-index, animation wrapper, pointer-events, or disabled state.
+- Test both Hero buttons after the fix.
 
 Expected result:
-Clean section transitions with no flicker, no double-load, and no “appears/disappears/appears” behavior.
+Both Hero CTA buttons work correctly, including the one that scrolls to “За нас”.
 
 ==================================================
-4. SERVICES SECTION
-==================================================
-
-Problems:
-- No service link works.
-- Services are not properly displayed.
-- Current service presentation does not feel finished.
-- Cube has wrong positioning/visual behavior.
-- Cube faces are transparent.
-- Cube cannot be manually rotated by holding left mouse button.
-- Service content needs to be populated from real BSDC service pages.
-
-Source URLs:
-- https://www.bsdc.bg/service/
-- https://www.bsdc.bg/service/diving-services/
-- https://www.bsdc.bg/service/repair-and-maintance/
-- https://www.bsdc.bg/service/rov-services/
-- https://www.bsdc.bg/service/bathy-hidro/
-- https://www.bsdc.bg/service/dam-operator/
-- https://www.bsdc.bg/service/diving-courses/
-
-Requirements:
-- Fix all service links/interactions.
-- Services must render on screen correctly from CMS data.
-- Keep exactly 6 services.
-- Rebuild the Services presentation if needed, but do not change schema.
-- Cube should be shown in an isometric/3D angle.
-- Cube should not have one full flat face sitting directly on the ground/screen.
-- Cube faces must not be transparent.
-- Cube must support mouse drag rotation:
-  - hold left mouse button
-  - drag to rotate
-  - release to stop manual control
-- Use the BSDC company logo as icon inspiration/visual identity for service icons.
-- Do not use generic stock icons if the company logo can be adapted.
-- Keep the section premium and technical, not playful.
-
-FINAL SERVICES STRUCTURE:
-
-1. Индустриални водолазни услуги
-
-Description:
-Подводни СМР, инспекции, ремонти, монтажи, демонтажи, почистване, рязане, заваряване и аварийни дейности за пристанища, язовири, ВЕЦ, тръбопроводи, плавателни съдове и хидротехнически съоръжения.
-
-Includes:
-- водолазни инспекции
-- подводна техническа диагностика
-- подводни ремонти
-- подводни монтажи и демонтажи
-- подводно рязане, къртене, пробиване и заваряване
-- почистване на решетки, корпуси, винтове, изпускатели и съоръжения
-- аварийни водолазни дейности
-- видео и фотодокументиране
-
-2. ROV инспекции и роботизирано обследване
-
-Description:
-Дистанционно управляеми подводни инспекции с ROV за тръби, тунели, язовири, ВЕЦ, резервоари, мостове, кейове и рискови или труднодостъпни зони.
-
-Includes:
-- ROV огледи
-- инспекции в тръби и затворени пространства
-- сонар, камера, осветление и роботизирана ръка
-- локализиране на обекти
-- видео документиране
-- работа при условия, неподходящи за водолазен достъп
-
-3. Батиметрия, хидрография и сонарни обследвания
-
-Description:
-Измерване, сканиране и документиране на дъно, водни площи, язовири, пристанища, подходи, наноси и подводна инфраструктура.
-
-Includes:
-- батиметрични измервания
-- сонарно сканиране
-- дънни профили
-- локализиране на подводни обекти
-- данни за проектиране, ремонт, почистване и технически анализ
-
-4. Оператор на язовири и съоръженията към тях
-
-Description:
-Техническа експлоатация, контрол, документация и поддръжка на язовирни стени и съоръженията към тях съгласно изискванията на Закона за водите.
-
-Includes:
-- оператор на язовир
-- контрол на язовирни стени
-- КИС измервания
-- обработка на данни от контролно-измервателни системи
-- индивидуална оценка на техническото състояние
-- програма за технически контрол
-- аварийни планове
-- доклади и документация
-
-Important:
-Keep the phrase “Оператор на язовири” visible.
-Do not rename this service into a generic infrastructure title.
-
-5. Хидротехническо строителство и сухи СМР
-
-Description:
-Строително-монтажни и ремонтни дейности по хидротехническа, пристанищна и язовирна инфраструктура, изпълнявани над вода, на сухо или при осушени/достъпни участъци.
-
-Includes:
-- ремонт на кейове, пирсове, пасарелки и площадки
-- монтаж и ремонт на метални конструкции
-- подмяна на решетки, стълби, парапети и сервизни елементи
-- бетонови възстановявания
-- антикорозионна защита
-- работа по водовземни кули, шахти, камери и сервизни зони
-- подготовка на участъци за последващи водолазни или ROV дейности
-
-Important:
-This is a separate dry-side service.
-It is not underwater diving.
-It represents BSDC’s technical capability around hydrotechnical sites.
-
-6. Водолазни курсове NAUI / CMAS
-
-Description:
-Любителско водолазно обучение, пробни гмуркания и сертификационни курсове по системите NAUI и CMAS.
-
-Includes:
-- пробно гмуркане
-- Scuba Diver
-- Passport Scuba Diver
-- Master Scuba Diver
-- NAUI и CMAS обучение
-- индивидуални и групови гмуркания
-- гмуркания във Варна и по българското Черноморие
-
-Important:
-Do not call NAUI/CMAS courses professional commercial diving training.
-Use “любителско”, “сертификационно”, “NAUI”, “CMAS”, “scuba”.
-
-Expected result:
-Services become functional, visually stronger, technically accurate, and not repetitive.
-
-==================================================
-5. PROJECTS / NEWS SECTION
-==================================================
-
-Problems:
-- Only 6 projects/news items load.
-- There is no scroll or pagination to access the rest.
-- Items do not open properly.
-- The section does not look like an old diary/book.
-- There is no “Прочети повече”.
-- Modal/detail layouts are too basic.
-- There are no rich galleries inside details.
-- Filtering/category browsing is missing.
-
-Source URLs:
-- https://www.bsdc.bg/news/нова-локация-на-производствена-и-офис/
-- https://www.bsdc.bg/news/оглед-и-оценка-на-състоянието-на-гнд-з/
-- https://www.bsdc.bg/news/ремонтно-възстановителни-и-укрепит/
-- https://www.bsdc.bg/news/подводен-оглед-на-основен-изпускате/
-- https://www.bsdc.bg/news/подводен-оглед-на-основен-изпускате-2/
-- https://www.bsdc.bg/news/подводен-оглед-на-ои-на-язовир-алекс/
-- https://www.bsdc.bg/news/ремонт-на-свод-на-входна-шахта-на-дес/
-- https://www.bsdc.bg/news/вец-луковит-проектиране-достав/
-- https://www.bsdc.bg/news/подводен-оглед-на-водовземна-кула-за/
-- https://www.bsdc.bg/news/подводен-оглед-на-съоръжения-яз-сту/
-- https://www.bsdc.bg/news/разхлабването-на-болтовите-връзки-на/
-- https://www.bsdc.bg/news/подводен-оглед-на-ои-на-язовир-тешал/
-- https://www.bsdc.bg/news/подводен-оглед-на-ои-на-язовирна-стена/
-- https://www.bsdc.bg/news/ясна-поляна/
-- https://www.bsdc.bg/news/подводен-оглед-на-решетка-на-основен-и/
-
-Requirements:
-- Import/populate all available project/news content from the listed BSDC links into the existing CMS structure.
-- Do not invent missing text.
-- If a page has limited content, use only factual summarization from the source.
-- Do not use external media.
-- Use local media paths only: /uploads/bsdc/*
-- The Projects/News section should look like an old technical diary / archive book.
-- Show two items per “page” if suitable.
-- Add 3D page-turn / book-style navigation for moving through items.
-- Add a contents/index page or contents-style navigation.
-- Add category filters.
-- Add “Прочети повече” for every item.
-- Detail/modal view should be rich:
-  - title
-  - date/category if available
-  - full text
-  - image/gallery if available
-  - previous/next item navigation
-- Make sure all items are reachable, not only the first 6.
-- Keep performance acceptable on mobile.
-
-Expected result:
-Projects/News becomes a premium archive/book-style section with all real BSDC items accessible.
-
-==================================================
-6. CONTACT SECTION
-==================================================
-
-Problems:
-- No Google Maps embed.
-- It is unclear if there is anti-spam protection.
-
-Requirements:
-- Add Google Maps only if the correct company location/address is already available in CMS/settings.
-- If exact address is not available, do not invent one.
-- Check the contact form for anti-spam protection.
-- Add basic anti-spam protection if missing:
-  - honeypot field
-  - minimum submit delay
-  - server-side validation
-  - rate limiting if already supported by the current stack
-- Do not add intrusive captcha unless necessary.
-- Contact form must work in BG/EN.
-- Inquiry modal and Contact section can reuse the same backend submission logic.
-
-Expected result:
-Contact section is functional, safer against spam, and does not contain fake location data.
-
-==================================================
-7. FOOTER / LEGAL
-==================================================
-
-Required footer links:
-- Privacy Policy / Политика за поверителност
-- Cookie Policy / Политика за бисквитки
-- Terms of Use / Условия за ползване
-- Contact / Контакти
-
-Recommended footer content:
-Company:
-Черноморски Водолазен Център ООД
-
-Contact details:
-- phone
-- email
-- city / country
-- contact form link
-
-Navigation anchors:
-- Начало
-- За нас
-- Услуги
-- Проекти
-- Контакти
-
-Legal links:
-- Политика за поверителност
-- Политика за бисквитки
-- Условия за ползване
-
-Copyright:
-© Черноморски Водолазен Център ООД. Всички права запазени.
-
-Footer structure:
-Column 1 — Brand / short company description
-Column 2 — Navigation
-Column 3 — Services
-Column 4 — Contact + Legal links
-
-Cookie banner rules:
-- Add cookie banner only if the website uses:
-  - Google Analytics
-  - Meta Pixel
-  - tracking cookies
-  - marketing cookies
-  - embedded third-party services that set cookies
-- If the website uses only strictly necessary cookies, do not add a large accept/reject banner.
-- Cookie Policy should still explain what is used.
-
-Do not add:
-- newsletter subscription
-- full FAQ in footer
-- SEO features
-- sitemap
-- robots.txt
-- structured data
-- canonical URLs
-- meta tag cleanup
-
-Expected result:
-Footer becomes clean, legal-ready, and premium without unnecessary GDPR burden.
-
-==================================================
-8. GLOBAL TRANSITION / ANIMATION FIX
+2. ABOUT SECTION — DOUBLE TRANSITION / FLICKER
 ==================================================
 
 Problem:
-Across the public site, transitions are not good.
-Sections appear, then disappear, then appear again.
-This happens on multiple sections/pages.
+The About section still has a double transition:
+- it loads
+- disappears
+- loads again
 
 Requirements:
-- Audit all animations globally.
-- Fix hydration/initial render flicker.
-- Fix repeated scroll reveal triggers.
-- Avoid conflicting CSS and Framer Motion animations.
-- Use stable initial states.
-- Animate once where appropriate.
-- Disable heavy animations on mobile if they cause jank.
+- Fix the double animation/flicker in the About section.
+- Audit the animation wrapper, scroll reveal component, Framer Motion initial/animate states, and IntersectionObserver logic.
+- Remove repeated reveal triggers.
+- Do not allow the section to render visible, then hide, then animate again.
+- Use one clean reveal only.
 - Respect reduced-motion preference.
-- Keep the visual style premium, but not unstable.
 
 Expected result:
-The whole public site feels stable, smooth and intentional.
+About section appears once, smoothly, without disappearing and reappearing.
+
+==================================================
+3. SERVICES SECTION — FUNCTIONALITY AND PRESENTATION ISSUES
+==================================================
+
+Problems:
+- Services section still has double transition:
+  - loads
+  - disappears
+  - loads again
+- Cube does not disappear or transition away properly when a service is selected.
+- After selecting a service, there is no clear working way to return back to the cube.
+- “X” close button does not work / cannot be clicked.
+- Service detail pages/panels have no meaningful transition.
+- Service details have no depth or 3D feeling.
+- Details are too standard: image + text only.
+- All services look too similar.
+- Cube is still transparent.
+- Services inside the cube are difficult to select.
+
+Requirements:
+- Fix the Services section double transition/flicker.
+- Cube must be fully opaque.
+- Cube faces must not be transparent.
+- Service labels/items inside the cube must be easy to click/select.
+- Make sure pointer events, z-index, overlays and transforms do not block service selection.
+- When a service is selected:
+  - cube should transition away or move into background intentionally
+  - selected service detail should appear with a premium transition
+  - user must clearly understand they entered service detail mode
+- Add a working “X” close button:
+  - must be clickable
+  - must return user back to the cube/service overview
+  - must work on desktop and mobile
+- Add another clear “Back to services” control if needed.
+- Do not leave the user trapped inside a service detail view.
+
+Service detail presentation requirements:
+Each service detail must feel richer and less generic.
+
+Each service detail should include:
+- service title
+- short intro
+- main image
+- gallery strip or gallery grid with several images if available
+- key activities as ordered or unordered list
+- at least one visual card group / capability cards / technical highlights
+- better spatial layout, not just image + paragraph
+- premium motion/depth transition
+- mobile-friendly layout
+
+Important:
+Do not make all six service detail layouts identical.
+They can share a base component, but visual arrangement should vary enough to feel custom.
+
+Suggested variation:
+- Industrial diving: strong technical image, dark panel, capability cards, list of operations
+- ROV: more technical/robotic layout, equipment cards, inspection use cases
+- Bathymetry: map/survey feeling, data cards, sonar/gallery presentation
+- Dam operator: documentation/control layout, process cards, compliance/technical blocks
+- Dry hydrotechnical works: construction/metalwork layout, before/after/gallery feeling
+- NAUI/CMAS courses: lighter training layout, course levels, experience cards, gallery
+
+Expected result:
+Services section becomes usable and visually premium:
+cube works, service selection works, close/back works, details have galleries, cards, lists, transitions, depth and variation.
+
+==================================================
+4. PROJECTS / NEWS SECTION — NOT FIXED
+==================================================
+
+Problems:
+- Projects section still has double transition/flicker.
+- It still shows only 6 projects.
+- Requirement was to show projects in groups of 2, not only 6 total.
+- There is no proper horizontal scroll/book effect.
+- There is no contents/index page with projects.
+- Correct projects from the old site were not properly imported/populated.
+- Suitable images from the old project links were not added.
+- The section still does not feel like a diary/book/archive.
+- Project modal “X” close button does not work.
+- The only way to exit the modal is clicking outside it.
+
+Requirements:
+- Fix the Projects/News section double transition/flicker.
+- Load all available project/news items from CMS, not only the first 6.
+- If there is a query limit, pagination limit, slice(0, 6), hardcoded cap, or frontend filtering cap, remove/fix it.
+- Display projects in groups/pages of 2 items.
+- Add horizontal navigation with book/page-turn feeling.
+- Add old technical diary/archive book visual direction.
+- Add a contents/index view or contents-style navigation listing available projects.
+- Add category filters if categories exist in CMS.
+- Each project card must have:
+  - title
+  - short summary
+  - image if available
+  - category/date if available
+  - “Прочети повече”
+- Project detail modal must include:
+  - working “X” close button
+  - title
+  - full text
+  - gallery/images if available
+  - previous/next project controls if possible
+- “X” close button must be clickable and must not be blocked by z-index, overlay, transform, or pointer-events.
+- Clicking outside can remain as secondary close behavior, but must not be the only way to close.
+
+Content requirements:
+- Populate only real projects/news from the old BSDC website sources already provided in the previous task.
+- Use suitable images from the imported local media where available.
+- Do not use unrelated images.
+- Do not use external stock images.
+- Do not invent missing project facts.
+
+Expected result:
+Projects/News becomes a real archive section:
+all imported items are reachable, shown two per page, with book-style navigation, contents/index, correct images and working modals.
+
+==================================================
+5. CONTACT SECTION AND FOOTER
+==================================================
+
+Problems:
+- Contact section still has double transition/flicker.
+- Footer text is too small and almost unreadable.
+- Google Maps is still not visible on the public site.
+- A Google Maps link has already been added in the CMS and must be rendered publicly.
+
+Requirements:
+- Fix Contact section double transition/flicker.
+- Render the Google Maps link/embed from CMS settings on the public Contact section.
+- Do not hardcode a fake address.
+- Use the CMS-provided Google Maps link.
+- If the CMS value is a Google Maps embed URL, render it as an iframe.
+- If the CMS value is a normal Google Maps share link, either:
+  - convert/render it correctly if current code supports it, or
+  - show a clear “Вижте в Google Maps” button/link and document why iframe is not possible.
+- Footer font size must be increased.
+- Footer text must be readable on desktop and mobile.
+- Legal links must remain visible and usable.
+- Footer should stay premium and clean, not tiny and hidden.
+
+Expected result:
+Contact section renders the CMS Google Maps link, footer text is readable, and contact/footer transitions are stable.
+
+==================================================
+6. GLOBAL TRANSITION FIX — STILL NOT SOLVED
+==================================================
+
+Problem:
+Multiple sections still have the same bad behavior:
+- section loads
+- disappears
+- loads again
+
+Affected sections:
+- About
+- Services
+- Projects/News
+- Contact
+- possibly other animated sections
+
+Requirements:
+- Treat this as a global animation bug, not isolated visual polish.
+- Audit shared reveal components.
+- Check ScrollReveal / motion wrappers / initial opacity classes / hydration behavior.
+- Remove conflicting CSS transitions and Framer Motion animations.
+- Make reveal animation run once only.
+- Prevent animation from resetting when state changes, language changes, selected service changes, modal opens, or section re-renders.
+- Ensure initial server/client render does not cause visible flicker.
+- On mobile, reduce or disable heavy transitions if they cause instability.
+
+Expected result:
+No public section should appear, disappear, and appear again.
 
 ==================================================
 FINAL ACCEPTANCE CHECKLIST
@@ -392,27 +237,47 @@ FINAL ACCEPTANCE CHECKLIST
 
 Before finishing, verify:
 
-- Nav links work.
-- Language switch works.
-- “Запитване” opens modal.
-- Hero buttons work.
-- About transition does not flicker.
-- Services render correctly.
-- Service links/interactions work.
+Hero:
+- CTA to “За нас” works.
+- Both hero buttons are clickable.
+
+About:
+- No double transition.
+- No flicker.
+
+Services:
+- No double transition.
 - Cube is opaque.
-- Cube starts in an isometric angle.
-- Cube rotates with left mouse drag.
-- Exactly 6 services are shown.
-- Service content matches the approved structure.
-- Projects/News loads all imported items, not only 6.
-- Projects/News items open.
+- Cube services are easy to select.
+- Cube transitions properly when service opens.
+- Service detail opens with premium motion.
+- “X” close button works.
+- User can return to cube.
+- Service pages/panels have galleries, cards, lists and visual variation.
+- Service layouts are not all identical.
+
+Projects/News:
+- No double transition.
+- More than 6 items can be reached.
+- Items are shown in groups/pages of 2.
+- Book/page-turn navigation exists.
+- Contents/index view exists.
+- Correct old BSDC projects/news are populated.
+- Relevant local images are used.
 - “Прочети повече” exists.
-- Book/diary style interaction works.
-- Category filters work.
-- Contact form works.
-- Anti-spam protection exists or is added.
-- Footer has required legal links.
-- No SEO work is started.
-- No schema changes are made.
-- No migrations are created.
-- No fake content is added.
+- Modal “X” close button works.
+- Clicking outside is not the only close method.
+
+Contact/Footer:
+- No double transition.
+- CMS Google Maps link is rendered publicly.
+- Footer font size is readable.
+- Legal links remain visible.
+
+Global:
+- No schema changes.
+- No migrations.
+- No SEO work.
+- No fake content.
+- No external stock images.
+- BG/EN routing still works.

@@ -89,7 +89,7 @@ export default function PageExperience({
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
 
-  const projectsPerPage = 6
+  const projectsPerPage = 2
   const totalPages      = Math.ceil(Math.max(projects.length, 1) / projectsPerPage)
   const pagedProjects   = projects.slice(projectPage * projectsPerPage, (projectPage + 1) * projectsPerPage)
   const tickerPartners  = [...partners, ...partners]
@@ -152,7 +152,7 @@ export default function PageExperience({
   // ── Transitions ───────────────────────────────────────────────────────────
 
   function triggerSceneEntrance(sceneIndex: number) {
-    const delay = 0.3
+    const delay = 1.0
 
     if (sceneIndex === 0) {
       const el = heroRef.current
@@ -172,12 +172,12 @@ export default function PageExperience({
     if (sceneIndex === 1) {
       if (aboutEntranceFired.current) return
       aboutEntranceFired.current = true
-      gsap.from(".about-eyebrow", { x: -40, opacity: 0, duration: 0.7, delay })
-      gsap.from(".about-title",   { x: -60, opacity: 0, duration: 0.8, delay: delay + 0.1 })
-      gsap.from(".about-text",    { y: 30,  opacity: 0, duration: 0.7, delay: delay + 0.2 })
-      gsap.from(".about-image",   { x: 80,  opacity: 0, duration: 0.9, delay: delay + 0.1 })
-      gsap.from(".about-stats",   { y: 30,  opacity: 0, duration: 0.6, delay: delay + 0.3 })
-      gsap.from(".about-certs",   { y: 40,  opacity: 0, duration: 0.6, delay: delay + 0.4 })
+      gsap.fromTo(".about-eyebrow", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
+      gsap.fromTo(".about-title",   { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
+      gsap.fromTo(".about-text",    { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
+      gsap.fromTo(".about-image",   { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
+      gsap.fromTo(".about-stats",   { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: delay + 0.3 })
+      gsap.fromTo(".about-certs",   { y: 40,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: delay + 0.4 })
 
       aboutRef.current?.querySelectorAll("[data-stat-value]").forEach((statEl) => {
         const raw = statEl.getAttribute("data-stat-value") ?? ""
@@ -197,17 +197,17 @@ export default function PageExperience({
     }
 
     if (sceneIndex === 2) {
-      gsap.from(".services-menu", { x: -100, opacity: 0, duration: 0.6, delay: delay + 0.4 })
+      gsap.fromTo(".services-menu", { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, delay: delay + 0.4 })
       cubeRef.current?.startEntrance()
     }
 
     if (sceneIndex === 3) {
-      gsap.from(".project-card", { y: 60, opacity: 0, stagger: 0.08, duration: 0.6, delay: delay + 0.3 })
+      gsap.fromTo(".project-card", { y: 60, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08, duration: 0.6, delay: delay + 0.3 })
     }
 
     if (sceneIndex === 4) {
-      gsap.from(".contact-info", { x: -40, opacity: 0, duration: 0.7, delay })
-      gsap.from(".contact-form", { x: 40,  opacity: 0, duration: 0.7, delay: delay + 0.1 })
+      gsap.fromTo(".contact-info", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
+      gsap.fromTo(".contact-form", { x: 40,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay: delay + 0.1 })
     }
   }
 
@@ -296,11 +296,11 @@ export default function PageExperience({
 
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: 0.5 })
-      tl.from(".hero-eyebrow", { y: 30, opacity: 0, duration: 0.8, ease: "power3.out" })
-      tl.from(".hero-word",    { y: 80, opacity: 0, stagger: 0.12, duration: 0.9, ease: "power3.out" }, "-=0.4")
-      tl.from(".hero-sub",     { y: 20, opacity: 0, duration: 0.7, ease: "power3.out" }, "-=0.3")
-      tl.from(".hero-cta",     { y: 20, opacity: 0, duration: 0.6, ease: "power3.out" }, "-=0.3")
-      tl.from(".hero-stats",   { y: 30, opacity: 0, duration: 0.7, ease: "power3.out" }, "-=0.3")
+      tl.fromTo(".hero-eyebrow", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" })
+      tl.fromTo(".hero-word",    { y: 80, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.12, duration: 0.9, ease: "power3.out" }, "-=0.4")
+      tl.fromTo(".hero-sub",     { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, "-=0.3")
+      tl.fromTo(".hero-cta",     { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, "-=0.3")
+      tl.fromTo(".hero-stats",   { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, "-=0.3")
       tl.add(() => {
         heroRef.current?.querySelectorAll("[data-stat-value]").forEach((el) => {
           const raw = el.getAttribute("data-stat-value") ?? ""
@@ -785,6 +785,27 @@ export default function PageExperience({
                   </div>
                 )}
               </div>
+
+              {settings?.googleMapsEmbed && (
+                <div className="mt-6">
+                  {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
+                    <div
+                      className="h-36 w-full overflow-hidden opacity-80"
+                      dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
+                    />
+                  ) : (
+                    <a
+                      href={settings.googleMapsEmbed}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 border border-[#B87333]/40 px-4 py-2 text-xs text-[#B87333] transition-colors hover:bg-[#B87333]/10"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      {lang === "bg" ? "Виж на картата" : "View on map"}
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right: contact form */}
@@ -889,7 +910,7 @@ export default function PageExperience({
               {/* Brand */}
               <div>
                 <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="mb-2 h-7 w-auto object-contain" style={{ filter: "brightness(0.7)" }} />
-                <p className="text-[10px] leading-relaxed text-slate-700">
+                <p className="text-xs leading-relaxed text-slate-600">
                   {lang === "bg"
                     ? "Подводни технологии и хидротехническо инженерство от 2001 г."
                     : "Underwater technologies and hydrotechnical engineering since 2001."}
@@ -897,7 +918,7 @@ export default function PageExperience({
               </div>
               {/* Navigation */}
               <div>
-                <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
                   {lang === "bg" ? "Навигация" : "Navigation"}
                 </p>
                 <nav className="flex flex-col gap-1">
@@ -912,7 +933,7 @@ export default function PageExperience({
                       key={scene}
                       type="button"
                       onClick={() => goToScene(scene)}
-                      className="text-left text-[10px] text-slate-700 transition-colors hover:text-slate-400"
+                      className="text-left text-xs text-slate-600 transition-colors hover:text-slate-300"
                     >
                       {label}
                     </button>
@@ -921,47 +942,47 @@ export default function PageExperience({
               </div>
               {/* Services */}
               <div>
-                <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
                   {lang === "bg" ? "Услуги" : "Services"}
                 </p>
                 <div className="flex flex-col gap-1">
                   {services.slice(0, 6).map((svc) => (
-                    <span key={svc.id} className="text-[10px] leading-tight text-slate-700">{svc.title}</span>
+                    <span key={svc.id} className="text-xs leading-tight text-slate-600">{svc.title}</span>
                   ))}
                 </div>
               </div>
               {/* Contact + Legal */}
               <div>
-                <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
                   {lang === "bg" ? "Контакти и правно" : "Contact & Legal"}
                 </p>
                 <div className="mb-3 flex flex-col gap-1">
                   {settings?.email && (
-                    <a href={`mailto:${settings.email}`} className="text-[10px] text-slate-700 transition-colors hover:text-slate-400">
+                    <a href={`mailto:${settings.email}`} className="text-xs text-slate-600 transition-colors hover:text-slate-300">
                       {settings.email}
                     </a>
                   )}
                   {settings?.phones?.[0] && (
-                    <a href={`tel:${settings.phones[0].replace(/\s/g, "")}`} className="text-[10px] text-slate-700 transition-colors hover:text-slate-400">
+                    <a href={`tel:${settings.phones[0].replace(/\s/g, "")}`} className="text-xs text-slate-600 transition-colors hover:text-slate-300">
                       {settings.phones[0]}
                     </a>
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <a href={`/${lang}/privacy`} className="text-[10px] text-slate-700 transition-colors hover:text-slate-500">
+                  <a href={`/${lang}/privacy`} className="text-xs text-slate-600 transition-colors hover:text-slate-400">
                     {lang === "bg" ? "Политика за поверителност" : "Privacy Policy"}
                   </a>
-                  <a href={`/${lang}/cookies`} className="text-[10px] text-slate-700 transition-colors hover:text-slate-500">
+                  <a href={`/${lang}/cookies`} className="text-xs text-slate-600 transition-colors hover:text-slate-400">
                     {lang === "bg" ? "Политика за бисквитки" : "Cookie Policy"}
                   </a>
-                  <a href={`/${lang}/terms`} className="text-[10px] text-slate-700 transition-colors hover:text-slate-500">
+                  <a href={`/${lang}/terms`} className="text-xs text-slate-600 transition-colors hover:text-slate-400">
                     {lang === "bg" ? "Условия за ползване" : "Terms of Use"}
                   </a>
                 </div>
               </div>
             </div>
             <div className="mt-4 border-t border-white/[0.04] pt-3 text-center">
-              <p className="text-[9px] text-slate-700">
+              <p className="text-[10px] text-slate-600">
                 {`© ${new Date().getFullYear()} ${settings?.companyName ?? "Черноморски Водолазен Център ООД"}. ${lang === "bg" ? "Всички права запазени." : "All rights reserved."}`}
               </p>
             </div>
@@ -1005,7 +1026,7 @@ export default function PageExperience({
         const prev = idx > 0 ? projects[idx - 1] : null
         const next = idx < projects.length - 1 ? projects[idx + 1] : null
         return (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 py-8">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 py-8 pointer-events-auto">
             <div
               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
               onClick={() => setSelectedProject(null)}
@@ -1034,7 +1055,8 @@ export default function PageExperience({
                 <button
                   type="button"
                   onClick={() => setSelectedProject(null)}
-                  className="ml-4 flex h-8 w-8 flex-shrink-0 items-center justify-center text-slate-600 transition-colors hover:text-white"
+                  className="relative z-[201] ml-4 flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center text-slate-600 transition-colors hover:text-white"
+                  style={{ pointerEvents: "auto" }}
                   aria-label={lang === "bg" ? "Затвори" : "Close"}
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -1103,7 +1125,8 @@ export default function PageExperience({
             <button
               type="button"
               onClick={() => { setShowContactModal(false); setContactStatus("idle") }}
-              className="absolute right-4 top-4 text-slate-500 transition-colors hover:text-white"
+              className="absolute right-4 top-4 z-[301] cursor-pointer text-slate-500 transition-colors hover:text-white"
+              style={{ pointerEvents: "auto" }}
               aria-label="Close"
             >
               ✕
