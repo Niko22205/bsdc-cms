@@ -80,6 +80,7 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
   const wireMatRef   = useRef<THREE.LineBasicMaterial>(null)
   const hoveredFace  = useRef(-1)
   const idleTimer    = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const initialized  = useRef(false)
 
   const boxGeo = useMemo(() => new THREE.BoxGeometry(3, 3, 3), [])
   useEffect(() => { return () => boxGeo.dispose() }, [boxGeo])
@@ -108,21 +109,17 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
       const grp = cubeGroupRef.current
       if (!grp) return
 
+      gsap.killTweensOf(grp.rotation)
+      grp.rotation.x = Math.PI / 6
+      grp.rotation.y = Math.PI / 4
       grp.scale.setScalar(0.3)
-      faceMats.current.forEach(m => { if (m) m.opacity = 0 })
       if (wireMatRef.current) wireMatRef.current.opacity = 0
 
       const tl = gsap.timeline()
-      // Wireframe in
       if (wireMatRef.current) {
         tl.to(wireMatRef.current, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 0)
       }
-      // Elastic scale
       tl.to(grp.scale, { x: 1, y: 1, z: 1, duration: 1.0, ease: 'elastic.out(1,0.5)' }, 0)
-      // Solid faces staggered in
-      faceMats.current.forEach((m, i) => {
-        if (m) tl.to(m, { opacity: 0.9, duration: 0.6, ease: 'power2.out' }, 0.4 + i * 0.04)
-      })
     },
 
     zoomOut() {
@@ -131,10 +128,7 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
         duration: 0.6,
         ease: 'power2.inOut',
         onComplete: () => {
-          if (controlsRef.current) {
-            controlsRef.current.update()
-            controlsRef.current.enabled = true
-          }
+          if (controlsRef.current) controlsRef.current.update()
         },
       })
     },
@@ -142,6 +136,14 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
 
   // Per-frame: lerp face offsets + update material state imperatively
   useFrame(() => {
+    if (!initialized.current && cubeGroupRef.current && controlsRef.current) {
+      cubeGroupRef.current.rotation.x = Math.PI / 6
+      cubeGroupRef.current.rotation.y = Math.PI / 4
+      controlsRef.current.autoRotate = true
+      controlsRef.current.autoRotateSpeed = 0.5
+      initialized.current = true
+    }
+
     faceRefs.current.forEach((mesh, i) => {
       if (!mesh) return
       const target = i === hoveredFace.current ? 0.15 : 0
@@ -199,7 +201,6 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
                 }}
                 onClick={() => {
                   resetIdleTimer()
-                  if (controlsRef.current) controlsRef.current.enabled = false
                   gsap.to(camera.position, { z: 3, duration: 0.6, ease: 'power2.inOut' })
                   onFaceClick(i)
                 }}
@@ -208,8 +209,6 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
                 <meshStandardMaterial
                   ref={el => { faceMats.current[i] = el }}
                   color="#0a1628"
-                  transparent
-                  opacity={0.9}
                   side={THREE.DoubleSide}
                 />
               </mesh>
@@ -253,8 +252,8 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
         ref={controlsRef}
         enableZoom={false}
         enablePan={false}
-        autoRotate
-        autoRotateSpeed={0.5}
+        enableRotate
+        onChange={resetIdleTimer}
       />
     </>
   )

@@ -21,12 +21,20 @@ export function Navbar({ settings, lang }: Props) {
   }, [])
 
   const navLinks = [
-    { href: "#about", label: lang === "en" ? "About" : "За нас" },
-    { href: "#services", label: lang === "en" ? "Services" : "Услуги" },
-    { href: "#projects", label: lang === "en" ? "Projects" : "Проекти" },
-    { href: "#partners", label: lang === "en" ? "Partners" : "Партньори" },
-    { href: "#contact", label: lang === "en" ? "Contact" : "Контакти" },
+    { scene: 0, label: lang === "en" ? "Home"     : "Начало"    },
+    { scene: 1, label: lang === "en" ? "About"    : "За нас"    },
+    { scene: 2, label: lang === "en" ? "Services" : "Услуги"    },
+    { scene: 3, label: lang === "en" ? "Projects" : "Проекти"   },
+    { scene: 4, label: lang === "en" ? "Contact"  : "Контакти"  },
   ]
+
+  function navigate(scene: number) {
+    window.dispatchEvent(new CustomEvent("bsdc:navigate", { detail: { scene } }))
+  }
+
+  function openEnquiry() {
+    window.dispatchEvent(new CustomEvent("bsdc:enquiry"))
+  }
 
   return (
     <header
@@ -45,13 +53,14 @@ export function Navbar({ settings, lang }: Props) {
         {/* Desktop nav */}
         <nav className="hidden gap-8 sm:flex">
           {navLinks.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
+            <button
+              key={l.scene}
+              type="button"
+              onClick={() => navigate(l.scene)}
               className="relative text-[11px] uppercase tracking-[0.18em] text-slate-400 transition-colors duration-300 after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:scale-x-0 after:bg-[#B87333] after:transition-transform after:duration-300 after:content-[''] hover:text-white hover:after:scale-x-100"
             >
               {l.label}
-            </a>
+            </button>
           ))}
         </nav>
 
@@ -82,12 +91,13 @@ export function Navbar({ settings, lang }: Props) {
           </div>
 
           {/* CTA button */}
-          <a
-            href="#contact"
+          <button
+            type="button"
+            onClick={openEnquiry}
             className="hidden border border-[#B87333] px-4 py-1.5 text-[11px] uppercase tracking-widest text-[#B87333] transition-all duration-300 hover:bg-[#B87333] hover:text-white sm:block"
           >
             {lang === "en" ? "Enquiry" : "Запитване"}
-          </a>
+          </button>
 
           {/* Mobile hamburger */}
           <button
@@ -119,14 +129,14 @@ export function Navbar({ settings, lang }: Props) {
         <div className="bg-[#020617] px-6 py-2 sm:hidden">
           <nav className="flex flex-col text-[11px] uppercase tracking-[0.18em] text-slate-400">
             {navLinks.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="border-b border-white/5 py-3 transition-colors hover:text-white"
-                onClick={() => setMenuOpen(false)}
+              <button
+                key={l.scene}
+                type="button"
+                onClick={() => { navigate(l.scene); setMenuOpen(false) }}
+                className="border-b border-white/5 py-3 text-left transition-colors hover:text-white"
               >
                 {l.label}
-              </a>
+              </button>
             ))}
             <div className="flex items-center gap-3 border-b border-white/5 py-3">
               <Link
@@ -145,13 +155,13 @@ export function Navbar({ settings, lang }: Props) {
                 EN
               </Link>
             </div>
-            <a
-              href="#contact"
+            <button
+              type="button"
+              onClick={() => { openEnquiry(); setMenuOpen(false) }}
               className="mb-2 mt-3 self-start border border-[#B87333] px-4 py-1.5 text-[11px] uppercase tracking-widest text-[#B87333]"
-              onClick={() => setMenuOpen(false)}
             >
               {lang === "en" ? "Enquiry" : "Запитване"}
-            </a>
+            </button>
           </nav>
         </div>
       )}
