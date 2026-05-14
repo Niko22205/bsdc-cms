@@ -6,7 +6,6 @@ import {
   useMemo,
   useEffect,
   useImperativeHandle,
-  useState,
 } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Html } from '@react-three/drei'
@@ -46,6 +45,7 @@ const DEFAULT_ICONS: LucideIcon[] = [Anchor, Waves, Ship, Wrench, HardHat, Zap]
 export interface ServicesCubeHandle {
   rotateTo: (faceIndex: number) => void
   startEntrance: () => void
+  zoomOut: () => void
 }
 
 interface ServicesCubeProps {
@@ -259,106 +259,24 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
   )
 })
 
-// ── DetailOverlay ─────────────────────────────────────────────────────────────
-
-function DetailOverlay({ service, onClose }: { service: Service; onClose: () => void }) {
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = overlayRef.current
-    if (el) gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' })
-
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  function handleClose() {
-    const el = overlayRef.current
-    if (el) {
-      gsap.to(el, { opacity: 0, duration: 0.3, ease: 'power2.in', onComplete: onClose })
-    } else {
-      onClose()
-    }
-  }
-
-  return (
-    <div
-      ref={overlayRef}
-      className="absolute inset-0 z-50 bg-[#020617]/95 backdrop-blur-sm"
-      style={{ pointerEvents: "auto" }}
-    >
-      <button
-        type="button"
-        onClick={handleClose}
-        className="absolute right-8 top-8 z-[51] flex h-10 w-10 cursor-pointer items-center justify-center text-white/60 transition-colors hover:text-white"
-        style={{ pointerEvents: "auto" }}
-        aria-label="Затвори"
-      >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path
-            d="M15 5L5 15M5 5l10 10"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
-
-      <div className="flex h-full items-center gap-16 px-16 lg:px-24">
-        {/* Image or gradient placeholder */}
-        <div className="relative h-[60%] w-1/2 flex-shrink-0 overflow-hidden">
-          {service.featuredImageUrl ? (
-            <img
-              src={service.featuredImageUrl}
-              alt={service.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-[#0a1628] via-[#0d1f3c] to-[#B87333]/20" />
-          )}
-        </div>
-
-        {/* Text content */}
-        <div className="flex flex-col overflow-hidden">
-          <h2 className="mb-6 text-4xl font-black text-white">{service.title}</h2>
-          {service.content && (
-            <div
-              className="max-h-[40vh] overflow-y-auto text-slate-400"
-              dangerouslySetInnerHTML={{ __html: service.content }}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // ── ServicesCube (default export) ────────────────────────────────────────────
 
 const ServicesCube = forwardRef<ServicesCubeHandle, ServicesCubeProps>(function ServicesCube(
   { services, onServiceSelect, activeIndex },
   ref,
 ) {
-  const [activeService, setActiveService] = useState<Service | null>(null)
   const sceneRef = useRef<CubeSceneHandle>(null)
 
   useImperativeHandle(ref, () => ({
     rotateTo:      (i) => sceneRef.current?.rotateTo(i),
     startEntrance: ()  => sceneRef.current?.startEntrance(),
+    zoomOut:       ()  => sceneRef.current?.zoomOut(),
   }))
 
   function handleFaceClick(index: number) {
     const service = services[index]
     if (!service) return
-    setActiveService(service)
     onServiceSelect(service)
-  }
-
-  function handleClose() {
-    setActiveService(null)
-    onServiceSelect(null)
-    sceneRef.current?.zoomOut()
   }
 
   return (
@@ -371,10 +289,6 @@ const ServicesCube = forwardRef<ServicesCubeHandle, ServicesCubeProps>(function 
           onFaceClick={handleFaceClick}
         />
       </Canvas>
-
-      {activeService && (
-        <DetailOverlay service={activeService} onClose={handleClose} />
-      )}
     </div>
   )
 })

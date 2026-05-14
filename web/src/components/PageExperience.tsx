@@ -66,6 +66,7 @@ export default function PageExperience({
 
   const [currentScene, setCurrentScene]             = useState(0)
   const [activeServiceIndex, setActiveServiceIndex] = useState(0)
+  const [activeService, setActiveService]           = useState<Service | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
   const [showContactModal, setShowContactModal]     = useState(false)
@@ -73,6 +74,7 @@ export default function PageExperience({
 
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
+  const activeServiceRef     = useRef<Service | null>(null)
   const isAnimating          = useRef(false)
   const touchStartY          = useRef(0)
   const cubeRef              = useRef<ServicesCubeHandle>(null)
@@ -146,8 +148,9 @@ export default function PageExperience({
     }
   }
 
-  // keep ref in sync so wheel/key handlers (stale closures) can read it
+  // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
+  useEffect(() => { activeServiceRef.current = activeService }, [activeService])
 
   // ── Transitions ───────────────────────────────────────────────────────────
 
@@ -172,6 +175,7 @@ export default function PageExperience({
     if (sceneIndex === 1) {
       if (aboutEntranceFired.current) return
       aboutEntranceFired.current = true
+      gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats, .about-certs', { opacity: 0, y: 30, x: 0 })
       gsap.fromTo(".about-eyebrow", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
       gsap.fromTo(".about-title",   { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
       gsap.fromTo(".about-text",    { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
@@ -197,15 +201,19 @@ export default function PageExperience({
     }
 
     if (sceneIndex === 2) {
+      gsap.set('.services-menu', { opacity: 0, x: -100 })
       gsap.fromTo(".services-menu", { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, delay: delay + 0.4 })
       cubeRef.current?.startEntrance()
     }
 
     if (sceneIndex === 3) {
+      gsap.set('.project-card', { opacity: 0, y: 60 })
       gsap.fromTo(".project-card", { y: 60, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08, duration: 0.6, delay: delay + 0.3 })
     }
 
     if (sceneIndex === 4) {
+      gsap.set('.contact-info', { opacity: 0, x: -40 })
+      gsap.set('.contact-form', { opacity: 0, x: 40 })
       gsap.fromTo(".contact-info", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
       gsap.fromTo(".contact-form", { x: 40,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay: delay + 0.1 })
     }
@@ -247,6 +255,9 @@ export default function PageExperience({
         currentSceneRef.current = next
         setCurrentScene(next)
         isAnimating.current = false
+        sceneRefs.forEach((ref, i) => {
+          if (ref.current) ref.current.style.zIndex = i === next ? '10' : '1'
+        })
         triggerSceneEntrance(next)
       },
     })
@@ -294,6 +305,18 @@ export default function PageExperience({
       gsap.set(ref.current, { opacity: i === 0 ? 1 : 0, y: 0 })
     })
 
+    // Set initial z-index
+    sceneRefs.forEach((ref, i) => {
+      if (ref.current) ref.current.style.zIndex = i === 0 ? '10' : '1'
+    })
+
+    // GSAP owns initial hidden state for non-hero animated elements
+    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats, .about-certs', { opacity: 0, y: 30 })
+    gsap.set('.services-menu', { opacity: 0, x: -100 })
+    gsap.set('.project-card', { opacity: 0, y: 60 })
+    gsap.set('.contact-info', { opacity: 0, x: -40 })
+    gsap.set('.contact-form', { opacity: 0, x: 40 })
+
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({ delay: 0.5 })
       tl.fromTo(".hero-eyebrow", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" })
@@ -326,7 +349,7 @@ export default function PageExperience({
 
   useEffect(() => {
     function handleWheel(e: WheelEvent) {
-      if (selectedProjectRef.current) return
+      if (selectedProjectRef.current || activeServiceRef.current) return
       e.preventDefault()
       if (isAnimating.current) return
       if (e.deltaY > 50)  goToScene(currentSceneRef.current + 1)
@@ -334,7 +357,7 @@ export default function PageExperience({
     }
     function handleTouchStart(e: TouchEvent) { touchStartY.current = e.touches[0].clientY }
     function handleTouchEnd(e: TouchEvent) {
-      if (selectedProjectRef.current) return
+      if (selectedProjectRef.current || activeServiceRef.current) return
       const delta = touchStartY.current - e.changedTouches[0].clientY
       if (delta > 50) goToScene(currentSceneRef.current + 1)
       else if (delta < -50) goToScene(currentSceneRef.current - 1)
@@ -381,7 +404,7 @@ export default function PageExperience({
       <GlobalBackground />
 
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <div ref={heroRef} className="pointer-events-none absolute inset-0" style={{ willChange: "opacity, transform" }}>
+      <div ref={heroRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
 
         {home?.heroImageUrl && (
           <div className="hero-bg-wrapper pointer-events-none absolute inset-0 z-[-1] overflow-hidden">
@@ -399,7 +422,7 @@ export default function PageExperience({
           </div>
         )}
 
-        <div className={`${currentScene === 0 ? "pointer-events-auto" : "pointer-events-none"} absolute inset-0 z-30 flex flex-col justify-center px-6 pt-16 md:px-16 md:pt-20 lg:px-24`}>
+        <div className="absolute inset-0 z-30 flex flex-col justify-center px-6 pt-16 md:px-16 md:pt-20 lg:px-24">
           <div className="hero-eyebrow mb-6 flex items-center gap-4">
             <div className="h-px w-8 bg-[#B87333]" />
             <span className="text-[11px] uppercase tracking-[0.35em] text-[#B87333]">
@@ -434,11 +457,7 @@ export default function PageExperience({
             </button>
             <button
               type="button"
-              onClick={() => {
-                const target = home?.ctaSecondaryTarget
-                if (!target || target === "#about") goToScene(1)
-                else window.location.href = target
-              }}
+              onClick={() => goToScene(1)}
               className="cursor-pointer border border-white/20 px-8 py-4 text-[11px] uppercase tracking-[0.2em] text-white/70 transition-all duration-300 hover:border-white/40 hover:text-white"
             >
               {home?.ctaSecondaryLabel ?? (lang === "bg" ? "За нас" : "About us")}
@@ -469,8 +488,8 @@ export default function PageExperience({
       </div>
 
       {/* ── ABOUT ────────────────────────────────────────────────────────── */}
-      <div ref={aboutRef} className="pointer-events-none absolute inset-0" style={{ willChange: "opacity, transform" }}>
-        <div className={`${currentScene === 1 ? "pointer-events-auto" : "pointer-events-none"} absolute inset-0 flex flex-col`}>
+      <div ref={aboutRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
+        <div className="absolute inset-0 flex flex-col">
 
           <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
             <div className="flex w-full flex-col justify-center overflow-hidden bg-[#07111f] px-6 py-8 md:w-1/2 md:px-16 md:py-0">
@@ -541,8 +560,8 @@ export default function PageExperience({
       </div>
 
       {/* ── SERVICES ─────────────────────────────────────────────────────── */}
-      <div ref={servicesRef} className="pointer-events-none absolute inset-0" style={{ willChange: "opacity, transform" }}>
-        <div className={`${currentScene === 2 ? "pointer-events-auto" : "pointer-events-none"} absolute inset-0 flex`}>
+      <div ref={servicesRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
+        <div className="absolute inset-0 flex">
 
           {/* Left menu */}
           <div className="services-menu flex w-52 flex-shrink-0 flex-col justify-center border-r border-white/[0.06] bg-[#07111f] px-6 py-12">
@@ -587,6 +606,7 @@ export default function PageExperience({
                 if (svc) {
                   const idx = services.findIndex((s) => s.id === svc.id)
                   if (idx >= 0) setActiveServiceIndex(idx)
+                  setActiveService(svc)
                 }
               }}
               activeIndex={activeServiceIndex}
@@ -599,10 +619,10 @@ export default function PageExperience({
       {/* ── PROJECTS ─────────────────────────────────────────────────────── */}
       <div
         ref={projectsRef}
-        className="journal-grain pointer-events-none absolute inset-0 overflow-hidden"
+        className="journal-grain absolute inset-0 overflow-hidden"
         style={{ willChange: "opacity, transform", background: "#0f0a05" }}
       >
-        <div className={`${currentScene === 3 ? "pointer-events-auto" : "pointer-events-none"} absolute inset-0 flex flex-col px-8 py-10 md:px-16`}>
+        <div className="absolute inset-0 flex flex-col px-8 py-10 md:px-16">
 
           {/* Header */}
           <div className="mb-6 flex items-end justify-between">
@@ -727,14 +747,37 @@ export default function PageExperience({
       </div>
 
       {/* ── CONTACT ──────────────────────────────────────────────────────── */}
-      <div ref={contactRef} className="pointer-events-none absolute inset-0" style={{ willChange: "opacity, transform" }}>
-        <div className={`${currentScene === 4 ? "pointer-events-auto" : "pointer-events-none"} absolute inset-0 flex flex-col`}>
+      <div ref={contactRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
+        <div className="absolute inset-0 flex flex-col">
+
+          {/* Google Maps background layer */}
+          {settings?.googleMapsEmbed && (
+            <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+              {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
+                <div
+                  className="h-full w-full opacity-30 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0"
+                  style={{ filter: "invert(90%) hue-rotate(180deg)" }}
+                  dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
+                />
+              ) : (
+                <iframe
+                  src={settings.googleMapsEmbed}
+                  className="absolute inset-0 h-full w-full border-0 opacity-30"
+                  style={{ filter: "invert(90%) hue-rotate(180deg)" }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Map"
+                />
+              )}
+            </div>
+          )}
 
           {/* Main content */}
-          <div className="flex flex-1 overflow-hidden">
+          <div className="relative z-10 flex flex-1 overflow-hidden">
 
             {/* Left: company info */}
-            <div className="contact-info flex w-full flex-col justify-center bg-[#07111f] px-8 py-10 md:w-2/5 md:px-12">
+            <div className="contact-info flex w-full flex-col justify-center bg-[#07111f]/90 px-8 py-10 md:w-2/5 md:px-12">
               <div className="mb-6 flex items-center gap-3">
                 <div className="h-px w-6 bg-[#B87333]" />
                 <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
@@ -785,31 +828,10 @@ export default function PageExperience({
                   </div>
                 )}
               </div>
-
-              {settings?.googleMapsEmbed && (
-                <div className="mt-6">
-                  {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
-                    <div
-                      className="h-36 w-full overflow-hidden opacity-80"
-                      dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
-                    />
-                  ) : (
-                    <a
-                      href={settings.googleMapsEmbed}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 border border-[#B87333]/40 px-4 py-2 text-xs text-[#B87333] transition-colors hover:bg-[#B87333]/10"
-                    >
-                      <MapPin className="h-3 w-3" />
-                      {lang === "bg" ? "Виж на картата" : "View on map"}
-                    </a>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Right: contact form */}
-            <div className="contact-form flex flex-1 flex-col justify-center bg-[#020617] px-8 py-10 md:px-12">
+            <div className="contact-form flex flex-1 flex-col justify-center bg-[#020617]/90 px-8 py-10 md:px-12">
               <h3 className="mb-6 text-xl font-bold text-white">
                 {lang === "bg" ? "Изпратете запитване" : "Send an Enquiry"}
               </h3>
@@ -905,12 +927,12 @@ export default function PageExperience({
           )}
 
           {/* Footer */}
-          <footer className="border-t border-white/[0.06] bg-[#020617] px-6 py-5 md:px-16">
+          <footer className="border-t border-white/[0.06] bg-[#020617]/90 px-6 py-5 md:px-16">
             <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-4">
               {/* Brand */}
               <div>
                 <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="mb-2 h-7 w-auto object-contain" style={{ filter: "brightness(0.7)" }} />
-                <p className="text-xs leading-relaxed text-slate-600">
+                <p className="text-sm leading-relaxed text-slate-500">
                   {lang === "bg"
                     ? "Подводни технологии и хидротехническо инженерство от 2001 г."
                     : "Underwater technologies and hydrotechnical engineering since 2001."}
@@ -918,7 +940,7 @@ export default function PageExperience({
               </div>
               {/* Navigation */}
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
                   {lang === "bg" ? "Навигация" : "Navigation"}
                 </p>
                 <nav className="flex flex-col gap-1">
@@ -933,7 +955,7 @@ export default function PageExperience({
                       key={scene}
                       type="button"
                       onClick={() => goToScene(scene)}
-                      className="text-left text-xs text-slate-600 transition-colors hover:text-slate-300"
+                      className="text-left text-sm text-slate-500 transition-colors hover:text-slate-200"
                     >
                       {label}
                     </button>
@@ -942,47 +964,47 @@ export default function PageExperience({
               </div>
               {/* Services */}
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
                   {lang === "bg" ? "Услуги" : "Services"}
                 </p>
                 <div className="flex flex-col gap-1">
                   {services.slice(0, 6).map((svc) => (
-                    <span key={svc.id} className="text-xs leading-tight text-slate-600">{svc.title}</span>
+                    <span key={svc.id} className="text-sm leading-tight text-slate-500">{svc.title}</span>
                   ))}
                 </div>
               </div>
               {/* Contact + Legal */}
               <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-400">
                   {lang === "bg" ? "Контакти и правно" : "Contact & Legal"}
                 </p>
                 <div className="mb-3 flex flex-col gap-1">
                   {settings?.email && (
-                    <a href={`mailto:${settings.email}`} className="text-xs text-slate-600 transition-colors hover:text-slate-300">
+                    <a href={`mailto:${settings.email}`} className="text-sm text-slate-500 transition-colors hover:text-slate-200">
                       {settings.email}
                     </a>
                   )}
                   {settings?.phones?.[0] && (
-                    <a href={`tel:${settings.phones[0].replace(/\s/g, "")}`} className="text-xs text-slate-600 transition-colors hover:text-slate-300">
+                    <a href={`tel:${settings.phones[0].replace(/\s/g, "")}`} className="text-sm text-slate-500 transition-colors hover:text-slate-200">
                       {settings.phones[0]}
                     </a>
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <a href={`/${lang}/privacy`} className="text-xs text-slate-600 transition-colors hover:text-slate-400">
+                  <a href={`/${lang}/privacy`} className="text-sm text-slate-500 transition-colors hover:text-slate-300">
                     {lang === "bg" ? "Политика за поверителност" : "Privacy Policy"}
                   </a>
-                  <a href={`/${lang}/cookies`} className="text-xs text-slate-600 transition-colors hover:text-slate-400">
+                  <a href={`/${lang}/cookies`} className="text-sm text-slate-500 transition-colors hover:text-slate-300">
                     {lang === "bg" ? "Политика за бисквитки" : "Cookie Policy"}
                   </a>
-                  <a href={`/${lang}/terms`} className="text-xs text-slate-600 transition-colors hover:text-slate-400">
+                  <a href={`/${lang}/terms`} className="text-sm text-slate-500 transition-colors hover:text-slate-300">
                     {lang === "bg" ? "Условия за ползване" : "Terms of Use"}
                   </a>
                 </div>
               </div>
             </div>
             <div className="mt-4 border-t border-white/[0.04] pt-3 text-center">
-              <p className="text-[10px] text-slate-600">
+              <p className="text-xs text-slate-500">
                 {`© ${new Date().getFullYear()} ${settings?.companyName ?? "Черноморски Водолазен Център ООД"}. ${lang === "bg" ? "Всички права запазени." : "All rights reserved."}`}
               </p>
             </div>
@@ -1019,6 +1041,45 @@ export default function PageExperience({
         <span className="text-xs text-white/20">/</span>
         <span className="text-xs text-white/30">{String(totalScenes).padStart(2, "0")}</span>
       </div>
+
+      {/* ── SERVICE DETAIL OVERLAY ──────────────────────────────────────── */}
+      {activeService && (
+        <div className="fixed inset-0 z-[250] pointer-events-auto bg-[#020617]/95 backdrop-blur-sm">
+          <button
+            type="button"
+            onClick={() => { setActiveService(null); cubeRef.current?.zoomOut() }}
+            className="absolute right-8 top-8 z-[251] flex h-10 w-10 cursor-pointer items-center justify-center text-white/60 transition-colors hover:text-white"
+            style={{ pointerEvents: "auto" }}
+            aria-label={lang === "bg" ? "Затвори" : "Close"}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="flex h-full items-center gap-16 px-16 lg:px-24">
+            <div className="relative h-[60%] w-1/2 flex-shrink-0 overflow-hidden">
+              {activeService.featuredImageUrl ? (
+                <img
+                  src={activeService.featuredImageUrl}
+                  alt={activeService.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-[#0a1628] via-[#0d1f3c] to-[#B87333]/20" />
+              )}
+            </div>
+            <div className="flex flex-col overflow-hidden">
+              <h2 className="mb-6 text-4xl font-black text-white">{activeService.title}</h2>
+              {activeService.content && (
+                <div
+                  className="max-h-[40vh] overflow-y-auto text-slate-400"
+                  dangerouslySetInnerHTML={{ __html: activeService.content }}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── PROJECT DETAIL MODAL ─────────────────────────────────────────── */}
       {selectedProject && (() => {
