@@ -199,7 +199,8 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
                   hoveredFace.current = -1
                   document.body.style.cursor = 'auto'
                 }}
-                onClick={() => {
+                onPointerDown={(event) => {
+                  event.stopPropagation()
                   resetIdleTimer()
                   gsap.to(camera.position, { z: 3, duration: 0.6, ease: 'power2.inOut' })
                   onFaceClick(i)
@@ -209,7 +210,6 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
                 <meshStandardMaterial
                   ref={el => { faceMats.current[i] = el }}
                   color="#1a2744"
-                  side={THREE.DoubleSide}
                 />
               </mesh>
 
@@ -281,7 +281,7 @@ const ServicesCube = forwardRef<ServicesCubeHandle, ServicesCubeProps>(function 
 
   return (
     <div className="relative h-full w-full">
-      <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+      <Canvas camera={{ position: [0, 0, 8], fov: 50 }} style={{ background: '#020617' }}>
         <CubeScene
           ref={sceneRef}
           services={services}
