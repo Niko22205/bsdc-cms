@@ -81,6 +81,7 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
   const hoveredFace  = useRef(-1)
   const idleTimer    = useRef<ReturnType<typeof setTimeout> | null>(null)
   const initialized  = useRef(false)
+  const hoverLightRef = useRef<THREE.PointLight>(null)
 
   const boxGeo = useMemo(() => new THREE.BoxGeometry(3, 3, 3), [])
   useEffect(() => { return () => boxGeo.dispose() }, [boxGeo])
@@ -161,13 +162,24 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
       } else if (isHovered) {
         mat.color.setHex(0x0d1f3c)
         mat.emissive.setHex(0xB87333)
-        mat.emissiveIntensity = 0.1
+        mat.emissiveIntensity = 0.8
       } else {
         mat.color.setHex(0x1a2744)
         mat.emissive.setHex(0x000000)
         mat.emissiveIntensity = 0
       }
     })
+
+    if (hoverLightRef.current) {
+      const h = hoveredFace.current
+      if (h >= 0 && FACE_CONFIG[h]) {
+        const fp = FACE_CONFIG[h].pos
+        hoverLightRef.current.position.set(fp[0] * 2.5, fp[1] * 2.5, fp[2] * 2.5)
+        hoverLightRef.current.intensity = 2.5
+      } else {
+        hoverLightRef.current.intensity = 0
+      }
+    }
   })
 
   return (
@@ -175,6 +187,7 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
       <ambientLight intensity={0.3} />
       <spotLight position={[0, 5, 5]} intensity={2} color="#ffffff" penumbra={0.5} castShadow={false} />
       <pointLight position={[-3, 2, 0]} intensity={0.8} color="#B87333" />
+      <pointLight ref={hoverLightRef} color="#B87333" intensity={0} distance={8} decay={2} />
 
       <group ref={cubeGroupRef}>
         {/* Wireframe outline — shown during entrance animation */}
@@ -281,7 +294,7 @@ const ServicesCube = forwardRef<ServicesCubeHandle, ServicesCubeProps>(function 
 
   return (
     <div className="relative h-full w-full">
-      <Canvas camera={{ position: [0, 0, 8], fov: 50 }} style={{ background: '#020617' }}>
+      <Canvas camera={{ position: [0, 0, 8], fov: 50 }} gl={{ preserveDrawingBuffer: true }} style={{ background: '#020617' }}>
         <CubeScene
           ref={sceneRef}
           services={services}

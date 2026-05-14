@@ -38,7 +38,7 @@ export function Navbar({ settings, lang }: Props) {
 
   return (
     <header
-      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-[600] transition-all duration-300 ${
         scrolled
           ? "border-b border-white/[0.06] bg-[#020617]/95 backdrop-blur-md"
           : "bg-transparent"

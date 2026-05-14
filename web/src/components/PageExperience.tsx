@@ -404,7 +404,7 @@ export default function PageExperience({
       }
     }
 
-    if (nextEl) gsap.set(nextEl, { opacity: 0 })
+    if (nextEl) gsap.set(nextEl, { opacity: next === 2 ? 0.001 : 0 })
 
     // Reset next scene's animated elements to hidden BEFORE dissolve starts
     if (next === 1) gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats,.about-certs', { opacity: 0, y: 30, x: 0 })
@@ -424,7 +424,7 @@ export default function PageExperience({
       },
     })
 
-    if (currentEl) tl.to(currentEl, { opacity: 0, duration: 1.4, ease: "power2.inOut" }, 0)
+    if (currentEl) tl.to(currentEl, { opacity: current === 2 ? 0.001 : 0, duration: 1.4, ease: "power2.inOut" }, 0)
     if (nextEl)    tl.to(nextEl,    { opacity: 1, duration: 1.4, ease: "power2.inOut" }, 0)
 
     if (current === 0 && next === 1) {
@@ -604,7 +604,7 @@ export default function PageExperience({
         {meta.gallery.map((src, i) => (
           <div
             key={i}
-            className="relative h-16 flex-1 overflow-hidden"
+            className="relative h-48 flex-1 overflow-hidden"
             style={{ border: `1px solid ${meta.accent}30` }}
           >
             <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition-opacity hover:opacity-100" />
@@ -647,7 +647,7 @@ export default function PageExperience({
     if (svcIdx === 0) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
@@ -680,7 +680,7 @@ export default function PageExperience({
               <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
               {svc.content && (
                 <div
-                  className="mb-6 max-w-lg text-sm leading-relaxed text-slate-400 [&_p]:mb-3"
+                  className="mb-6 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
                   dangerouslySetInnerHTML={{ __html: svc.content }}
                 />
               )}
@@ -737,7 +737,7 @@ export default function PageExperience({
               <div>
                 {svc.content && (
                   <div
-                    className="mb-4 text-sm leading-relaxed text-slate-400 [&_p]:mb-3"
+                    className="mb-4 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
                     dangerouslySetInnerHTML={{ __html: svc.content }}
                   />
                 )}
@@ -778,7 +778,7 @@ export default function PageExperience({
     if (svcIdx === 2) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
@@ -814,7 +814,7 @@ export default function PageExperience({
 
               {svc.content && (
                 <div
-                  className="mb-5 text-sm leading-relaxed text-slate-400 [&_p]:mb-3"
+                  className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
                   dangerouslySetInnerHTML={{ __html: svc.content }}
                 />
               )}
@@ -894,7 +894,7 @@ export default function PageExperience({
               <div className="lg:col-span-2">
                 {svc.content && (
                   <div
-                    className="mb-5 text-sm leading-relaxed text-slate-400 [&_p]:mb-3"
+                    className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
                     dangerouslySetInnerHTML={{ __html: svc.content }}
                   />
                 )}
@@ -935,7 +935,7 @@ export default function PageExperience({
     if (svcIdx === 4) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
@@ -969,7 +969,7 @@ export default function PageExperience({
               <div>
                 {svc.content && (
                   <div
-                    className="mb-5 text-sm leading-relaxed text-slate-400 [&_p]:mb-3"
+                    className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
                     dangerouslySetInnerHTML={{ __html: svc.content }}
                   />
                 )}
@@ -1006,7 +1006,7 @@ export default function PageExperience({
     // ── Layout 5: Courses — split, accreditation cards right ─────────────────
     return (
       <div
-        className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-y-auto pointer-events-auto"
+        className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
         style={{ background: meta.bg }}
       >
         {CloseBtn}
@@ -1023,7 +1023,7 @@ export default function PageExperience({
             <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
             {svc.content && (
               <div
-                className="mb-5 max-w-lg text-sm leading-relaxed text-slate-400 [&_p]:mb-3"
+                className="mb-5 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
                 dangerouslySetInnerHTML={{ __html: svc.content }}
               />
             )}
@@ -1118,7 +1118,7 @@ export default function PageExperience({
                 ))}
             </div>
 
-            <p className="hero-sub mb-10 max-w-sm text-sm leading-relaxed text-slate-400 md:text-base">
+            <p className="hero-sub mb-10 max-w-sm text-sm leading-relaxed text-slate-300 md:text-base">
               {home?.subheadline ?? ""}
             </p>
 
@@ -1148,13 +1148,13 @@ export default function PageExperience({
             ]).map((stat, i) => (
               <div key={i} className={`py-6 text-center ${i < 2 ? "border-r border-white/[0.06]" : ""}`}>
                 <div data-stat-value={stat.value} className="text-3xl font-black text-white">{stat.value}</div>
-                <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-500">{stat.label}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-400">{stat.label}</div>
               </div>
             ))}
           </div>
 
           <div className="pointer-events-none absolute bottom-24 right-8 z-10 hidden flex-col items-center gap-2 sm:flex">
-            <span className="text-[9px] uppercase tracking-[0.3em] text-slate-500" style={{ writingMode: "vertical-rl" }}>
+            <span className="text-[9px] uppercase tracking-[0.3em] text-slate-400" style={{ writingMode: "vertical-rl" }}>
               Scroll
             </span>
             <div className="h-12 w-px animate-pulse bg-gradient-to-b from-[#B87333] to-transparent" />
@@ -1178,7 +1178,7 @@ export default function PageExperience({
                   {about?.title ?? "За нас"}
                 </h2>
                 <div
-                  className="about-text max-h-24 overflow-hidden text-sm leading-relaxed text-slate-400 md:max-h-none"
+                  className="about-text max-h-24 overflow-hidden text-sm leading-relaxed text-slate-300 md:max-h-none"
                   dangerouslySetInnerHTML={{ __html: about?.content ?? "" }}
                 />
                 <div className="about-stats mt-5 flex gap-6 md:mt-8 md:gap-10">
@@ -1187,7 +1187,7 @@ export default function PageExperience({
                       <div className="text-2xl font-black text-[#B87333] md:text-3xl" data-stat-value={stat.value}>
                         {stat.value}
                       </div>
-                      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-500">{stat.label}</div>
+                      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-400">{stat.label}</div>
                     </div>
                   ))}
                 </div>
@@ -1221,7 +1221,7 @@ export default function PageExperience({
                       <div className="mb-1 text-xs font-semibold leading-tight text-white">{cert.title}</div>
                       <div className="mb-1 text-[10px] uppercase text-[#B87333]">{cert.issuer}</div>
                       {cert.issueDate && (
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-slate-400">
                           {new Date(cert.issueDate).toLocaleDateString("bg-BG")}
                         </div>
                       )}
@@ -1256,7 +1256,7 @@ export default function PageExperience({
                       cubeRef.current?.rotateTo(i)
                     }}
                     className={`group flex items-center gap-3 py-3 text-left transition-colors ${
-                      activeServiceIndex === i ? "text-white" : "text-slate-500 hover:text-slate-300"
+                      activeServiceIndex === i ? "text-white" : "text-slate-400 hover:text-slate-300"
                     }`}
                   >
                     <div
@@ -1362,7 +1362,17 @@ export default function PageExperience({
                       <div className="absolute inset-0 bg-gradient-to-t from-[#1a1108] via-[#1a1108]/20 to-transparent" />
                     </div>
                   ) : (
-                    <div className="min-h-0 flex-1 bg-[#2a1f0a]/60" />
+                    <div className="relative min-h-0 flex-1 overflow-hidden bg-gradient-to-br from-[#1a1208] to-[#0f0a05]">
+                      <div
+                        className="absolute inset-0 opacity-10"
+                        style={{ backgroundImage: "repeating-linear-gradient(45deg, #B87333 0, #B87333 1px, transparent 0, transparent 50%)", backgroundSize: "14px 14px" }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center p-6">
+                        <span className="text-center text-4xl font-black uppercase leading-tight text-[#f0e6cc]" style={{ opacity: 0.04 }}>
+                          {project.title}
+                        </span>
+                      </div>
+                    </div>
                   )}
                   {/* Text — fixed height at bottom */}
                   <div className="flex-shrink-0 border-t border-[#f0e6cc]/[0.06] p-4">
@@ -1427,34 +1437,11 @@ export default function PageExperience({
         <div ref={contactRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
           <div className="absolute inset-0 flex flex-col">
 
-            {/* Google Maps background — visible through semi-transparent panels */}
-            {settings?.googleMapsEmbed && (
-              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-                {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
-                  <div
-                    className="h-full w-full opacity-50 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0"
-                    style={{ filter: "invert(90%) hue-rotate(180deg)" }}
-                    dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
-                  />
-                ) : (
-                  <iframe
-                    src={settings.googleMapsEmbed}
-                    className="absolute inset-0 h-full w-full border-0 opacity-50"
-                    style={{ filter: "invert(90%) hue-rotate(180deg)" }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Map"
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Main content — semi-transparent panels so map shows through */}
-            <div className="relative z-10 flex flex-1 overflow-hidden">
+            {/* Main content */}
+            <div className="flex flex-1 overflow-hidden">
 
               {/* Left: company info */}
-              <div className="contact-info flex w-full flex-col justify-center bg-[#07111f]/60 px-8 py-10 backdrop-blur-sm md:w-2/5 md:px-12">
+              <div className="contact-info flex w-full flex-col justify-center bg-[#07111f] px-8 py-10 md:w-2/5 md:px-12">
                 <div className="mb-6 flex items-center gap-3">
                   <div className="h-px w-6 bg-[#B87333]" />
                   <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
@@ -1468,7 +1455,7 @@ export default function PageExperience({
                   {settings?.address && (
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#B87333]" />
-                      <span className="text-sm leading-relaxed text-slate-400">{settings.address}</span>
+                      <span className="text-sm leading-relaxed text-slate-300">{settings.address}</span>
                     </div>
                   )}
                   {settings?.phones && settings.phones.length > 0 && (
@@ -1479,7 +1466,7 @@ export default function PageExperience({
                           <a
                             key={i}
                             href={`tel:${p.replace(/\s/g, "")}`}
-                            className="text-sm text-slate-400 transition-colors hover:text-white"
+                            className="text-sm text-slate-300 transition-colors hover:text-white"
                           >
                             {p}
                           </a>
@@ -1492,7 +1479,7 @@ export default function PageExperience({
                       <Mail className="h-4 w-4 flex-shrink-0 text-[#B87333]" />
                       <a
                         href={`mailto:${settings.email}`}
-                        className="text-sm text-slate-400 transition-colors hover:text-white"
+                        className="text-sm text-slate-300 transition-colors hover:text-white"
                       >
                         {settings.email}
                       </a>
@@ -1501,14 +1488,14 @@ export default function PageExperience({
                   {settings?.workingHours && (
                     <div className="flex items-center gap-3">
                       <Clock className="h-4 w-4 flex-shrink-0 text-[#B87333]" />
-                      <span className="text-sm text-slate-400">{settings.workingHours}</span>
+                      <span className="text-sm text-slate-300">{settings.workingHours}</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Right: contact form */}
-              <div className="contact-form flex flex-1 flex-col justify-center bg-[#020617]/60 px-8 py-10 backdrop-blur-sm md:px-12">
+              <div className="contact-form flex flex-1 flex-col justify-center bg-[#020617] px-8 py-10 md:px-12">
                 <h3 className="mb-6 text-xl font-bold text-white">
                   {lang === "bg" ? "Изпратете запитване" : "Send an Enquiry"}
                 </h3>
@@ -1542,7 +1529,7 @@ export default function PageExperience({
                     />
                     <select
                       name="type"
-                      className="border border-white/[0.08] bg-[#020617] px-4 py-3 text-sm text-slate-400 outline-none transition-colors focus:border-[#B87333]/50"
+                      className="border border-white/[0.08] bg-[#020617] px-4 py-3 text-sm text-slate-300 outline-none transition-colors focus:border-[#B87333]/50"
                     >
                       <option value="">{lang === "bg" ? "Вид запитване" : "Enquiry type"}</option>
                       <option value="general">{lang === "bg" ? "Обща информация" : "General"}</option>
@@ -1586,6 +1573,32 @@ export default function PageExperience({
 
             </div>
 
+            {/* Google Maps — full-width row */}
+            {settings?.googleMapsEmbed && (
+              <div
+                className="flex-shrink-0 overflow-hidden border-y border-[#B87333]/30"
+                style={{ height: "280px" }}
+              >
+                {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
+                  <div
+                    className="h-full w-full opacity-60 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0"
+                    style={{ filter: "invert(90%) hue-rotate(180deg)" }}
+                    dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
+                  />
+                ) : (
+                  <iframe
+                    src={settings.googleMapsEmbed}
+                    className="h-full w-full border-0 opacity-60"
+                    style={{ filter: "invert(90%) hue-rotate(180deg)" }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Map"
+                  />
+                )}
+              </div>
+            )}
+
             {/* Partners ticker */}
             {partners.length > 0 && (
               <div className="overflow-hidden border-t border-white/[0.06] bg-[#07111f]/80 py-4">
@@ -1604,20 +1617,22 @@ export default function PageExperience({
             )}
 
             {/* Footer */}
-            <footer className="border-t border-white/[0.06] bg-[#020617]/90 px-6 py-5 md:px-16">
+            <footer className="border-t border-white/[0.06] bg-[#020617] px-6 py-5 md:px-16">
               <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-4">
                 {/* Brand */}
                 <div>
-                  <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="mb-2 h-7 w-auto object-contain" style={{ filter: "brightness(0.7)" }} />
-                  <p className="text-sm leading-relaxed text-slate-500">
-                    {lang === "bg"
-                      ? "Подводни технологии и хидротехническо инженерство от 2001 г."
-                      : "Underwater technologies and hydrotechnical engineering since 2001."}
+                  <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="mb-3 h-16 w-auto object-contain" style={{ filter: "brightness(0.8)" }} />
+                  <p className="max-w-[200px] text-sm leading-relaxed text-slate-400">
+                    {lang === "bg" ? (
+                      <>Подводни технологии и<br />хидротехническо инженерство от 2001 г.</>
+                    ) : (
+                      <>Underwater technologies and<br />hydrotechnical engineering since 2001.</>
+                    )}
                   </p>
                 </div>
                 {/* Navigation */}
                 <div>
-                  <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
+                  <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-300">
                     {lang === "bg" ? "Навигация" : "Navigation"}
                   </p>
                   <nav className="flex flex-col gap-1">
@@ -1632,7 +1647,7 @@ export default function PageExperience({
                         key={scene}
                         type="button"
                         onClick={() => goToScene(scene)}
-                        className="text-left text-sm text-slate-500 transition-colors hover:text-slate-200"
+                        className="text-left text-sm text-slate-400 transition-colors hover:text-slate-200"
                       >
                         {label}
                       </button>
@@ -1641,47 +1656,47 @@ export default function PageExperience({
                 </div>
                 {/* Services */}
                 <div>
-                  <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
+                  <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-300">
                     {lang === "bg" ? "Услуги" : "Services"}
                   </p>
                   <div className="flex flex-col gap-1">
                     {services.slice(0, 6).map((svc) => (
-                      <span key={svc.id} className="text-sm leading-tight text-slate-500">{svc.title}</span>
+                      <span key={svc.id} className="text-sm leading-tight text-slate-400">{svc.title}</span>
                     ))}
                   </div>
                 </div>
                 {/* Contact + Legal */}
                 <div>
-                  <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
+                  <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-slate-300">
                     {lang === "bg" ? "Контакти и правно" : "Contact & Legal"}
                   </p>
                   <div className="mb-3 flex flex-col gap-1">
                     {settings?.email && (
-                      <a href={`mailto:${settings.email}`} className="text-sm text-slate-500 transition-colors hover:text-slate-200">
+                      <a href={`mailto:${settings.email}`} className="text-sm text-slate-400 transition-colors hover:text-slate-200">
                         {settings.email}
                       </a>
                     )}
                     {settings?.phones?.[0] && (
-                      <a href={`tel:${settings.phones[0].replace(/\s/g, "")}`} className="text-sm text-slate-500 transition-colors hover:text-slate-200">
+                      <a href={`tel:${settings.phones[0].replace(/\s/g, "")}`} className="text-sm text-slate-400 transition-colors hover:text-slate-200">
                         {settings.phones[0]}
                       </a>
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
-                    <a href={`/${lang}/privacy`} className="text-sm text-slate-500 transition-colors hover:text-slate-300">
+                    <a href={`/${lang}/privacy`} className="text-sm text-slate-400 transition-colors hover:text-slate-300">
                       {lang === "bg" ? "Политика за поверителност" : "Privacy Policy"}
                     </a>
-                    <a href={`/${lang}/cookies`} className="text-sm text-slate-500 transition-colors hover:text-slate-300">
+                    <a href={`/${lang}/cookies`} className="text-sm text-slate-400 transition-colors hover:text-slate-300">
                       {lang === "bg" ? "Политика за бисквитки" : "Cookie Policy"}
                     </a>
-                    <a href={`/${lang}/terms`} className="text-sm text-slate-500 transition-colors hover:text-slate-300">
+                    <a href={`/${lang}/terms`} className="text-sm text-slate-400 transition-colors hover:text-slate-300">
                       {lang === "bg" ? "Условия за ползване" : "Terms of Use"}
                     </a>
                   </div>
                 </div>
               </div>
               <div className="mt-4 border-t border-white/[0.04] pt-3 text-center">
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-400">
                   {`© ${new Date().getFullYear()} ${settings?.companyName ?? "Черноморски Водолазен Център ООД"}. ${lang === "bg" ? "Всички права запазени." : "All rights reserved."}`}
                 </p>
               </div>
@@ -1759,7 +1774,7 @@ export default function PageExperience({
                 <button
                   type="button"
                   onClick={() => setSelectedProject(null)}
-                  className="ml-4 flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center border border-[#f0e6cc]/20 text-slate-500 transition-colors hover:border-[#f0e6cc]/40 hover:text-white"
+                  className="ml-4 flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center border border-[#f0e6cc]/20 text-slate-400 transition-colors hover:border-[#f0e6cc]/40 hover:text-white"
                   style={{ pointerEvents: "auto" }}
                   aria-label={lang === "bg" ? "Затвори" : "Close"}
                 >
@@ -1840,7 +1855,7 @@ export default function PageExperience({
             <button
               type="button"
               onClick={() => { setShowContactModal(false); setContactStatus("idle") }}
-              className="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center text-slate-500 transition-colors hover:text-white"
+              className="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center text-slate-400 transition-colors hover:text-white"
               style={{ pointerEvents: "auto" }}
               aria-label="Close"
             >
@@ -1873,7 +1888,7 @@ export default function PageExperience({
                 />
                 <select
                   name="type"
-                  className="border border-white/[0.08] bg-[#07111f] px-4 py-3 text-sm text-slate-400 outline-none transition-colors focus:border-[#B87333]/50"
+                  className="border border-white/[0.08] bg-[#07111f] px-4 py-3 text-sm text-slate-300 outline-none transition-colors focus:border-[#B87333]/50"
                 >
                   <option value="">{lang === "bg" ? "Вид запитване" : "Enquiry type"}</option>
                   <option value="general">{lang === "bg" ? "Обща информация" : "General"}</option>
