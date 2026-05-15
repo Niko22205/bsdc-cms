@@ -25,7 +25,6 @@ const FACE_CONFIG: { pos: [number, number, number]; rot: [number, number, number
   { pos: [ 0,    0,   -1.5 ], rot: [0,              Math.PI,     0] }, // -Z back
 ]
 
-// target [rotX, rotY] to bring each face to face the camera (+Z)
 const FACE_TARGET_ROTATIONS: [number, number][] = [
   [0,             -Math.PI / 2],
   [0,              Math.PI / 2],
@@ -34,6 +33,84 @@ const FACE_TARGET_ROTATIONS: [number, number][] = [
   [0,             0           ],
   [0,              Math.PI    ],
 ]
+
+// ── Canvas helpers ────────────────────────────────────────────────────────────
+
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = text.split(' ')
+  const lines: string[] = []
+  let current = ''
+  for (const word of words) {
+    const test = current ? `${current} ${word}` : word
+    if (ctx.measureText(test).width > maxWidth && current) {
+      lines.push(current)
+      current = word
+    } else {
+      current = test
+    }
+  }
+  if (current) lines.push(current)
+  return lines
+}
+
+function drawFaceCanvas(
+  canvas: HTMLCanvasElement,
+  title: string,
+  image: HTMLImageElement | null,
+  isHovered: boolean,
+  isActive: boolean,
+) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+  const W = 512, H = 512
+
+  ctx.fillStyle = '#0d1f3c'
+  ctx.fillRect(0, 0, W, H)
+
+  if (image && image.complete && image.naturalWidth > 0) {
+    try { ctx.drawImage(image, 0, 0, W, H) } catch { /* skip */ }
+    ctx.fillStyle = isHovered ? 'rgba(0,0,0,0.25)' : 'rgba(0,0,0,0.50)'
+    ctx.fillRect(0, 0, W, H)
+  }
+
+  if (isHovered) {
+    const grd = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 200)
+    grd.addColorStop(0,    'rgba(220,150,50,0.50)')
+    grd.addColorStop(0.40, 'rgba(184,115,51,0.20)')
+    grd.addColorStop(1,    'rgba(0,0,0,0)')
+    ctx.fillStyle = grd
+    ctx.fillRect(0, 0, W, H)
+  }
+
+  if (isActive) {
+    ctx.strokeStyle = '#B87333'
+    ctx.lineWidth = 12
+    ctx.strokeRect(10, 10, W - 20, H - 20)
+    ctx.strokeStyle = 'rgba(184,115,51,0.4)'
+    ctx.lineWidth = 6
+    ctx.strokeRect(20, 20, W - 40, H - 40)
+  }
+
+  const fadeGrd = ctx.createLinearGradient(0, H * 0.52, 0, H)
+  fadeGrd.addColorStop(0, 'rgba(0,0,0,0)')
+  fadeGrd.addColorStop(1, 'rgba(0,0,0,0.88)')
+  ctx.fillStyle = fadeGrd
+  ctx.fillRect(0, 0, W, H)
+
+  ctx.font = 'bold 26px Arial, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'bottom'
+  ctx.fillStyle = isHovered ? '#ffffff' : 'rgba(255,255,255,0.92)'
+  const lines = wrapText(ctx, title, W - 56)
+  const lineH = 34
+  lines.forEach((line, idx) => {
+    const y = H - 30 - (lines.length - 1 - idx) * lineH
+    ctx.fillText(line, W / 2, y)
+  })
+
+  ctx.fillStyle = isHovered ? '#dda060' : '#B87333'
+  ctx.fillRect(28, H - 10, W - 56, 4)
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,14 +145,19 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
   ref,
 ) {
   const { camera } = useThree()
-  const cubeGroupRef = useRef<THREE.Group>(null)
-  const controlsRef  = useRef<OrbitControlsImpl>(null)
-  const faceRefs     = useRef<(THREE.Mesh | null)[]>(Array(6).fill(null))
-  const faceMats     = useRef<(THREE.MeshStandardMaterial | null)[]>(Array(6).fill(null))
-  const wireMatRef   = useRef<THREE.LineBasicMaterial>(null)
-  const hoveredFace  = useRef(-1)
-  const idleTimer    = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const initialized  = useRef(false)
+  const cubeGroupRef  = useRef<THREE.Group>(null)
+  const controlsRef   = useRef<OrbitControlsImpl>(null)
+  const faceRefs      = useRef<(THREE.Mesh | null)[]>(Array(6).fill(null))
+  const faceMats      = useRef<(THREE.MeshStandardMaterial | null)[]>(Array(6).fill(null))
+  const faceCanvases  = useRef<(HTMLCanvasElement | null)[]>(Array(6).fill(null))
+  const faceTextures  = useRef<(THREE.CanvasTexture | null)[]>(Array(6).fill(null))
+  const loadedImages  = useRef<(HTMLImageElement | null)[]>(Array(6).fill(null))
+  const wireMatRef    = useRef<THREE.LineBasicMaterial>(null)
+  const hoveredFace   = useRef(-1)
+  const prevHovered   = useRef(-2)
+  const prevActive    = useRef(-2)
+  const idleTimer     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const initialized   = useRef(false)
   const hoverLightRef = useRef<THREE.PointLight>(null)
 
   const boxGeo = useMemo(() => new THREE.BoxGeometry(3, 3, 3), [])
@@ -90,6 +172,41 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
   }
 
   useEffect(() => () => { if (idleTimer.current) clearTimeout(idleTimer.current) }, [])
+
+  // Build canvas textures once after mount
+  useEffect(() => {
+    services.forEach((svc, i) => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 512
+      canvas.height = 512
+      faceCanvases.current[i] = canvas
+      drawFaceCanvas(canvas, svc.title, null, false, i === activeIndex)
+      const tex = new THREE.CanvasTexture(canvas)
+      tex.colorSpace = THREE.SRGBColorSpace
+      faceTextures.current[i] = tex
+      const mat = faceMats.current[i]
+      if (mat) {
+        mat.map = tex
+        mat.color.setHex(0xffffff)
+        mat.needsUpdate = true
+      }
+      const imgSrc = svc.featuredImageUrl ?? (svc.images.length > 0 ? svc.images[0] : null)
+      if (imgSrc) {
+        const img = new Image()
+        img.onload = () => {
+          loadedImages.current[i] = img
+          const c = faceCanvases.current[i]
+          if (!c) return
+          drawFaceCanvas(c, svc.title, img, hoveredFace.current === i, i === activeIndex)
+          const t = faceTextures.current[i]
+          if (t) t.needsUpdate = true
+        }
+        img.onerror = () => {}
+        img.src = imgSrc
+      }
+    })
+    return () => { faceTextures.current.forEach(t => t?.dispose()) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useImperativeHandle(ref, () => ({
     rotateTo(faceIndex: number) {
@@ -130,7 +247,6 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
     },
   })) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Per-frame: lerp face offsets + update material state imperatively
   useFrame(() => {
     if (!initialized.current && cubeGroupRef.current && controlsRef.current) {
       cubeGroupRef.current.rotation.x = Math.PI / 6
@@ -142,35 +258,38 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
 
     faceRefs.current.forEach((mesh, i) => {
       if (!mesh) return
-      const target = i === hoveredFace.current ? 0.15 : 0
+      const target = i === hoveredFace.current ? 0.12 : 0
       mesh.position.z += (target - mesh.position.z) * 0.1
     })
 
-    faceMats.current.forEach((mat, i) => {
-      if (!mat) return
-      const isActive  = i === activeIndex
-      const isHovered = i === hoveredFace.current
-      if (isActive) {
-        mat.color.setHex(0x0d1f3c)
-        mat.emissive.setHex(0xB87333)
-        mat.emissiveIntensity = 0.3
-      } else if (isHovered) {
-        mat.color.setHex(0x0d1f3c)
-        mat.emissive.setHex(0xB87333)
-        mat.emissiveIntensity = 0.8
-      } else {
-        mat.color.setHex(0x1a2744)
-        mat.emissive.setHex(0x000000)
-        mat.emissiveIntensity = 0
+    const h = hoveredFace.current
+    if (h !== prevHovered.current || activeIndex !== prevActive.current) {
+      const toRedraw = new Set<number>()
+      if (h !== prevHovered.current) {
+        if (h >= 0) toRedraw.add(h)
+        if (prevHovered.current >= 0) toRedraw.add(prevHovered.current)
       }
-    })
+      if (activeIndex !== prevActive.current) {
+        toRedraw.add(activeIndex)
+        if (prevActive.current >= 0) toRedraw.add(prevActive.current)
+      }
+      toRedraw.forEach(idx => {
+        const canvas = faceCanvases.current[idx]
+        const tex    = faceTextures.current[idx]
+        const svc    = services[idx]
+        if (!canvas || !tex || !svc) return
+        drawFaceCanvas(canvas, svc.title, loadedImages.current[idx] ?? null, idx === h, idx === activeIndex)
+        tex.needsUpdate = true
+      })
+      prevHovered.current = h
+      prevActive.current  = activeIndex
+    }
 
     if (hoverLightRef.current) {
-      const h = hoveredFace.current
       if (h >= 0 && FACE_CONFIG[h]) {
         const fp = FACE_CONFIG[h].pos
         hoverLightRef.current.position.set(fp[0] * 2.5, fp[1] * 2.5, fp[2] * 2.5)
-        hoverLightRef.current.intensity = 2.5
+        hoverLightRef.current.intensity = 1.5
       } else {
         hoverLightRef.current.intensity = 0
       }
@@ -179,9 +298,9 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
 
   return (
     <>
-      <ambientLight intensity={0.3} />
-      <spotLight position={[0, 5, 5]} intensity={2} color="#ffffff" penumbra={0.5} castShadow={false} />
-      <pointLight position={[-3, 2, 0]} intensity={0.8} color="#B87333" />
+      <ambientLight intensity={0.5} />
+      <spotLight position={[0, 5, 5]} intensity={1.5} color="#ffffff" penumbra={0.5} castShadow={false} />
+      <pointLight position={[-3, 2, 0]} intensity={0.6} color="#B87333" />
       <pointLight ref={hoverLightRef} color="#B87333" intensity={0} distance={8} decay={2} />
 
       <group ref={cubeGroupRef}>
@@ -191,36 +310,34 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
           <lineBasicMaterial ref={wireMatRef} color="#B87333" transparent opacity={0} />
         </lineSegments>
 
-        {FACE_CONFIG.map((face, i) => {
-          return (
-            <group key={i} position={face.pos} rotation={face.rot}>
-              <mesh
-                ref={el => { faceRefs.current[i] = el }}
-                onPointerEnter={() => {
-                  hoveredFace.current = i
-                  resetIdleTimer()
-                  document.body.style.cursor = 'crosshair'
-                }}
-                onPointerLeave={() => {
-                  hoveredFace.current = -1
-                  document.body.style.cursor = 'auto'
-                }}
-                onPointerDown={(event) => {
-                  event.stopPropagation()
-                  resetIdleTimer()
-                  gsap.to(camera.position, { z: 3, duration: 0.6, ease: 'power2.inOut' })
-                  onFaceClick(i)
-                }}
-              >
-                <planeGeometry args={[3, 3]} />
-                <meshStandardMaterial
-                  ref={el => { faceMats.current[i] = el }}
-                  color="#1a2744"
-                />
-              </mesh>
-            </group>
-          )
-        })}
+        {FACE_CONFIG.map((face, i) => (
+          <group key={i} position={face.pos} rotation={face.rot}>
+            <mesh
+              ref={el => { faceRefs.current[i] = el }}
+              onPointerEnter={() => {
+                hoveredFace.current = i
+                resetIdleTimer()
+                document.body.style.cursor = 'crosshair'
+              }}
+              onPointerLeave={() => {
+                hoveredFace.current = -1
+                document.body.style.cursor = 'auto'
+              }}
+              onPointerDown={(event) => {
+                event.stopPropagation()
+                resetIdleTimer()
+                gsap.to(camera.position, { z: 3, duration: 0.6, ease: 'power2.inOut' })
+                onFaceClick(i)
+              }}
+            >
+              <planeGeometry args={[3, 3]} />
+              <meshStandardMaterial
+                ref={el => { faceMats.current[i] = el }}
+                color="#1a2744"
+              />
+            </mesh>
+          </group>
+        ))}
       </group>
 
       <OrbitControls

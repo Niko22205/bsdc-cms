@@ -631,11 +631,15 @@ export default function PageExperience({
           <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
             {/* Left: main image — full height, no scroll */}
             <div className="relative h-64 flex-shrink-0 lg:h-auto lg:w-[44%]">
-              <img
-                src={svc.featuredImageUrl ?? "/uploads/bsdc/service-background.jpg"}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              {(svc.featuredImageUrl || svc.images.length > 0) ? (
+                <img
+                  src={svc.featuredImageUrl ?? svc.images[0]}
+                  alt={svc.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
+              )}
               <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, #07111f)" }} />
               <div className="absolute inset-0 bg-gradient-to-t from-[#07111f] via-transparent to-transparent lg:hidden" />
               {/* Vertical accent line */}
@@ -691,11 +695,15 @@ export default function PageExperience({
           {/* Monitor viewport frame — flex-shrink-0 at top */}
           <div className="flex-shrink-0 mx-6 mt-10 mb-5 border-2 lg:mx-16 lg:mt-12" style={{ borderColor: `${meta.accent}60` }}>
             <div className="relative h-56 overflow-hidden lg:h-72">
-              <img
-                src={svc.featuredImageUrl ?? "/uploads/bsdc/service-rov-lbv200.jpg"}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              {(svc.featuredImageUrl || svc.images.length > 0) ? (
+                <img
+                  src={svc.featuredImageUrl ?? svc.images[0]}
+                  alt={svc.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
+              )}
               {/* Scan-line overlay */}
               <div
                 className="absolute inset-0 pointer-events-none"
@@ -820,11 +828,15 @@ export default function PageExperience({
 
             {/* Right: image with sonar overlay — full height */}
             <div className="relative hidden lg:block lg:w-1/2">
-              <img
-                src={svc.featuredImageUrl ?? "/uploads/bsdc/service-bathymetry-scan.jpg"}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              {(svc.featuredImageUrl || svc.images.length > 0) ? (
+                <img
+                  src={svc.featuredImageUrl ?? svc.images[0]}
+                  alt={svc.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
+              )}
               <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#040c18]/50" />
               {/* Sonar rings */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -861,11 +873,15 @@ export default function PageExperience({
             className="relative flex-shrink-0 h-52 overflow-hidden border-b lg:h-64"
             style={{ borderColor: `${meta.accent}30` }}
           >
-            <img
-              src={svc.featuredImageUrl ?? "/uploads/bsdc/project-dam-barrier.jpg"}
-              alt={svc.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            {(svc.featuredImageUrl || svc.images.length > 0) ? (
+              <img
+                src={svc.featuredImageUrl ?? svc.images[0]}
+                alt={svc.title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
+            )}
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(to top, #0c0e14 0%, rgba(12,14,20,0.3) 50%, transparent 100%)" }}
@@ -941,11 +957,15 @@ export default function PageExperience({
 
           {/* Hero image with title overlay — flex-shrink-0 */}
           <div className="relative flex-shrink-0 h-72 lg:h-96">
-            <img
-              src={svc.featuredImageUrl ?? "/uploads/bsdc/project-repair-works-a.jpg"}
-              alt={svc.title}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+            {(svc.featuredImageUrl || svc.images.length > 0) ? (
+              <img
+                src={svc.featuredImageUrl ?? svc.images[0]}
+                alt={svc.title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
+            )}
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(to top, #0a0b0d 0%, rgba(10,11,13,0.45) 55%, rgba(10,11,13,0.2) 100%)" }}
@@ -1049,11 +1069,15 @@ export default function PageExperience({
             style={{ background: `${meta.accent}08`, borderLeft: `1px solid ${meta.accent}20` }}
           >
             <div className="relative h-44 overflow-hidden">
-              <img
-                src={svc.featuredImageUrl ?? "/uploads/bsdc/service-courses-scuba.jpg"}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              {(svc.featuredImageUrl || svc.images.length > 0) ? (
+                <img
+                  src={svc.featuredImageUrl ?? svc.images[0]}
+                  alt={svc.title}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#061020]/80 to-transparent" />
             </div>
             <h3 className="text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>

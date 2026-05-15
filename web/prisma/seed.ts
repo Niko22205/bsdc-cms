@@ -131,6 +131,8 @@ async function main() {
       shortDescription:
         "Квалифицирани и мотивирани водолази, оборудвани със специализирана съвременна техника за комплексна подводна дейност.",
       sortOrder: 0,
+      featuredImageUrl: "/uploads/bsdc/service-diving-work.jpg",
+      images: ["/uploads/bsdc/service-diver-work.jpg", "/uploads/bsdc/gallery-diver-helmet.jpg", "/uploads/bsdc/gallery-diver-underwater.jpg", "/uploads/bsdc/service-repair.jpg"],
     },
     {
       translationKey: "rov-services",
@@ -139,6 +141,8 @@ async function main() {
       shortDescription:
         "Специализирани услуги с дистанционно управляеми подводни апарати (ROV) с инспекционна апаратура.",
       sortOrder: 1,
+      featuredImageUrl: "/uploads/bsdc/service-rov-lbv200.jpg",
+      images: ["/uploads/bsdc/service-rov-lbv300.jpg", "/uploads/bsdc/service-rov-t7.jpg", "/uploads/bsdc/gallery-water-dive.jpg"],
     },
     {
       translationKey: "micro-dam-operation",
@@ -147,6 +151,8 @@ async function main() {
       shortDescription:
         "Технически екип, ръководен от квалифициран хидроспециалист, за поддръжка и обслужване на микроязовири.",
       sortOrder: 2,
+      featuredImageUrl: "/uploads/bsdc/project-dam-barrier.jpg",
+      images: ["/uploads/bsdc/gallery-sdam.jpg", "/uploads/bsdc/project-lake-reservoir.jpg", "/uploads/bsdc/project-yazlata-a.jpg"],
     },
     {
       translationKey: "port-vessel-dam-repairs",
@@ -155,6 +161,8 @@ async function main() {
       shortDescription:
         "Хидротехническите съоръжения изискват редовна поддръжка поради постоянното им излагане на природни и климатични условия.",
       sortOrder: 3,
+      featuredImageUrl: "/uploads/bsdc/service-repair.jpg",
+      images: ["/uploads/bsdc/project-repair-works-a.jpg", "/uploads/bsdc/project-shaft-repair.jpg", "/uploads/bsdc/project-sooruzheniya-a.jpg"],
     },
     {
       translationKey: "bathymetry-hydrography",
@@ -163,6 +171,8 @@ async function main() {
       shortDescription:
         "Прецизни батиметрични замервания и хидрографски изследвания с детайлни модели за мониторинг на ерозията.",
       sortOrder: 4,
+      featuredImageUrl: "/uploads/bsdc/service-bathymetry-scan.jpg",
+      images: ["/uploads/bsdc/service-bathymetry-data-01.jpg", "/uploads/bsdc/service-bathymetry-data-02.jpg", "/uploads/bsdc/service-bathymetry-data-03.jpg", "/uploads/bsdc/service-bathymetry-data-04.jpg"],
     },
     {
       translationKey: "diving-courses",
@@ -171,6 +181,8 @@ async function main() {
       shortDescription:
         "Водолазно обучение по системите NAUI и CMAS, включително пробни водолазни изживявания.",
       sortOrder: 5,
+      featuredImageUrl: "/uploads/bsdc/service-courses-scuba.jpg",
+      images: ["/uploads/bsdc/gallery-water-dive.jpg", "/uploads/bsdc/gallery-dive-wreck.jpg", "/uploads/bsdc/gallery-diver-underwater.jpg"],
     },
   ]
 
@@ -183,6 +195,8 @@ async function main() {
         shortDescription: s.shortDescription,
         sortOrder: s.sortOrder,
         published: true,
+        featuredImageUrl: s.featuredImageUrl,
+        images: s.images,
       },
       create: {
         language: "BG",
@@ -192,6 +206,8 @@ async function main() {
         shortDescription: s.shortDescription,
         sortOrder: s.sortOrder,
         published: true,
+        featuredImageUrl: s.featuredImageUrl,
+        images: s.images,
       },
     })
   }
@@ -209,6 +225,9 @@ async function main() {
     excerpt: string
     publishedAt: Date
     sortOrder: number
+    featuredImageUrl: string
+    images: string[]
+    category: string
   }> = [
     {
       translationKey: "yazlata-dam-rehabilitation-2022",
@@ -218,6 +237,9 @@ async function main() {
         'Язовирът се намира в близост до с. Ясна Поляна, Община Приморско, и се използва за напояване на земеделски земи. Проектът обхваща рехабилитация на основните изпускателни съоръжения.',
       publishedAt: new Date("2022-12-10"),
       sortOrder: 0,
+      featuredImageUrl: "/uploads/bsdc/project-yazlata-a.jpg",
+      images: ["/uploads/bsdc/project-yazlata-b.jpg"],
+      category: "Хидротехническо строителство",
     },
     {
       translationKey: "kardzhali-dam-rov-inspection-2022",
@@ -227,6 +249,9 @@ async function main() {
         'Хидроенергийният комплекс „Кърджали" е горното стъпало на каскадата „Арда". Стената на язовира разполага с два основни тунелни изпускателя, подложени на подводна инспекция.',
       publishedAt: new Date("2022-12-04"),
       sortOrder: 1,
+      featuredImageUrl: "/uploads/bsdc/project-kardzhali-a.jpg",
+      images: ["/uploads/bsdc/project-kardzhali-b.jpg"],
+      category: "ROV инспекции",
     },
     {
       translationKey: "teshal-dam-devin-inspection-2022",
@@ -236,6 +261,9 @@ async function main() {
         'Язовирите „Доспат" и „Тешел" са горните стъпала на каскадата Доспат–Въча. Извършена е подводна инспекция на основния изпускател и водовземателното съоръжение за ВЕЦ „Девин".',
       publishedAt: new Date("2022-10-30"),
       sortOrder: 2,
+      featuredImageUrl: "/uploads/bsdc/project-teshal-a.jpg",
+      images: ["/uploads/bsdc/project-teshal-b.jpg"],
+      category: "ROV инспекции",
     },
     {
       translationKey: "peshtera-hec-intake-inspection-2022",
@@ -245,6 +273,9 @@ async function main() {
         'Водовземателната кула се намира на 150 метра от оста на язовирната стена, в дясното поле на водохранилището, над входа на основния водопроводен тунел.',
       publishedAt: new Date("2022-10-23"),
       sortOrder: 3,
+      featuredImageUrl: "/uploads/bsdc/project-peshtera-a.jpg",
+      images: ["/uploads/bsdc/project-peshtera-b.jpg"],
+      category: "ROV инспекции",
     },
   ]
 
@@ -259,6 +290,9 @@ async function main() {
         publishedAt: p.publishedAt,
         sortOrder: p.sortOrder,
         published: true,
+        featuredImageUrl: p.featuredImageUrl,
+        images: p.images,
+        category: p.category,
       },
       create: {
         language: "BG",
@@ -270,6 +304,9 @@ async function main() {
         publishedAt: p.publishedAt,
         sortOrder: p.sortOrder,
         published: true,
+        featuredImageUrl: p.featuredImageUrl,
+        images: p.images,
+        category: p.category,
       },
     })
   }
