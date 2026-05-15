@@ -8,12 +8,10 @@ import {
   useImperativeHandle,
 } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, Html } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 import gsap from 'gsap'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
-import { Anchor, Waves, Ship, Wrench, HardHat, Zap } from 'lucide-react'
-import type { LucideProps } from 'lucide-react'
 import type { Service } from '@/generated/prisma/client'
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -36,9 +34,6 @@ const FACE_TARGET_ROTATIONS: [number, number][] = [
   [0,             0           ],
   [0,              Math.PI    ],
 ]
-
-type LucideIcon = React.ComponentType<LucideProps>
-const DEFAULT_ICONS: LucideIcon[] = [Anchor, Waves, Ship, Wrench, HardHat, Zap]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -197,8 +192,6 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
         </lineSegments>
 
         {FACE_CONFIG.map((face, i) => {
-          const service = services[i]
-          const Icon    = DEFAULT_ICONS[i]
           return (
             <group key={i} position={face.pos} rotation={face.rot}>
               <mesh
@@ -225,37 +218,6 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
                   color="#1a2744"
                 />
               </mesh>
-
-              {service && (
-                <Html center transform position={[0, 0, 0.05]} distanceFactor={6}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '4px',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    }}
-                  >
-                    <Icon size={18} color="#B87333" />
-                    <p
-                      style={{
-                        fontSize: '10px',
-                        color: '#ffffff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        textAlign: 'center',
-                        maxWidth: '80px',
-                        lineHeight: '1.2',
-                        margin: 0,
-                      }}
-                    >
-                      {service.title}
-                    </p>
-                  </div>
-                </Html>
-              )}
             </group>
           )
         })}

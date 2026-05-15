@@ -37,7 +37,6 @@ const ServicesCube = dynamic(
 interface ServiceMeta {
   accent: string
   bg: string
-  gallery: string[]
   activities: string[]
   cards: { title: string; value: string; sub: string }[]
 }
@@ -47,12 +46,6 @@ const SERVICE_META: ServiceMeta[] = [
     // 0 — Индустриални водолазни услуги
     accent: "#B87333",
     bg: "#07111f",
-    gallery: [
-      "/uploads/bsdc/service-diving-work.jpg",
-      "/uploads/bsdc/service-diver-work.jpg",
-      "/uploads/bsdc/service-repair.jpg",
-      "/uploads/bsdc/gallery-diver-helmet.jpg",
-    ],
     activities: [
       "Подводна заварка и рязане",
       "Монтаж и демонтаж на подводни конструкции",
@@ -70,12 +63,6 @@ const SERVICE_META: ServiceMeta[] = [
     // 1 — ROV инспекции
     accent: "#00c8e8",
     bg: "#040e1a",
-    gallery: [
-      "/uploads/bsdc/service-rov-lbv200.jpg",
-      "/uploads/bsdc/service-rov-lbv300.jpg",
-      "/uploads/bsdc/service-rov-t7.jpg",
-      "/uploads/bsdc/gallery-water-dive.jpg",
-    ],
     activities: [
       "HD видео инспекция на конструкции",
       "Обследване на тръбопроводи и кабели",
@@ -93,12 +80,6 @@ const SERVICE_META: ServiceMeta[] = [
     // 2 — Батиметрия
     accent: "#38bdf8",
     bg: "#040c18",
-    gallery: [
-      "/uploads/bsdc/service-bathymetry-data-01.jpg",
-      "/uploads/bsdc/service-bathymetry-data-02.jpg",
-      "/uploads/bsdc/service-bathymetry-data-03.jpg",
-      "/uploads/bsdc/service-bathymetry-data-04.jpg",
-    ],
     activities: [
       "Многолъчево сонарно картиране",
       "Батиметрично профилиране",
@@ -116,12 +97,6 @@ const SERVICE_META: ServiceMeta[] = [
     // 3 — Оператор на язовири
     accent: "#B87333",
     bg: "#0c0e14",
-    gallery: [
-      "/uploads/bsdc/project-dam-barrier.jpg",
-      "/uploads/bsdc/project-lake-reservoir.jpg",
-      "/uploads/bsdc/gallery-sdam.jpg",
-      "/uploads/bsdc/project-yazlata-a.jpg",
-    ],
     activities: [
       "Мониторинг на техническото състояние",
       "Управление на водовземанията",
@@ -139,12 +114,6 @@ const SERVICE_META: ServiceMeta[] = [
     // 4 — Хидротехническо строителство
     accent: "#B87333",
     bg: "#0a0b0d",
-    gallery: [
-      "/uploads/bsdc/project-repair-works-a.jpg",
-      "/uploads/bsdc/project-shaft-repair.jpg",
-      "/uploads/bsdc/project-lukovit-hec.jpg",
-      "/uploads/bsdc/project-sooruzheniya-a.jpg",
-    ],
     activities: [
       "Хидротехнически съоръжения под вода",
       "Укрепителни и защитни работи",
@@ -162,12 +131,6 @@ const SERVICE_META: ServiceMeta[] = [
     // 5 — Водолазни курсове
     accent: "#60a5fa",
     bg: "#061020",
-    gallery: [
-      "/uploads/bsdc/service-courses-scuba.jpg",
-      "/uploads/bsdc/gallery-dive-wreck.jpg",
-      "/uploads/bsdc/gallery-diver-underwater.jpg",
-      "/uploads/bsdc/gallery-water-dive.jpg",
-    ],
     activities: [
       "Начален курс Open Water Diver",
       "Advanced Open Water Diver",
@@ -226,6 +189,8 @@ export default function PageExperience({
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
   const [showContactModal, setShowContactModal]     = useState(false)
   const [selectedProject, setSelectedProject]       = useState<ProjectNewsItem | null>(null)
+  const [projectFilter, setProjectFilter]           = useState<'ALL' | 'PROJECT' | 'NEWS'>('ALL')
+  const [categoryFilter, setCategoryFilter]         = useState<string>('ALL')
 
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
@@ -247,8 +212,16 @@ export default function PageExperience({
   const totalScenes = sceneRefs.length
 
   const projectsPerPage = 2
-  const totalPages      = Math.ceil(Math.max(projects.length, 1) / projectsPerPage)
-  const pagedProjects   = projects.slice(projectPage * projectsPerPage, (projectPage + 1) * projectsPerPage)
+  const filteredProjects = projects.filter(p => {
+    const typeOk = projectFilter === 'ALL' || p.type === projectFilter
+    const catOk  = categoryFilter === 'ALL' || p.category === categoryFilter
+    return typeOk && catOk
+  })
+  const totalPages    = Math.ceil(Math.max(filteredProjects.length, 1) / projectsPerPage)
+  const pagedProjects = filteredProjects.slice(projectPage * projectsPerPage, (projectPage + 1) * projectsPerPage)
+  const uniqueCategories = Array.from(
+    new Set(projects.map(p => p.category).filter((c): c is string => Boolean(c)))
+  )
   const tickerPartners  = [...partners, ...partners]
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -306,6 +279,7 @@ export default function PageExperience({
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
+  useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
 
   // ── Transitions ───────────────────────────────────────────────────────────
 
@@ -576,7 +550,7 @@ export default function PageExperience({
       <button
         type="button"
         onClick={closeDetail}
-        className="fixed right-6 top-6 z-[510] flex h-12 w-12 cursor-pointer items-center justify-center border border-white/25 bg-black/70 text-white/70 backdrop-blur-sm transition-all hover:border-white/50 hover:bg-black/90 hover:text-white"
+        className="fixed right-8 bottom-8 z-[510] flex h-12 w-12 cursor-pointer items-center justify-center border border-white/25 bg-black/70 text-white/70 backdrop-blur-sm transition-all hover:border-white/50 hover:bg-black/90 hover:text-white"
         aria-label={lang === "bg" ? "Затвори" : "Close"}
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -589,7 +563,7 @@ export default function PageExperience({
       <button
         type="button"
         onClick={closeDetail}
-        className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] transition-opacity hover:opacity-70"
+        className="fixed left-8 bottom-8 z-[510] flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] transition-opacity hover:opacity-70"
         style={{ color: meta.accent }}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -599,9 +573,11 @@ export default function PageExperience({
       </button>
     )
 
-    const GalleryStrip = (
-      <div className="mt-5 flex gap-2">
-        {meta.gallery.map((src, i) => (
+    const galleryImages = svc.images?.length > 0 ? svc.images : []
+
+    const GalleryStrip = galleryImages.length > 0 ? (
+      <div className="flex gap-2">
+        {galleryImages.map((src, i) => (
           <div
             key={i}
             className="relative h-48 flex-1 overflow-hidden"
@@ -611,7 +587,7 @@ export default function PageExperience({
           </div>
         ))}
       </div>
-    )
+    ) : null
 
     const ActivitiesList = (
       <ul className="flex flex-col gap-2">
@@ -647,12 +623,13 @@ export default function PageExperience({
     if (svcIdx === 0) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
-          <div className="flex min-h-full flex-col lg:flex-row">
-            {/* Left: main image */}
+          {BackBtn}
+          <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+            {/* Left: main image — full height, no scroll */}
             <div className="relative h-64 flex-shrink-0 lg:h-auto lg:w-[44%]">
               <img
                 src={svc.featuredImageUrl ?? "/uploads/bsdc/service-background.jpg"}
@@ -668,28 +645,33 @@ export default function PageExperience({
               />
             </div>
 
-            {/* Right: content */}
-            <div className="flex flex-col justify-center px-8 py-10 lg:flex-1 lg:px-16 lg:py-20">
-              <div className="mb-6">{BackBtn}</div>
-              <div className="mb-3 flex items-center gap-3">
-                <div className="h-px w-8" style={{ background: meta.accent }} />
-                <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Индустриален водолазен отдел" : "Industrial diving"}
-                </span>
+            {/* Right: scrollable content column */}
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-16 lg:py-20">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="h-px w-8" style={{ background: meta.accent }} />
+                  <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
+                    {lang === "bg" ? "Индустриален водолазен отдел" : "Industrial diving"}
+                  </span>
+                </div>
+                <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
+                {svc.content && (
+                  <div
+                    className="mb-6 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
+                    dangerouslySetInnerHTML={{ __html: svc.content }}
+                  />
+                )}
+                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
+                  {lang === "bg" ? "Основни дейности" : "Key activities"}
+                </h3>
+                <div className="mb-6">{ActivitiesList}</div>
+                <div className="mb-2">{StatCards}</div>
               </div>
-              <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
-              {svc.content && (
-                <div
-                  className="mb-6 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                  dangerouslySetInnerHTML={{ __html: svc.content }}
-                />
+              {GalleryStrip ? (
+                <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
+              ) : (
+                <div className="h-24 flex-shrink-0" />
               )}
-              <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                {lang === "bg" ? "Основни дейности" : "Key activities"}
-              </h3>
-              <div className="mb-6">{ActivitiesList}</div>
-              <div className="mb-2">{StatCards}</div>
-              {GalleryStrip}
             </div>
           </div>
         </div>
@@ -700,37 +682,38 @@ export default function PageExperience({
     if (svcIdx === 1) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
-          <div className="min-h-full flex flex-col px-6 py-10 lg:px-16 lg:py-12">
-            <div className="mb-5">{BackBtn}</div>
+          {BackBtn}
 
-            {/* Monitor viewport frame */}
-            <div className="mb-5 border-2" style={{ borderColor: `${meta.accent}60` }}>
-              <div className="relative h-56 overflow-hidden lg:h-72">
-                <img
-                  src={svc.featuredImageUrl ?? "/uploads/bsdc/service-rov-lbv200.jpg"}
-                  alt={svc.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-                {/* Scan-line overlay */}
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,200,232,0.03) 2px, rgba(0,200,232,0.03) 4px)" }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#040e1a]/80 to-transparent" />
-                {/* HUD corners */}
-                {[["left-2 top-2 border-l-2 border-t-2",""],["right-2 top-2 border-r-2 border-t-2",""],["left-2 bottom-2 border-l-2 border-b-2",""],["right-2 bottom-2 border-r-2 border-b-2",""]].map(([cls], i) => (
-                  <div key={i} className={`absolute h-4 w-4 ${cls}`} style={{ borderColor: meta.accent }} />
-                ))}
-                <div className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-wider" style={{ color: meta.accent }}>
-                  ROV LIVE · HD REC
-                </div>
+          {/* Monitor viewport frame — flex-shrink-0 at top */}
+          <div className="flex-shrink-0 mx-6 mt-10 mb-5 border-2 lg:mx-16 lg:mt-12" style={{ borderColor: `${meta.accent}60` }}>
+            <div className="relative h-56 overflow-hidden lg:h-72">
+              <img
+                src={svc.featuredImageUrl ?? "/uploads/bsdc/service-rov-lbv200.jpg"}
+                alt={svc.title}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              {/* Scan-line overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,200,232,0.03) 2px, rgba(0,200,232,0.03) 4px)" }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#040e1a]/80 to-transparent" />
+              {/* HUD corners */}
+              {[["left-2 top-2 border-l-2 border-t-2",""],["right-2 top-2 border-r-2 border-t-2",""],["left-2 bottom-2 border-l-2 border-b-2",""],["right-2 bottom-2 border-r-2 border-b-2",""]].map(([cls], i) => (
+                <div key={i} className={`absolute h-4 w-4 ${cls}`} style={{ borderColor: meta.accent }} />
+              ))}
+              <div className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-wider" style={{ color: meta.accent }}>
+                ROV LIVE · HD REC
               </div>
             </div>
+          </div>
 
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-6 pb-5 lg:px-16">
             <h2 className="mb-5 text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
 
             <div className="grid gap-8 lg:grid-cols-2">
@@ -767,9 +750,13 @@ export default function PageExperience({
                 </div>
               </div>
             </div>
-
-            {GalleryStrip}
           </div>
+
+          {GalleryStrip ? (
+            <div className="flex-shrink-0 px-6 pb-24 lg:px-16">{GalleryStrip}</div>
+          ) : (
+            <div className="h-24 flex-shrink-0" />
+          )}
         </div>
       )
     }
@@ -778,54 +765,60 @@ export default function PageExperience({
     if (svcIdx === 2) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
-          <div className="flex min-h-full flex-col lg:flex-row">
-            {/* Left: data panels + content */}
-            <div className="flex flex-col justify-center px-8 py-10 lg:w-1/2 lg:px-16 lg:py-20">
-              <div className="mb-6">{BackBtn}</div>
-              <div className="mb-3 flex items-center gap-3">
-                <div className="h-px w-8" style={{ background: meta.accent }} />
-                <span className="font-mono text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                  SURVEY / HYDROGRAPHY
-                </span>
-              </div>
-              <h2 className="mb-5 text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
+          {BackBtn}
+          <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+            {/* Left: scrollable text column */}
+            <div className="flex flex-1 flex-col overflow-hidden lg:w-1/2">
+              <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-16 lg:py-20">
+                <div className="mb-3 flex items-center gap-3">
+                  <div className="h-px w-8" style={{ background: meta.accent }} />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
+                    SURVEY / HYDROGRAPHY
+                  </span>
+                </div>
+                <h2 className="mb-5 text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
 
-              {/* Measurement cards */}
-              <div className="mb-5 grid grid-cols-3 gap-2">
-                {meta.cards.map((card, i) => (
+                {/* Measurement cards */}
+                <div className="mb-5 grid grid-cols-3 gap-2">
+                  {meta.cards.map((card, i) => (
+                    <div
+                      key={i}
+                      className="p-3 text-center"
+                      style={{
+                        background: `linear-gradient(135deg, ${meta.accent}15 0%, transparent 100%)`,
+                        border: `1px solid ${meta.accent}30`,
+                      }}
+                    >
+                      <div className="mb-1 font-mono text-base font-black" style={{ color: meta.accent }}>{card.value}</div>
+                      <div className="text-[9px] uppercase tracking-wider text-white/60">{card.title}</div>
+                      <div className="text-[9px] text-white/30">{card.sub}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {svc.content && (
                   <div
-                    key={i}
-                    className="p-3 text-center"
-                    style={{
-                      background: `linear-gradient(135deg, ${meta.accent}15 0%, transparent 100%)`,
-                      border: `1px solid ${meta.accent}30`,
-                    }}
-                  >
-                    <div className="mb-1 font-mono text-base font-black" style={{ color: meta.accent }}>{card.value}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-white/60">{card.title}</div>
-                    <div className="text-[9px] text-white/30">{card.sub}</div>
-                  </div>
-                ))}
+                    className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
+                    dangerouslySetInnerHTML={{ __html: svc.content }}
+                  />
+                )}
+                <h3 className="mb-3 text-[10px] font-mono uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
+                  {lang === "bg" ? "Методи и обхват" : "Methods & scope"}
+                </h3>
+                {ActivitiesList}
               </div>
-
-              {svc.content && (
-                <div
-                  className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                  dangerouslySetInnerHTML={{ __html: svc.content }}
-                />
+              {GalleryStrip ? (
+                <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
+              ) : (
+                <div className="h-24 flex-shrink-0" />
               )}
-              <h3 className="mb-3 text-[10px] font-mono uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                {lang === "bg" ? "Методи и обхват" : "Methods & scope"}
-              </h3>
-              {ActivitiesList}
-              {GalleryStrip}
             </div>
 
-            {/* Right: image with sonar overlay */}
+            {/* Right: image with sonar overlay — full height */}
             <div className="relative hidden lg:block lg:w-1/2">
               <img
                 src={svc.featuredImageUrl ?? "/uploads/bsdc/service-bathymetry-scan.jpg"}
@@ -857,38 +850,39 @@ export default function PageExperience({
     if (svcIdx === 3) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
-          <div className="min-h-full flex flex-col px-6 py-10 lg:px-16 lg:py-12">
-            <div className="mb-5">{BackBtn}</div>
+          {BackBtn}
 
-            {/* Top image strip */}
+          {/* Top image strip — flex-shrink-0 */}
+          <div
+            className="relative flex-shrink-0 h-52 overflow-hidden border-b lg:h-64"
+            style={{ borderColor: `${meta.accent}30` }}
+          >
+            <img
+              src={svc.featuredImageUrl ?? "/uploads/bsdc/project-dam-barrier.jpg"}
+              alt={svc.title}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
             <div
-              className="relative mb-6 h-52 overflow-hidden border-b lg:h-64"
-              style={{ borderColor: `${meta.accent}30` }}
-            >
-              <img
-                src={svc.featuredImageUrl ?? "/uploads/bsdc/project-dam-barrier.jpg"}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, #0c0e14 0%, rgba(12,14,20,0.3) 50%, transparent 100%)" }}
-              />
-              <div className="absolute bottom-4 left-0 right-0 px-0">
-                <div className="mb-1.5 flex items-center gap-3">
-                  <div className="h-px w-8" style={{ background: meta.accent }} />
-                  <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                    {lang === "bg" ? "Управление & Експлоатация" : "Operations & Management"}
-                  </span>
-                </div>
-                <h2 className="text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(to top, #0c0e14 0%, rgba(12,14,20,0.3) 50%, transparent 100%)" }}
+            />
+            <div className="absolute bottom-4 left-6 right-0 lg:left-16">
+              <div className="mb-1.5 flex items-center gap-3">
+                <div className="h-px w-8" style={{ background: meta.accent }} />
+                <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
+                  {lang === "bg" ? "Управление & Експлоатация" : "Operations & Management"}
+                </span>
               </div>
+              <h2 className="text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
             </div>
+          </div>
 
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-6 py-8 lg:px-16">
             <div className="grid gap-8 lg:grid-cols-3">
               {/* Content */}
               <div className="lg:col-span-2">
@@ -924,9 +918,13 @@ export default function PageExperience({
                 </div>
               </div>
             </div>
-
-            {GalleryStrip}
           </div>
+
+          {GalleryStrip ? (
+            <div className="flex-shrink-0 px-6 pb-24 lg:px-16">{GalleryStrip}</div>
+          ) : (
+            <div className="h-24 flex-shrink-0" />
+          )}
         </div>
       )
     }
@@ -935,13 +933,14 @@ export default function PageExperience({
     if (svcIdx === 4) {
       return (
         <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
+          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
           style={{ background: meta.bg }}
         >
           {CloseBtn}
+          {BackBtn}
 
-          {/* Hero image with title overlay */}
-          <div className="relative h-72 flex-shrink-0 lg:h-96">
+          {/* Hero image with title overlay — flex-shrink-0 */}
+          <div className="relative flex-shrink-0 h-72 lg:h-96">
             <img
               src={svc.featuredImageUrl ?? "/uploads/bsdc/project-repair-works-a.jpg"}
               alt={svc.title}
@@ -952,7 +951,6 @@ export default function PageExperience({
               style={{ background: "linear-gradient(to top, #0a0b0d 0%, rgba(10,11,13,0.45) 55%, rgba(10,11,13,0.2) 100%)" }}
             />
             <div className="absolute bottom-0 left-0 right-0 px-8 pb-8 lg:px-16">
-              <div className="mb-4">{BackBtn}</div>
               <div className="mb-2 flex items-center gap-3">
                 <div className="h-px w-8" style={{ background: meta.accent }} />
                 <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
@@ -963,8 +961,8 @@ export default function PageExperience({
             </div>
           </div>
 
-          {/* Content below image */}
-          <div className="px-8 py-8 lg:px-16">
+          {/* Scrollable content below image */}
+          <div className="flex-1 overflow-y-auto px-8 py-8 lg:px-16">
             <div className="grid gap-10 lg:grid-cols-2">
               <div>
                 {svc.content && (
@@ -997,8 +995,13 @@ export default function PageExperience({
                 </div>
               </div>
             </div>
-            {GalleryStrip}
           </div>
+
+          {GalleryStrip ? (
+            <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
+          ) : (
+            <div className="h-24 flex-shrink-0" />
+          )}
         </div>
       )
     }
@@ -1006,35 +1009,41 @@ export default function PageExperience({
     // ── Layout 5: Courses — split, accreditation cards right ─────────────────
     return (
       <div
-        className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-y-auto pointer-events-auto"
+        className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
         style={{ background: meta.bg }}
       >
         {CloseBtn}
-        <div className="flex min-h-full flex-col lg:flex-row">
-          {/* Left: content + activities */}
-          <div className="flex flex-col justify-center px-8 py-10 lg:flex-1 lg:px-16 lg:py-20">
-            <div className="mb-6">{BackBtn}</div>
-            <div className="mb-3 flex items-center gap-3">
-              <div className="h-px w-8" style={{ background: meta.accent }} />
-              <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                {lang === "bg" ? "Обучение & Сертификация" : "Training & Certification"}
-              </span>
+        {BackBtn}
+        <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
+          {/* Left: scrollable text column */}
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-16 lg:py-20">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="h-px w-8" style={{ background: meta.accent }} />
+                <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
+                  {lang === "bg" ? "Обучение & Сертификация" : "Training & Certification"}
+                </span>
+              </div>
+              <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
+              {svc.content && (
+                <div
+                  className="mb-5 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
+                  dangerouslySetInnerHTML={{ __html: svc.content }}
+                />
+              )}
+              <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
+                {lang === "bg" ? "Програми на обучение" : "Training programs"}
+              </h3>
+              {ActivitiesList}
             </div>
-            <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
-            {svc.content && (
-              <div
-                className="mb-5 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                dangerouslySetInnerHTML={{ __html: svc.content }}
-              />
+            {GalleryStrip ? (
+              <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
+            ) : (
+              <div className="h-24 flex-shrink-0" />
             )}
-            <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-              {lang === "bg" ? "Програми на обучение" : "Training programs"}
-            </h3>
-            {ActivitiesList}
-            {GalleryStrip}
           </div>
 
-          {/* Right: image + accreditation cards */}
+          {/* Right: image + accreditation cards — full height */}
           <div
             className="flex flex-col justify-center gap-4 px-8 py-10 lg:w-80 lg:flex-shrink-0 lg:px-10"
             style={{ background: `${meta.accent}08`, borderLeft: `1px solid ${meta.accent}20` }}
@@ -1311,6 +1320,40 @@ export default function PageExperience({
                 <h2 className="text-2xl font-black leading-tight text-[#f0e6cc] md:text-3xl">
                   {lang === "bg" ? "Нашата работа" : "Our Work"}
                 </h2>
+
+                {/* Type + category filters */}
+                <div className="mb-3 flex flex-shrink-0 flex-wrap gap-2">
+                  {(['ALL', 'PROJECT', 'NEWS'] as const).map(f => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setProjectFilter(f)}
+                      className={`border px-3 py-1 text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                        projectFilter === f
+                          ? 'border-[#B87333] text-[#B87333]'
+                          : 'border-[#f0e6cc]/20 text-[#f0e6cc]/40 hover:border-[#f0e6cc]/40 hover:text-[#f0e6cc]/70'
+                      }`}
+                    >
+                      {f === 'ALL' ? (lang === 'bg' ? 'Всички' : 'All')
+                       : f === 'PROJECT' ? (lang === 'bg' ? 'Проекти' : 'Projects')
+                       : (lang === 'bg' ? 'Новини' : 'News')}
+                    </button>
+                  ))}
+                  {uniqueCategories.map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setCategoryFilter(categoryFilter === cat ? 'ALL' : cat)}
+                      className={`border px-3 py-1 text-[10px] uppercase tracking-[0.15em] transition-colors ${
+                        categoryFilter === cat
+                          ? 'border-[#B87333]/60 text-[#B87333]/80'
+                          : 'border-[#f0e6cc]/10 text-[#f0e6cc]/30 hover:border-[#f0e6cc]/30 hover:text-[#f0e6cc]/60'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {totalPages > 1 && (
@@ -1442,12 +1485,6 @@ export default function PageExperience({
 
               {/* Left: company info */}
               <div className="contact-info flex w-full flex-col justify-center bg-[#07111f] px-8 py-10 md:w-2/5 md:px-12">
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="h-px w-6 bg-[#B87333]" />
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
-                    {lang === "bg" ? "Контакти" : "Contact"}
-                  </span>
-                </div>
                 <h2 className="mb-8 text-3xl font-black leading-tight text-white md:text-4xl">
                   {settings?.companyName ?? "BSDC"}
                 </h2>
@@ -1455,7 +1492,7 @@ export default function PageExperience({
                   {settings?.address && (
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#B87333]" />
-                      <span className="text-sm leading-relaxed text-slate-300">{settings.address}</span>
+                      <span className="text-base leading-relaxed text-slate-300">{settings.address}</span>
                     </div>
                   )}
                   {settings?.phones && settings.phones.length > 0 && (
@@ -1466,7 +1503,7 @@ export default function PageExperience({
                           <a
                             key={i}
                             href={`tel:${p.replace(/\s/g, "")}`}
-                            className="text-sm text-slate-300 transition-colors hover:text-white"
+                            className="text-base text-slate-300 transition-colors hover:text-white"
                           >
                             {p}
                           </a>
@@ -1479,7 +1516,7 @@ export default function PageExperience({
                       <Mail className="h-4 w-4 flex-shrink-0 text-[#B87333]" />
                       <a
                         href={`mailto:${settings.email}`}
-                        className="text-sm text-slate-300 transition-colors hover:text-white"
+                        className="text-base text-slate-300 transition-colors hover:text-white"
                       >
                         {settings.email}
                       </a>
@@ -1488,7 +1525,7 @@ export default function PageExperience({
                   {settings?.workingHours && (
                     <div className="flex items-center gap-3">
                       <Clock className="h-4 w-4 flex-shrink-0 text-[#B87333]" />
-                      <span className="text-sm text-slate-300">{settings.workingHours}</span>
+                      <span className="text-base text-slate-300">{settings.workingHours}</span>
                     </div>
                   )}
                 </div>
@@ -1509,14 +1546,14 @@ export default function PageExperience({
                       type="text"
                       required
                       placeholder={lang === "bg" ? "Вашето име" : "Your name"}
-                      className="border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-[#B87333]/50"
+                      className="border-0 border-b border-white/20 bg-transparent px-0 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-b focus:border-[#B87333]/60"
                     />
                     <input
                       name="email"
                       type="email"
                       required
                       placeholder={lang === "bg" ? "Имейл" : "Email"}
-                      className="border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-[#B87333]/50"
+                      className="border-0 border-b border-white/20 bg-transparent px-0 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-b focus:border-[#B87333]/60"
                     />
                   </div>
 
@@ -1525,11 +1562,11 @@ export default function PageExperience({
                       name="phone"
                       type="tel"
                       placeholder={lang === "bg" ? "Телефон" : "Phone"}
-                      className="border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-[#B87333]/50"
+                      className="border-0 border-b border-white/20 bg-transparent px-0 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-b focus:border-[#B87333]/60"
                     />
                     <select
                       name="type"
-                      className="border border-white/[0.08] bg-[#020617] px-4 py-3 text-sm text-slate-300 outline-none transition-colors focus:border-[#B87333]/50"
+                      className="border-0 border-b border-white/20 bg-transparent px-0 py-3 text-sm text-slate-300 outline-none transition-colors focus:border-b focus:border-[#B87333]/60"
                     >
                       <option value="">{lang === "bg" ? "Вид запитване" : "Enquiry type"}</option>
                       <option value="general">{lang === "bg" ? "Обща информация" : "General"}</option>
@@ -1543,7 +1580,7 @@ export default function PageExperience({
                     required
                     rows={4}
                     placeholder={lang === "bg" ? "Вашето съобщение..." : "Your message..."}
-                    className="resize-none border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-colors focus:border-[#B87333]/50"
+                    className="resize-none border-0 border-b border-white/20 bg-transparent px-0 py-3 text-sm text-white placeholder-slate-500 outline-none transition-colors focus:border-b focus:border-[#B87333]/60"
                   />
 
                   <div className="flex items-center gap-4">
@@ -1620,8 +1657,8 @@ export default function PageExperience({
             <footer className="border-t border-white/[0.06] bg-[#020617] px-6 py-5 md:px-16">
               <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:grid-cols-4">
                 {/* Brand */}
-                <div>
-                  <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="mb-3 h-16 w-auto object-contain" style={{ filter: "brightness(0.8)" }} />
+                <div className="text-center">
+                  <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="mx-auto mb-3 block h-20 w-auto object-contain" style={{ filter: "brightness(0.8)" }} />
                   <p className="max-w-[200px] text-sm leading-relaxed text-slate-400">
                     {lang === "bg" ? (
                       <>Подводни технологии и<br />хидротехническо инженерство от 2001 г.</>
