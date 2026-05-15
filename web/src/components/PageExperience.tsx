@@ -43,7 +43,7 @@ interface ServiceMeta {
 
 const SERVICE_META: ServiceMeta[] = [
   {
-    // 0 — Индустриални водолазни услуги
+    // 0 — Индустриални водолазни услуги (diving-services, sortOrder 0)
     accent: "#B87333",
     bg: "#07111f",
     activities: [
@@ -219,8 +219,9 @@ export default function PageExperience({
   })
   const totalPages    = Math.ceil(Math.max(filteredProjects.length, 1) / projectsPerPage)
   const pagedProjects = filteredProjects.slice(projectPage * projectsPerPage, (projectPage + 1) * projectsPerPage)
+  const TYPE_LEVEL_VALUES = new Set(["PROJECT", "NEWS", "Проекти", "Новини", "project", "news"])
   const uniqueCategories = Array.from(
-    new Set(projects.map(p => p.category).filter((c): c is string => Boolean(c)))
+    new Set(projects.map(p => p.category).filter((c): c is string => c !== null && !TYPE_LEVEL_VALUES.has(c)))
   )
   const tickerPartners  = [...partners, ...partners]
 
@@ -1502,13 +1503,37 @@ export default function PageExperience({
 
         {/* ── CONTACT ──────────────────────────────────────────────────────── */}
         <div ref={contactRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
-          <div className="absolute inset-0 flex flex-col">
+
+          {/* Map as full-height dark background */}
+          {settings?.googleMapsEmbed && (
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+              {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
+                <div
+                  className="h-full w-full [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0"
+                  style={{ filter: "invert(90%) hue-rotate(180deg) brightness(0.35)" }}
+                  dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
+                />
+              ) : (
+                <iframe
+                  src={settings.googleMapsEmbed}
+                  className="h-full w-full border-0"
+                  style={{ filter: "invert(90%) hue-rotate(180deg) brightness(0.35)" }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Map"
+                />
+              )}
+            </div>
+          )}
+
+          <div className="absolute inset-0 z-[2] flex flex-col">
 
             {/* Main content */}
             <div className="flex flex-1 overflow-hidden">
 
               {/* Left: company info */}
-              <div className="contact-info flex w-full flex-col justify-center bg-[#07111f] px-8 py-10 md:w-2/5 md:px-12">
+              <div className="contact-info flex w-full flex-col justify-center bg-[#07111f]/95 px-8 py-10 md:w-2/5 md:px-12">
                 <h2 className="mb-8 text-3xl font-black leading-tight text-white md:text-4xl">
                   {settings?.companyName ?? "BSDC"}
                 </h2>
@@ -1556,7 +1581,7 @@ export default function PageExperience({
               </div>
 
               {/* Right: contact form */}
-              <div className="contact-form flex flex-1 flex-col justify-center bg-[#020617] px-8 py-10 md:px-12">
+              <div className="contact-form flex flex-1 flex-col justify-center bg-[#020617]/95 px-8 py-10 md:px-12">
                 <h3 className="mb-6 text-xl font-bold text-white">
                   {lang === "bg" ? "Изпратете запитване" : "Send an Enquiry"}
                 </h3>
@@ -1634,31 +1659,6 @@ export default function PageExperience({
 
             </div>
 
-            {/* Google Maps — full-width row */}
-            {settings?.googleMapsEmbed && (
-              <div
-                className="flex-shrink-0 overflow-hidden border-y border-[#B87333]/30"
-                style={{ height: "280px" }}
-              >
-                {settings.googleMapsEmbed.trim().startsWith("<iframe") ? (
-                  <div
-                    className="h-full w-full opacity-60 [&_iframe]:h-full [&_iframe]:w-full [&_iframe]:border-0"
-                    style={{ filter: "invert(90%) hue-rotate(180deg)" }}
-                    dangerouslySetInnerHTML={{ __html: settings.googleMapsEmbed }}
-                  />
-                ) : (
-                  <iframe
-                    src={settings.googleMapsEmbed}
-                    className="h-full w-full border-0 opacity-60"
-                    style={{ filter: "invert(90%) hue-rotate(180deg)" }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Map"
-                  />
-                )}
-              </div>
-            )}
 
             {/* Partners ticker */}
             {partners.length > 0 && (
@@ -1855,19 +1855,21 @@ export default function PageExperience({
                     style={{ filter: "sepia(25%) contrast(0.9)" }}
                   />
                 )}
-                {/* Gallery placeholder cards if no dedicated gallery */}
-                <div className="mb-5 flex gap-2">
-                  {[
-                    "/uploads/bsdc/project-pic-01.jpg",
-                    "/uploads/bsdc/project-pic-03.jpg",
-                    "/uploads/bsdc/gallery-pic-05.jpg",
-                    "/uploads/bsdc/gallery-pic-06.jpg",
-                  ].map((src, i) => (
-                    <div key={i} className="relative h-16 flex-1 overflow-hidden border border-[#f0e6cc]/[0.06]">
-                      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" style={{ filter: "sepia(20%)" }} />
+                {/* Gallery — uses CMS images if available, else fallback placeholders */}
+                {(() => {
+                  const galleryItems = selectedProject.images.length > 0
+                    ? selectedProject.images.slice(0, 4)
+                    : ["/uploads/bsdc/project-pic-01.jpg", "/uploads/bsdc/project-pic-03.jpg", "/uploads/bsdc/gallery-pic-05.jpg", "/uploads/bsdc/gallery-pic-06.jpg"]
+                  return (
+                    <div className="mb-5 flex gap-2">
+                      {galleryItems.map((src, i) => (
+                        <div key={i} className="relative h-16 flex-1 overflow-hidden border border-[#f0e6cc]/[0.06]">
+                          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" style={{ filter: "sepia(20%)" }} />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  )
+                })()}
                 {selectedProject.content ? (
                   <div
                     className="text-sm leading-relaxed text-[#f0e6cc]/70 [&_li]:mt-1.5 [&_p]:mb-4 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"

@@ -69,8 +69,7 @@ async function main() {
       subheadline: "Намирането на трайно решение е нашата крайна цел!",
       ctaLabel: "Нашите услуги",
       ctaTarget: "#services",
-      // TODO: add hero image URL when confirmed
-      heroImageUrl: null,
+      // heroImageUrl intentionally omitted — never blank a CMS-set image via seed
     },
     create: {
       language: "BG",
@@ -78,8 +77,13 @@ async function main() {
       subheadline: "Намирането на трайно решение е нашата крайна цел!",
       ctaLabel: "Нашите услуги",
       ctaTarget: "#services",
-      heroImageUrl: null,
+      heroImageUrl: "/uploads/bsdc/hero-diver-helmet.jpg",
     },
+  })
+  // Restore hero image only if currently null (never overwrite a CMS-set value)
+  await prisma.homeContent.updateMany({
+    where: { language: "BG", heroImageUrl: null },
+    data: { heroImageUrl: "/uploads/bsdc/hero-diver-helmet.jpg" },
   })
 
   // -----------------------------------------------------------------------
@@ -98,9 +102,7 @@ async function main() {
         "Работим с доказан професионализъм, планиране и дисциплина в управленско, оперативно и административно направление.",
         "Предимствата ни: високо качество, гарантирана работа, операции по целия свят, консултации и достъпни цени.",
       ].join("\n\n"),
-      // TODO: add company/team photo URL when confirmed
-      imageUrl: null,
-      // Statistics counters on bsdc.bg show placeholder 0 values — omitted until real figures are confirmed
+      // imageUrl intentionally omitted — never blank a CMS-set image via seed
       statistics: Prisma.DbNull,
     },
     create: {
@@ -113,9 +115,14 @@ async function main() {
         "Работим с доказан професионализъм, планиране и дисциплина в управленско, оперативно и административно направление.",
         "Предимствата ни: високо качество, гарантирана работа, операции по целия свят, консултации и достъпни цени.",
       ].join("\n\n"),
-      imageUrl: null,
+      imageUrl: "/uploads/bsdc/about-diving-suit-historic.jpg",
       statistics: Prisma.DbNull,
     },
+  })
+  // Restore about image only if currently null (never overwrite a CMS-set value)
+  await prisma.aboutContent.updateMany({
+    where: { language: "BG", imageUrl: null },
+    data: { imageUrl: "/uploads/bsdc/about-diving-suit-historic.jpg" },
   })
 
   // -----------------------------------------------------------------------
@@ -123,11 +130,25 @@ async function main() {
   // Source: https://www.bsdc.bg/service/
   // -----------------------------------------------------------------------
   console.log("Seeding services (BG)…")
+
+  // Delete the 5 empty duplicate records created by a previous wrong-key seed run.
+  // These have no content/images and were created with wrong translationKeys.
+  // The 6 original records (with images) are kept and renamed below.
+  await prisma.service.deleteMany({
+    where: {
+      language: "BG",
+      translationKey: { in: ["industrial-diving", "rov-inspection", "bathymetry", "dam-operator", "hydrotechnical-construction"] },
+    },
+  })
+
+  // Final professional service names — updating original records by their stable translationKeys.
+  // sortOrder reordered to match SERVICE_META layout indices in PageExperience.tsx:
+  //   0 → industrial diving, 1 → ROV, 2 → bathymetry, 3 → dam ops, 4 → hydrotechnical, 5 → courses
   const services = [
     {
       translationKey: "diving-services",
       slug: "diving-services",
-      title: "Водолазни Услуги",
+      title: "Индустриални водолазни услуги",
       shortDescription:
         "Квалифицирани и мотивирани водолази, оборудвани със специализирана съвременна техника за комплексна подводна дейност.",
       sortOrder: 0,
@@ -137,7 +158,7 @@ async function main() {
     {
       translationKey: "rov-services",
       slug: "rov-services",
-      title: "ROV Услуги",
+      title: "ROV инспекции и роботизирано обследване",
       shortDescription:
         "Специализирани услуги с дистанционно управляеми подводни апарати (ROV) с инспекционна апаратура.",
       sortOrder: 1,
@@ -145,39 +166,39 @@ async function main() {
       images: ["/uploads/bsdc/service-rov-lbv300.jpg", "/uploads/bsdc/service-rov-t7.jpg", "/uploads/bsdc/gallery-water-dive.jpg"],
     },
     {
-      translationKey: "micro-dam-operation",
-      slug: "micro-dam-operation",
-      title: "Оператор на Микроязовири",
-      shortDescription:
-        "Технически екип, ръководен от квалифициран хидроспециалист, за поддръжка и обслужване на микроязовири.",
-      sortOrder: 2,
-      featuredImageUrl: "/uploads/bsdc/project-dam-barrier.jpg",
-      images: ["/uploads/bsdc/gallery-sdam.jpg", "/uploads/bsdc/project-lake-reservoir.jpg", "/uploads/bsdc/project-yazlata-a.jpg"],
-    },
-    {
-      translationKey: "port-vessel-dam-repairs",
-      slug: "port-vessel-dam-repairs",
-      title: "Ремонти на Пристанища, Съдове и Язовири",
-      shortDescription:
-        "Хидротехническите съоръжения изискват редовна поддръжка поради постоянното им излагане на природни и климатични условия.",
-      sortOrder: 3,
-      featuredImageUrl: "/uploads/bsdc/service-repair.jpg",
-      images: ["/uploads/bsdc/project-repair-works-a.jpg", "/uploads/bsdc/project-shaft-repair.jpg", "/uploads/bsdc/project-sooruzheniya-a.jpg"],
-    },
-    {
       translationKey: "bathymetry-hydrography",
       slug: "bathymetry-hydrography",
-      title: "Батиметрия и Хидрография",
+      title: "Батиметрия, хидрография и сонарни обследвания",
       shortDescription:
         "Прецизни батиметрични замервания и хидрографски изследвания с детайлни модели за мониторинг на ерозията.",
-      sortOrder: 4,
+      sortOrder: 2,
       featuredImageUrl: "/uploads/bsdc/service-bathymetry-scan.jpg",
       images: ["/uploads/bsdc/service-bathymetry-data-01.jpg", "/uploads/bsdc/service-bathymetry-data-02.jpg", "/uploads/bsdc/service-bathymetry-data-03.jpg", "/uploads/bsdc/service-bathymetry-data-04.jpg"],
     },
     {
+      translationKey: "micro-dam-operation",
+      slug: "micro-dam-operation",
+      title: "Оператор на язовири и съоръженията към тях",
+      shortDescription:
+        "Технически екип, ръководен от квалифициран хидроспециалист, за поддръжка и обслужване на язовири и хидротехнически съоръжения.",
+      sortOrder: 3,
+      featuredImageUrl: "/uploads/bsdc/project-dam-barrier.jpg",
+      images: ["/uploads/bsdc/gallery-sdam.jpg", "/uploads/bsdc/project-yazlata-a.jpg", "/uploads/bsdc/project-gnd-survey.jpg"],
+    },
+    {
+      translationKey: "port-vessel-dam-repairs",
+      slug: "port-vessel-dam-repairs",
+      title: "Хидротехническо строителство и сухи СМР",
+      shortDescription:
+        "Хидротехническите съоръжения изискват редовна поддръжка поради постоянното им излагане на природни и климатични условия.",
+      sortOrder: 4,
+      featuredImageUrl: "/uploads/bsdc/service-repair.jpg",
+      images: ["/uploads/bsdc/project-repair-works-a.jpg", "/uploads/bsdc/project-shaft-repair.jpg", "/uploads/bsdc/project-sooruzheniya-a.jpg"],
+    },
+    {
       translationKey: "diving-courses",
       slug: "diving-courses",
-      title: "Водолазни Курсове",
+      title: "Водолазни курсове NAUI / CMAS",
       shortDescription:
         "Водолазно обучение по системите NAUI и CMAS, включително пробни водолазни изживявания.",
       sortOrder: 5,
