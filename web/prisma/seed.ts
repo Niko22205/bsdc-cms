@@ -123,6 +123,15 @@ async function main() {
     ],
   }
 
+  const aboutStatistics = [
+    { label: "Основана",    value: "2001"  },
+    { label: "Услуги",      value: "6+"    },
+    { label: "Клиенти",     value: "50+"   },
+    { label: "Проекта",     value: "100+"  },
+    { label: "Страни",      value: "3+"    },
+    { label: "Опит (г.)",   value: "20+"   },
+  ]
+
   await prisma.aboutContent.upsert({
     where: { language: "BG" },
     update: {
@@ -138,7 +147,7 @@ async function main() {
       subtitle: "Висококачествени решения",
       content: aboutContent,
       imageUrl: "/uploads/bsdc/about-diving-suit-historic.jpg",
-      statistics: Prisma.DbNull,
+      statistics: aboutStatistics,
       whyUs: aboutWhyUs,
       timeline: aboutTimeline,
     },
@@ -159,6 +168,10 @@ async function main() {
   if (existingAbout && existingAbout.timeline === null) {
     await prisma.aboutContent.update({ where: { language: "BG" }, data: { timeline: aboutTimeline } })
     console.log("  Seeded default timeline items.")
+  }
+  if (existingAbout && existingAbout.statistics === null) {
+    await prisma.aboutContent.update({ where: { language: "BG" }, data: { statistics: aboutStatistics } })
+    console.log("  Seeded default statistics.")
   }
 
   // -----------------------------------------------------------------------
