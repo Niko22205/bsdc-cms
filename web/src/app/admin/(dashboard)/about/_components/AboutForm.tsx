@@ -14,6 +14,8 @@ type AboutFormInitial = {
   content?: string
   imageUrl?: string | null
   statistics?: unknown
+  whyUs?: unknown
+  timeline?: unknown
 }
 
 type Props = {
@@ -27,11 +29,18 @@ const inputCls =
 
 const labelCls = "flex flex-col gap-1.5 text-sm font-medium text-slate-300"
 
+function jsonDefault(value: unknown): string {
+  if (value == null) return ""
+  if (typeof value === "string") return value
+  return JSON.stringify(value, null, 2)
+}
+
+const WHY_US_EXAMPLE = `{"label":"Защо да ни изберете","items":[{"title":"Специализиран екип","desc":"Опит в подводни огледи и ремонти."}]}`
+const TIMELINE_EXAMPLE = `{"label":"Развитие","items":[{"year":"2001","label":"Начало","desc":"Старт на дейността."},{"year":null,"label":"Курсове","desc":"Обучения по NAUI / CMAS."}]}`
+const STATS_EXAMPLE = `[{"label":"Основана","value":"2001"},{"label":"Вида услуги","value":"6+"}]`
+
 export function AboutForm({ language, action, initial = {} }: Props) {
   const [state, formAction, pending] = useActionState<AboutFormState, FormData>(action, {})
-
-  const statisticsDefault =
-    initial.statistics != null ? JSON.stringify(initial.statistics, null, 2) : ""
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -81,16 +90,52 @@ export function AboutForm({ language, action, initial = {} }: Props) {
         aspectRatio="portrait"
       />
 
+      {/* ── JSON fields ──────────────────────────────────────────────────── */}
+
+      <label className={labelCls}>
+        Защо да ни изберете — Why Us Items
+        <span className="text-xs font-normal text-slate-500">
+          JSON array — {WHY_US_EXAMPLE}
+        </span>
+        <textarea
+          name="whyUs"
+          rows={5}
+          defaultValue={jsonDefault(initial.whyUs)}
+          placeholder={WHY_US_EXAMPLE}
+          className={`${inputCls} resize-y font-mono text-xs`}
+        />
+        {state.errors?.whyUs && (
+          <span className="text-xs text-red-400">{state.errors.whyUs}</span>
+        )}
+      </label>
+
+      <label className={labelCls}>
+        Развитие — Timeline Items
+        <span className="text-xs font-normal text-slate-500">
+          JSON array — {TIMELINE_EXAMPLE}
+        </span>
+        <textarea
+          name="timeline"
+          rows={7}
+          defaultValue={jsonDefault(initial.timeline)}
+          placeholder={TIMELINE_EXAMPLE}
+          className={`${inputCls} resize-y font-mono text-xs`}
+        />
+        {state.errors?.timeline && (
+          <span className="text-xs text-red-400">{state.errors.timeline}</span>
+        )}
+      </label>
+
       <label className={labelCls}>
         Statistics
-        <span className="text-xs font-normal text-slate-600">
-          JSON — e.g. {`[{"label":"Projects","value":"120+"}]`}
+        <span className="text-xs font-normal text-slate-500">
+          JSON array — {STATS_EXAMPLE}
         </span>
         <textarea
           name="statistics"
           rows={4}
-          defaultValue={statisticsDefault}
-          placeholder='[{"label":"Projects","value":"120+"}]'
+          defaultValue={jsonDefault(initial.statistics)}
+          placeholder={STATS_EXAMPLE}
           className={`${inputCls} resize-y font-mono text-xs`}
         />
         {state.errors?.statistics && (

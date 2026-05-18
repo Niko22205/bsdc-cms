@@ -47,17 +47,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#B87333",
     bg: "#07111f",
     activities: [
-      "Подводна заварка и термично рязане (EN ISO 15614-9)",
-      "Монтаж и демонтаж на подводни конструкции",
-      "Хидравлично почистване под налягане",
-      "Подводно бетониране с тремие-тръба",
-      "Аварийни интервенции и хипербарни операции",
-      "Катодна защита и епоксидни обмазки",
+      "Подводни огледи и инспекции",
+      "Подводни ремонти и укрепване",
+      "Монтаж и демонтаж на конструкции",
+      "Почистване на подводни повърхности",
+      "Подводно бетониране",
+      "Аварийни водолазни операции",
     ],
     cards: [
-      { title: "Дълбочина", value: "300м", sub: "операционна" },
-      { title: "Стандарт", value: "IDSA/IMCA", sub: "сертификация" },
-      { title: "Опит", value: "20+г.", sub: "индустриален" },
+      { title: "Услуга", value: "Подводна", sub: "индустриална" },
+      { title: "Метод", value: "Водолазен", sub: "инспекции" },
+      { title: "Изход", value: "Доклад", sub: "документиране" },
     ],
   },
   {
@@ -65,17 +65,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#00c8e8",
     bg: "#040e1a",
     activities: [
-      "HD/4K видео инспекция с DVR запис",
-      "Ултразвуково измерване на корозия и стена",
-      "Лазерно измерване на разстояния",
-      "SONAR сканиране при нулева видимост",
-      "Инспекция на тунели и тръбопроводи от 300 мм",
-      "USBL акустично позициониране на дефекти",
+      "Видео и фотодокументиране на конструкции",
+      "Обследване на тръбопроводи и кабели",
+      "ROV инспекции при ограничена видимост",
+      "Инспекция на труднодостъпни зони",
+      "Документиране на дефекти и повреди",
+      "Изготвяне на технически доклади",
     ],
     cards: [
-      { title: "Камера", value: "4K HD", sub: "DVR запис" },
-      { title: "Дълбочина", value: "350м", sub: "LBV300-6" },
-      { title: "Позициониране", value: "USBL", sub: "акустично" },
+      { title: "Метод", value: "ROV", sub: "дистанционен" },
+      { title: "Изход", value: "Видео", sub: "документиране" },
+      { title: "Приложение", value: "Инспекция", sub: "обследване" },
     ],
   },
   {
@@ -83,17 +83,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#38bdf8",
     bg: "#040c18",
     activities: [
-      "Многолъчева батиметрия с 95% покритие",
-      "Side-Scan сонар за текстура на дъното",
-      "Суб-боттом профилиране (геоложки разрез)",
-      "RTK GNSS позициониране ±2 см",
-      "Change Detection мониторинг на утайки",
-      "Обработка в HYPACK / QPS QINSy",
+      "Батиметрични измервания",
+      "Сонарни обследвания на дъното",
+      "Хидрографски изследвания",
+      "Мониторинг на наносни отложения",
+      "Изготвяне на цифрови модели на дъното",
+      "Технически доклади и карти",
     ],
     cards: [
-      { title: "Точност", value: "±2см", sub: "GNSS RTK" },
-      { title: "Стандарт", value: "IHO S-44", sub: "Order 1a" },
-      { title: "Изход", value: "DWG/GIS", sub: "TIN модел" },
+      { title: "Метод", value: "Сонар", sub: "измерване" },
+      { title: "Изход", value: "Карта", sub: "на дъното" },
+      { title: "Данни", value: "Цифров", sub: "модел" },
     ],
   },
   {
@@ -101,17 +101,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#B87333",
     bg: "#0c0e14",
     activities: [
-      "Мониторинг по чл. 138, ал. 2 от Закона за водите",
-      "Ежеседмични и извънредни инспекции",
-      "Управление на изпускателни шахти",
-      "КИС — цифрово наблюдение на ниво и дебит",
-      "Аварийно-предупредителен план (EAP)",
-      "Координация с МОСВ и ДАМТН",
+      "Мониторинг на техническото състояние",
+      "Контрол на водоизпускателните органи",
+      "Профилактика и текущи ремонти",
+      "Технически отчети и документация",
+      "Действия при аварийни ситуации",
+      "Координация с компетентните органи",
     ],
     cards: [
-      { title: "Регулация", value: "ЗВ чл.138", sub: "лицензиран" },
-      { title: "Мониторинг", value: "КИС 24/7", sub: "цифров" },
-      { title: "Обекти", value: "15+", sub: "язовира" },
+      { title: "Тип", value: "Язовири", sub: "оператор" },
+      { title: "Обслужване", value: "Редовно", sub: "поддръжка" },
+      { title: "Изход", value: "Отчет", sub: "документация" },
     ],
   },
   {
@@ -119,17 +119,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#B87333",
     bg: "#0a0b0d",
     activities: [
-      "Подводно бетониране по БДС EN 13670",
-      "Ремонт и укрепване на стоманобетон",
-      "Монтаж на метални затворни органи",
-      "Хидроизолация и епоксидни обмазки",
-      "Катодна защита и горещо поцинковане",
-      "Земно-копни работи и дренажна инфраструктура",
+      "Ремонт на хидротехнически съоръжения",
+      "Подводно и надводно бетониране",
+      "Монтаж на метални конструкции",
+      "Укрепителни и защитни работи",
+      "Хидроизолация на съоръжения",
+      "Строително-монтажни работи",
     ],
     cards: [
-      { title: "Строителство", value: "СМР", sub: "лицензиран" },
-      { title: "Бетон", value: "EN 13670", sub: "стандарт" },
-      { title: "AS-BUILT", value: "Акт 19", sub: "документация" },
+      { title: "Тип", value: "СМР", sub: "строителство" },
+      { title: "Метод", value: "Подводен", sub: "и надводен" },
+      { title: "Изход", value: "Доклад", sub: "документация" },
     ],
   },
   {
@@ -137,20 +137,27 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#60a5fa",
     bg: "#061020",
     activities: [
-      "Try Dive — пробно гмуркане от 90 €",
-      "Open Water Diver NAUI (4 дни + 4 гмуркания)",
-      "Advanced Open Water Diver",
-      "Rescue Diver и Divemaster",
-      "CMAS ★1 / ★★2 / ★★★3 нива",
-      "Инструкторски курс NAUI IDC",
+      "Пробни водолазни изживявания",
+      "Начални курсове по NAUI",
+      "Начални курсове по CMAS",
+      "Курсове за напреднали водолази",
+      "Обучение на открита вода",
+      "Теоретична и практическа подготовка",
     ],
     cards: [
-      { title: "NAUI", value: "Акред.", sub: "партньор" },
-      { title: "CMAS", value: "★★★", sub: "3 нива" },
-      { title: "Цена", value: "от 90€", sub: "Try Dive" },
+      { title: "Система", value: "NAUI", sub: "сертификати" },
+      { title: "Система", value: "CMAS", sub: "сертификати" },
+      { title: "Обучение", value: "Открита", sub: "вода" },
     ],
   },
 ]
+
+// ── About CMS content types ───────────────────────────────────────────────────
+
+interface WhyUsItem    { title: string; desc?: string }
+interface TimelineItem { year: string | null; label: string; desc: string }
+// whyUs JSON shape:   { label?: string; items: WhyUsItem[] }  OR  WhyUsItem[]
+// timeline JSON shape: { label?: string; items: TimelineItem[] } OR TimelineItem[]
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -179,14 +186,30 @@ export default function PageExperience({
   settings,
   lang,
 }: Props) {
-  const allStats = (() => {
-    try {
-      const parsed = JSON.parse((about?.statistics as string) ?? "[]")
-      return Array.isArray(parsed) ? parsed as { value: string; label: string }[] : []
-    } catch { return [] as { value: string; label: string }[] }
-  })()
+  function parseCmsJson<T>(raw: unknown): T[] {
+    if (!raw) return []
+    if (Array.isArray(raw)) return raw as T[]
+    try { return JSON.parse(String(raw)) as T[] } catch { return [] }
+  }
+
+  const allStats   = parseCmsJson<{ value: string; label: string }>(about?.statistics)
   const heroStats  = allStats.slice(0, 3)
   const aboutStats = allStats.slice(3, 6)
+
+  function parseCmsSection<T>(raw: unknown, defaultLabel: string): { label: string; items: T[] } {
+    const val = raw && typeof raw === "object" && !Array.isArray(raw)
+      ? (raw as Record<string, unknown>)
+      : null
+    if (val && Array.isArray(val.items)) {
+      return { label: typeof val.label === "string" ? val.label : defaultLabel, items: val.items as T[] }
+    }
+    return { label: defaultLabel, items: parseCmsJson<T>(raw) }
+  }
+
+  const whyUsSection   = parseCmsSection<WhyUsItem>(about?.whyUs, "Защо да ни изберете")
+  const timelineSection = parseCmsSection<TimelineItem>(about?.timeline, "Развитие")
+  const whyUsItems     = whyUsSection.items
+  const timelineItems  = timelineSection.items
 
   const [currentScene, setCurrentScene]             = useState(0)
   const [activeServiceIndex, setActiveServiceIndex] = useState(0)
@@ -207,12 +230,13 @@ export default function PageExperience({
   const projectGridRef       = useRef<HTMLDivElement>(null)
   const aboutEntranceFired   = useRef(false)
 
-  const rootRef     = useRef<HTMLDivElement>(null)
-  const heroRef     = useRef<HTMLDivElement>(null)
-  const aboutRef    = useRef<HTMLDivElement>(null)
-  const servicesRef = useRef<HTMLDivElement>(null)
-  const projectsRef = useRef<HTMLDivElement>(null)
-  const contactRef  = useRef<HTMLDivElement>(null)
+  const rootRef          = useRef<HTMLDivElement>(null)
+  const heroRef          = useRef<HTMLDivElement>(null)
+  const aboutRef         = useRef<HTMLDivElement>(null)
+  const servicesRef      = useRef<HTMLDivElement>(null)
+  const projectsRef      = useRef<HTMLDivElement>(null)
+  const contactRef       = useRef<HTMLDivElement>(null)
+  const timelineScrollRef = useRef<HTMLDivElement>(null)
 
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
@@ -311,12 +335,14 @@ export default function PageExperience({
     if (sceneIndex === 1) {
       if (aboutEntranceFired.current) return
       aboutEntranceFired.current = true
-      gsap.fromTo(".about-eyebrow", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
-      gsap.fromTo(".about-title",   { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
-      gsap.fromTo(".about-text",    { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
-      gsap.fromTo(".about-image",   { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
-      gsap.fromTo(".about-stats",   { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: delay + 0.3 })
-      gsap.fromTo(".about-certs",   { y: 40,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: delay + 0.4 })
+      gsap.fromTo(".about-eyebrow",  { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
+      gsap.fromTo(".about-title",    { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
+      gsap.fromTo(".about-text",     { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
+      gsap.fromTo(".about-image",    { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
+      gsap.fromTo(".about-stats",    { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.3 })
+      gsap.fromTo(".about-why",      { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.35 })
+      gsap.fromTo(".about-timeline", { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.45 })
+      gsap.fromTo(".about-tl-item",  { y: 16,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, delay: delay + 0.6 })
 
       aboutRef.current?.querySelectorAll("[data-stat-value]").forEach((statEl) => {
         const raw = statEl.getAttribute("data-stat-value") ?? ""
@@ -388,7 +414,7 @@ export default function PageExperience({
     if (nextEl) gsap.set(nextEl, { opacity: next === 2 ? 0.001 : 0 })
 
     // Reset next scene's animated elements to hidden BEFORE dissolve starts
-    if (next === 1) gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats,.about-certs', { opacity: 0, y: 30, x: 0 })
+    if (next === 1) gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats,.about-why,.about-timeline,.about-tl-item', { opacity: 0, y: 20, x: 0 })
     if (next === 2) gsap.set('.services-menu', { opacity: 0, x: -100 })
     if (next === 3) gsap.set('.project-card', { opacity: 0, y: 60 })
     if (next === 4) gsap.set('.contact-info,.contact-form', { opacity: 0, x: 0 })
@@ -454,7 +480,7 @@ export default function PageExperience({
     })
 
     // GSAP owns initial hidden state for non-hero animated elements
-    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats, .about-certs', { opacity: 0, y: 30 })
+    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats, .about-why, .about-timeline, .about-tl-item', { opacity: 0, y: 20 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
     gsap.set('.project-card', { opacity: 0, y: 60 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
@@ -487,6 +513,31 @@ export default function PageExperience({
 
     return () => ctx.revert()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Timeline drag-to-scroll ───────────────────────────────────────────────
+
+  useEffect(() => {
+    const el = timelineScrollRef.current
+    if (!el) return
+    let active = false, startX = 0, scrollStart = 0
+    const onDown = (e: MouseEvent) => {
+      active = true; startX = e.pageX; scrollStart = el.scrollLeft
+      el.style.userSelect = 'none'
+    }
+    const onMove = (e: MouseEvent) => {
+      if (!active) return
+      el.scrollLeft = scrollStart - (e.pageX - startX)
+    }
+    const onUp = () => { active = false; el.style.userSelect = '' }
+    el.addEventListener('mousedown', onDown)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      el.removeEventListener('mousedown', onDown)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [])
 
   // ── Event listeners ───────────────────────────────────────────────────────
 
@@ -1206,33 +1257,111 @@ export default function PageExperience({
         <div ref={aboutRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
           <div className="absolute inset-0 flex flex-col">
 
+            {/* ── Story + image ── */}
             <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
-              <div className="flex w-full flex-col justify-center overflow-hidden bg-[#07111f] px-6 py-8 md:w-1/2 md:px-16 md:py-0">
-                <div className="about-eyebrow mb-3 flex items-center gap-3 md:mb-4">
+
+              {/* Left: story + why-us + certs */}
+              <div className="flex w-full flex-col justify-center overflow-hidden bg-[#07111f] px-6 py-6 md:w-1/2 md:px-12 md:py-0">
+
+                <div className="about-eyebrow mb-3 flex items-center gap-3">
                   <div className="h-px w-6 bg-[#B87333]" />
                   <span className="text-[11px] uppercase tracking-[0.3em] text-[#B87333]">
-                    {about?.subtitle ?? "ВИСОКОКАЧЕСТВЕНИ РЕШЕНИЯ"}
+                    {about?.subtitle ?? "BSDC"}
                   </span>
                 </div>
-                <h2 className="about-title mb-4 text-4xl font-black leading-tight text-white md:mb-6 md:text-5xl lg:text-6xl">
+
+                <h2 className="about-title mb-4 text-3xl font-black leading-tight text-white md:text-4xl lg:text-5xl">
                   {about?.title ?? "За нас"}
                 </h2>
+
                 <div
-                  className="about-text max-h-24 overflow-hidden text-sm leading-relaxed text-slate-300 md:max-h-none"
-                  dangerouslySetInnerHTML={{ __html: about?.content ?? "" }}
+                  className="about-text mb-4 max-h-16 overflow-hidden text-sm leading-relaxed text-slate-300 md:max-h-none"
+                  dangerouslySetInnerHTML={{
+                    __html: (about?.content ?? "").replace(/\n\n+/g, "<br><br>"),
+                  }}
                 />
-                <div className="about-stats mt-5 flex gap-6 md:mt-8 md:gap-10">
-                  {aboutStats.map((stat: { value: string; label: string }, i: number) => (
-                    <div key={i}>
-                      <div className="text-2xl font-black text-[#B87333] md:text-3xl" data-stat-value={stat.value}>
-                        {stat.value}
+
+                {/* Stats — only when CMS contains them */}
+                {aboutStats.length > 0 && (
+                  <div className="about-stats mb-4 flex gap-6 border-t border-white/[0.06] pt-3">
+                    {aboutStats.map((stat, i) => (
+                      <div key={i}>
+                        <div data-stat-value={stat.value} className="text-xl font-black text-white">
+                          {stat.value}
+                        </div>
+                        <div className="mt-0.5 text-[9px] uppercase tracking-[0.2em] text-slate-400">
+                          {stat.label}
+                        </div>
                       </div>
-                      <div className="mt-1 text-[10px] uppercase tracking-[0.2em] text-slate-400">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Why-us + Certs two-column (certs only when CMS has them) */}
+                {(whyUsItems.length > 0 || certificates.length > 0) && (
+                  <div
+                    className={`about-why grid gap-x-8 gap-y-4 ${
+                      certificates.length > 0 ? "grid-cols-2" : "grid-cols-1"
+                    }`}
+                  >
+                    {/* Why-us column */}
+                    {whyUsItems.length > 0 && (
+                      <div>
+                        <div className="mb-2.5 flex items-center gap-2">
+                          <div className="h-px w-4 bg-[#B87333]/50" />
+                          <span className="text-[10px] uppercase tracking-[0.28em] text-[#B87333]/80">
+                            {whyUsSection.label}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {whyUsItems.map((item, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <span className="mt-[3px] flex-shrink-0 text-xs leading-none text-[#B87333]">▸</span>
+                              <div>
+                                <div className="text-sm font-semibold leading-snug text-white">
+                                  {item.title}
+                                </div>
+                                {item.desc && (
+                                  <div className="text-xs leading-relaxed text-slate-400">
+                                    {item.desc}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Certs column */}
+                    {certificates.length > 0 && (
+                      <div>
+                        <div className="mb-2.5 flex items-center gap-2">
+                          <div className="h-px w-4 bg-[#B87333]/50" />
+                          <span className="text-[10px] uppercase tracking-[0.28em] text-[#B87333]/80">
+                            Сертификати
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {certificates.map((cert) => (
+                            <div
+                              key={cert.id}
+                              className="border border-[#B87333]/30 bg-[#B87333]/[0.05] px-3 py-2"
+                            >
+                              <div className="text-sm font-semibold text-slate-100">{cert.title}</div>
+                              {cert.issuer && (
+                                <div className="text-xs text-slate-500">{cert.issuer}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
+              {/* Right: image */}
               <div className="about-image relative hidden overflow-hidden md:block md:w-1/2">
                 {about?.imageUrl ? (
                   <>
@@ -1241,7 +1370,7 @@ export default function PageExperience({
                       alt="About BSDC"
                       className="absolute inset-0 h-full w-full object-cover object-center"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#07111f] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#07111f] via-[#07111f]/30 to-transparent" />
                   </>
                 ) : (
                   <div className="absolute inset-0 bg-[#07111f]" />
@@ -1249,27 +1378,95 @@ export default function PageExperience({
               </div>
             </div>
 
-            <div className="border-t border-white/[0.06]" style={{ background: "rgba(2,6,23,0.95)" }}>
-              <div className="px-6 py-4 md:px-16 md:py-6">
-                <p className="about-certs mb-3 text-base font-bold text-white md:mb-4 md:text-xl">Сертификати</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {certificates.map((cert) => (
-                    <div
-                      key={cert.id}
-                      className="w-36 border border-white/[0.08] p-2.5 transition-colors hover:border-[#B87333]/40 md:w-44 md:p-3"
-                    >
-                      <div className="mb-1 text-xs font-semibold leading-tight text-white">{cert.title}</div>
-                      <div className="mb-1 text-[10px] uppercase text-[#B87333]">{cert.issuer}</div>
-                      {cert.issueDate && (
-                        <div className="text-[10px] text-slate-400">
-                          {new Date(cert.issueDate).toLocaleDateString("bg-BG")}
-                        </div>
-                      )}
+            {/* ── Development timeline — curved spline, centered ── */}
+            {timelineItems.length > 0 && (
+              <div
+                className="about-timeline flex-shrink-0 border-t border-white/[0.06]"
+                style={{ background: "rgba(2,6,23,0.97)", height: "14rem" }}
+              >
+                <div className="relative h-full overflow-hidden">
+                  <div className="absolute left-6 top-2.5 z-10 select-none text-[9px] uppercase tracking-[0.3em] text-[#B87333]/50 md:left-12">
+                    {timelineSection.label}
+                  </div>
+                  <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-14 bg-gradient-to-r from-[#020617] to-transparent" />
+                  <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-14 bg-gradient-to-l from-[#020617] to-transparent" />
+
+                  {/* Drag-to-scroll, centered content */}
+                  <div
+                    ref={timelineScrollRef}
+                    className="absolute inset-0 top-8 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
+                    style={{ scrollbarWidth: "none" }}
+                  >
+                    <div className="flex min-h-full items-center justify-center px-8">
+                      {/* Fixed-width inner: 6 nodes × 160px + margins */}
+                      <div className="relative flex-shrink-0 select-none" style={{ width: 960, height: 176 }}>
+
+                        {/* Cubic bezier S-curve through alternating node heights */}
+                        <svg
+                          className="pointer-events-none absolute left-0 top-0"
+                          width="960"
+                          height="176"
+                          viewBox="0 0 960 176"
+                          fill="none"
+                        >
+                          <path
+                            d="M 80,64 C 160,64 160,112 240,112 C 320,112 320,64 400,64 C 480,64 480,112 560,112 C 640,112 640,64 720,64 C 800,64 800,112 880,112"
+                            stroke="rgba(184,115,51,0.4)"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+
+                        {timelineItems.map((item, i) => {
+                          const cx = 80 + i * 160
+                          const isEven = i % 2 === 0
+                          const cy = isEven ? 64 : 112
+
+                          return (
+                            <div
+                              key={i}
+                              className="about-tl-item absolute"
+                              style={{ left: cx - 70, width: 140 }}
+                            >
+                              {/* Oval marker */}
+                              <div
+                                className="absolute z-10"
+                                style={{
+                                  left: "50%",
+                                  top: cy - 8,
+                                  transform: "translateX(-50%)",
+                                  width: 16,
+                                  height: 16,
+                                  borderRadius: "50%",
+                                  border: "2px solid #B87333",
+                                  background: item.year ? "#B87333" : "rgba(2,6,23,0.97)",
+                                  boxShadow: item.year
+                                    ? "0 0 12px rgba(184,115,51,0.6)"
+                                    : "none",
+                                }}
+                              />
+
+                              {/* Card — even nodes above line, odd nodes below */}
+                              <div
+                                className="absolute border border-[#B87333]/25 bg-[#07111f]/90 px-2 py-1.5 transition-colors hover:border-[#B87333]/55"
+                                style={{ width: 140, ...(isEven ? { top: 2 } : { top: cy + 14 }) }}
+                              >
+                                <div className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-[#B87333]">
+                                  {item.year ? `${item.year} · ${item.label}` : item.label}
+                                </div>
+                                <p className="line-clamp-2 text-[10px] leading-snug text-slate-400">
+                                  {item.desc}
+                                </p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
           </div>
         </div>

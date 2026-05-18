@@ -90,6 +90,8 @@ model AboutContent {
   content    String
   imageUrl   String?
   statistics Json?
+  whyUs      Json?
+  timeline   Json?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
