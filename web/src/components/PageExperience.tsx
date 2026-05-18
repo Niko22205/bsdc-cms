@@ -233,6 +233,7 @@ export default function PageExperience({
   const rootRef          = useRef<HTMLDivElement>(null)
   const heroRef          = useRef<HTMLDivElement>(null)
   const aboutRef         = useRef<HTMLDivElement>(null)
+  const aboutScrollRef   = useRef<HTMLDivElement>(null)
   const servicesRef      = useRef<HTMLDivElement>(null)
   const projectsRef      = useRef<HTMLDivElement>(null)
   const contactRef       = useRef<HTMLDivElement>(null)
@@ -335,14 +336,13 @@ export default function PageExperience({
     if (sceneIndex === 1) {
       if (aboutEntranceFired.current) return
       aboutEntranceFired.current = true
-      gsap.fromTo(".about-eyebrow",  { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
-      gsap.fromTo(".about-title",    { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
-      gsap.fromTo(".about-text",     { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
-      gsap.fromTo(".about-image",    { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
-      gsap.fromTo(".about-stats",    { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.3 })
-      gsap.fromTo(".about-why",      { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.35 })
-      gsap.fromTo(".about-timeline", { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.45 })
-      gsap.fromTo(".about-tl-item",  { y: 16,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, delay: delay + 0.6 })
+      gsap.fromTo(".about-eyebrow",    { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
+      gsap.fromTo(".about-title",      { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
+      gsap.fromTo(".about-text",       { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
+      gsap.fromTo(".about-image",      { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
+      gsap.fromTo(".about-stats",      { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.3 })
+      // Depth cards: opacity only — CSS rotation preserved, no y to avoid transform conflict
+      gsap.fromTo(".about-depth-card", { opacity: 0 }, { opacity: 1, duration: 0.6, stagger: 0.12, delay: delay + 0.4 })
 
       aboutRef.current?.querySelectorAll("[data-stat-value]").forEach((statEl) => {
         const raw = statEl.getAttribute("data-stat-value") ?? ""
@@ -414,7 +414,11 @@ export default function PageExperience({
     if (nextEl) gsap.set(nextEl, { opacity: next === 2 ? 0.001 : 0 })
 
     // Reset next scene's animated elements to hidden BEFORE dissolve starts
-    if (next === 1) gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats,.about-why,.about-timeline,.about-tl-item', { opacity: 0, y: 20, x: 0 })
+    if (next === 1) {
+      gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats', { opacity: 0, y: 20, x: 0 })
+      gsap.set('.about-depth-card', { opacity: 0 })
+      aboutScrollRef.current?.scrollTo({ top: 0 })
+    }
     if (next === 2) gsap.set('.services-menu', { opacity: 0, x: -100 })
     if (next === 3) gsap.set('.project-card', { opacity: 0, y: 60 })
     if (next === 4) gsap.set('.contact-info,.contact-form', { opacity: 0, x: 0 })
@@ -480,7 +484,8 @@ export default function PageExperience({
     })
 
     // GSAP owns initial hidden state for non-hero animated elements
-    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats, .about-why, .about-timeline, .about-tl-item', { opacity: 0, y: 20 })
+    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats', { opacity: 0, y: 20 })
+    gsap.set('.about-depth-card', { opacity: 0 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
     gsap.set('.project-card', { opacity: 0, y: 60 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
@@ -546,6 +551,18 @@ export default function PageExperience({
       if (selectedProjectRef.current || activeServiceRef.current) return
       e.preventDefault()
       if (isAnimating.current) return
+
+      // On About scene: let inner container scroll before navigating to next/prev scene
+      if (currentSceneRef.current === 1) {
+        const el = aboutScrollRef.current
+        if (el) {
+          const atTop    = el.scrollTop <= 2
+          const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4
+          if (e.deltaY > 50 && !atBottom) { el.scrollBy({ top: e.deltaY, behavior: "smooth" }); return }
+          if (e.deltaY < -50 && !atTop)   { el.scrollBy({ top: e.deltaY, behavior: "smooth" }); return }
+        }
+      }
+
       if (e.deltaY > 50)  goToScene(currentSceneRef.current + 1)
       else if (e.deltaY < -50) goToScene(currentSceneRef.current - 1)
     }
@@ -1255,206 +1272,232 @@ export default function PageExperience({
 
         {/* ── ABOUT ────────────────────────────────────────────────────────── */}
         <div ref={aboutRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
-          <div className="absolute inset-0 flex flex-col">
+          {/* Vertically scrollable inner container — wheel handler manages scene vs inner scroll */}
+          <div
+            ref={aboutScrollRef}
+            className="absolute inset-0 overflow-y-auto bg-[#07111f]"
+            style={{ scrollbarWidth: "none" }}
+          >
 
-            {/* ── Story + image ── */}
-            <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+            {/* ── Zone 1: Story + layered image (full viewport height) ── */}
+            <div className="relative flex min-h-screen flex-col md:flex-row">
 
-              {/* Left: story + why-us + certs */}
-              <div className="flex w-full flex-col justify-center overflow-hidden bg-[#07111f] px-6 py-6 md:w-1/2 md:px-12 md:py-0">
-
-                <div className="about-eyebrow mb-3 flex items-center gap-3">
-                  <div className="h-px w-6 bg-[#B87333]" />
+              {/* Left: narrative */}
+              <div className="flex w-full flex-col justify-center px-8 py-20 md:w-[52%] md:px-14">
+                <div className="about-eyebrow mb-4 flex items-center gap-3">
+                  <div className="h-px w-8 bg-[#B87333]" />
                   <span className="text-[11px] uppercase tracking-[0.3em] text-[#B87333]">
                     {about?.subtitle ?? "BSDC"}
                   </span>
                 </div>
 
-                <h2 className="about-title mb-4 text-3xl font-black leading-tight text-white md:text-4xl lg:text-5xl">
+                <h2 className="about-title mb-6 text-3xl font-black leading-tight text-white md:text-4xl lg:text-[2.6rem]">
                   {about?.title ?? "За нас"}
                 </h2>
 
                 <div
-                  className="about-text mb-4 max-h-16 overflow-hidden text-sm leading-relaxed text-slate-300 md:max-h-none"
+                  className="about-text mb-8 text-sm leading-relaxed text-slate-300 md:text-[15px]"
                   dangerouslySetInnerHTML={{
                     __html: (about?.content ?? "").replace(/\n\n+/g, "<br><br>"),
                   }}
                 />
 
-                {/* Stats — only when CMS contains them */}
-                {aboutStats.length > 0 && (
-                  <div className="about-stats mb-4 flex gap-6 border-t border-white/[0.06] pt-3">
-                    {aboutStats.map((stat, i) => (
-                      <div key={i}>
-                        <div data-stat-value={stat.value} className="text-xl font-black text-white">
+                {/* All 6 stat cards in a responsive grid */}
+                {allStats.length > 0 && (
+                  <div className="about-stats grid grid-cols-3 gap-3 border-t border-white/[0.07] pt-6 md:grid-cols-6">
+                    {allStats.map((stat, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center rounded border border-white/[0.07] bg-white/[0.03] px-2 py-3 text-center"
+                      >
+                        <div data-stat-value={stat.value} className="text-xl font-black text-white md:text-2xl">
                           {stat.value}
                         </div>
-                        <div className="mt-0.5 text-[9px] uppercase tracking-[0.2em] text-slate-400">
+                        <div className="mt-1 text-[9px] uppercase tracking-[0.14em] text-slate-400">
                           {stat.label}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-
-                {/* Why-us + Certs two-column (certs only when CMS has them) */}
-                {(whyUsItems.length > 0 || certificates.length > 0) && (
-                  <div
-                    className={`about-why grid gap-x-8 gap-y-4 ${
-                      certificates.length > 0 ? "grid-cols-2" : "grid-cols-1"
-                    }`}
-                  >
-                    {/* Why-us column */}
-                    {whyUsItems.length > 0 && (
-                      <div>
-                        <div className="mb-2.5 flex items-center gap-2">
-                          <div className="h-px w-4 bg-[#B87333]/50" />
-                          <span className="text-[10px] uppercase tracking-[0.28em] text-[#B87333]/80">
-                            {whyUsSection.label}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {whyUsItems.map((item, i) => (
-                            <div key={i} className="flex items-start gap-2">
-                              <span className="mt-[3px] flex-shrink-0 text-xs leading-none text-[#B87333]">▸</span>
-                              <div>
-                                <div className="text-sm font-semibold leading-snug text-white">
-                                  {item.title}
-                                </div>
-                                {item.desc && (
-                                  <div className="text-xs leading-relaxed text-slate-400">
-                                    {item.desc}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Certs column */}
-                    {certificates.length > 0 && (
-                      <div>
-                        <div className="mb-2.5 flex items-center gap-2">
-                          <div className="h-px w-4 bg-[#B87333]/50" />
-                          <span className="text-[10px] uppercase tracking-[0.28em] text-[#B87333]/80">
-                            Сертификати
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {certificates.map((cert) => (
-                            <div
-                              key={cert.id}
-                              className="border border-[#B87333]/30 bg-[#B87333]/[0.05] px-3 py-2"
-                            >
-                              <div className="text-sm font-semibold text-slate-100">{cert.title}</div>
-                              {cert.issuer && (
-                                <div className="text-xs text-slate-500">{cert.issuer}</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
-              {/* Right: image */}
-              <div className="about-image relative hidden overflow-hidden md:block md:w-1/2">
+              {/* Right: image + floating depth cards */}
+              <div className="about-image relative hidden overflow-hidden md:flex md:w-[48%]">
                 {about?.imageUrl ? (
-                  <>
-                    <img
-                      src={about.imageUrl}
-                      alt="About BSDC"
-                      className="absolute inset-0 h-full w-full object-cover object-center"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#07111f] via-[#07111f]/30 to-transparent" />
-                  </>
+                  <img
+                    src={about.imageUrl}
+                    alt="About BSDC"
+                    className="absolute inset-0 h-full w-full object-cover object-center"
+                  />
                 ) : (
-                  <div className="absolute inset-0 bg-[#07111f]" />
+                  <div className="absolute inset-0 bg-[#040c18]" />
                 )}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#07111f] via-[#07111f]/40 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-[#07111f] to-transparent" />
+
+                {/* Depth card 1 — copper, top-right, tilted */}
+                <div
+                  className="about-depth-card absolute right-8 top-14 w-44 border border-[#B87333]/60 bg-[#07111f]/90 px-4 py-3 backdrop-blur-sm"
+                  style={{ transform: "rotate(-2.5deg)", boxShadow: "0 8px 32px rgba(0,0,0,0.55)" }}
+                >
+                  <div className="text-[9px] uppercase tracking-[0.28em] text-[#B87333]">Основана</div>
+                  <div className="text-3xl font-black text-white">2001</div>
+                  <div className="mt-0.5 text-[11px] text-slate-400">Варна, България</div>
+                </div>
+
+                {/* Depth card 2 — white border, bottom-left, tilted opposite */}
+                <div
+                  className="about-depth-card absolute bottom-16 left-6 w-52 border border-white/[0.14] bg-[#0d1f33]/85 px-5 py-4 backdrop-blur-sm"
+                  style={{ transform: "rotate(1.2deg)", boxShadow: "0 12px 40px rgba(0,0,0,0.65)" }}
+                >
+                  <div className="text-[9px] uppercase tracking-[0.28em] text-[#B87333]">Опит</div>
+                  <div className="text-2xl font-black text-white">20+ години</div>
+                  <div className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                    Подводно строителство,<br />инспекции и ремонти
+                  </div>
+                </div>
+
+                {/* Depth card 3 — copper tint, center-right badge */}
+                <div
+                  className="about-depth-card absolute right-16 top-[46%] w-36 -translate-y-1/2 border border-[#B87333]/30 bg-[#B87333]/[0.10] px-3 py-3 text-center backdrop-blur-sm"
+                  style={{ boxShadow: "0 4px 20px rgba(184,115,51,0.12)" }}
+                >
+                  <div className="text-[9px] uppercase tracking-[0.25em] text-[#B87333]">Операции</div>
+                  <div className="mt-0.5 text-base font-bold text-white">Световни</div>
+                </div>
               </div>
             </div>
 
-            {/* ── Development timeline — curved spline, centered ── */}
+            {/* ── Zone 2: Why Us — card grid ── */}
+            {whyUsItems.length > 0 && (
+              <div className="bg-[#020617] px-8 py-14 md:px-14">
+                <div className="mb-8 flex items-center gap-3">
+                  <div className="h-px w-6 bg-[#B87333]" />
+                  <span className="text-[11px] uppercase tracking-[0.3em] text-[#B87333]">
+                    {whyUsSection.label}
+                  </span>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {whyUsItems.map((item, i) => (
+                    <div
+                      key={i}
+                      className="border border-white/[0.07] bg-white/[0.02] px-5 py-5 transition-colors hover:border-[#B87333]/40 hover:bg-white/[0.04]"
+                    >
+                      <div className="mb-2 flex items-start gap-2">
+                        <span className="mt-[3px] flex-shrink-0 text-xs text-[#B87333]">▸</span>
+                        <div className="text-sm font-semibold leading-snug text-white md:text-base">
+                          {item.title}
+                        </div>
+                      </div>
+                      {item.desc && (
+                        <div className="pl-4 text-sm leading-relaxed text-slate-400">
+                          {item.desc}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Zone 3: Certificates — card grid ── */}
+            {certificates.length > 0 && (
+              <div className="bg-[#07111f] px-8 py-14 md:px-14">
+                <div className="mb-8 flex items-center gap-3">
+                  <div className="h-px w-6 bg-[#B87333]" />
+                  <span className="text-[11px] uppercase tracking-[0.3em] text-[#B87333]">Сертификати</span>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {certificates.map((cert) => (
+                    <div
+                      key={cert.id}
+                      className="border border-[#B87333]/30 bg-[#B87333]/[0.04] px-5 py-5 transition-colors hover:border-[#B87333]/55 hover:bg-[#B87333]/[0.07]"
+                    >
+                      <div className="mb-1 text-sm font-bold leading-snug text-slate-100 md:text-base">
+                        {cert.title}
+                      </div>
+                      {cert.issuer && (
+                        <div className="text-sm text-slate-400">{cert.issuer}</div>
+                      )}
+                      {cert.issueDate && (
+                        <div className="mt-2 text-[10px] uppercase tracking-widest text-[#B87333]/70">
+                          {new Date(cert.issueDate).getFullYear()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Zone 4: Timeline — flat line, alternating cards, drag-scroll ── */}
             {timelineItems.length > 0 && (
-              <div
-                className="about-timeline flex-shrink-0 border-t border-white/[0.06]"
-                style={{ background: "rgba(2,6,23,0.97)", height: "14rem" }}
-              >
-                <div className="relative h-full overflow-hidden">
-                  <div className="absolute left-6 top-2.5 z-10 select-none text-[9px] uppercase tracking-[0.3em] text-[#B87333]/50 md:left-12">
-                    {timelineSection.label}
+              <div className="bg-[#020617] py-14">
+                <div className="mb-10 px-8 md:px-14">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px w-6 bg-[#B87333]" />
+                    <span className="text-[11px] uppercase tracking-[0.3em] text-[#B87333]">
+                      {timelineSection.label}
+                    </span>
                   </div>
+                </div>
+
+                <div className="relative">
                   <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-14 bg-gradient-to-r from-[#020617] to-transparent" />
                   <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-14 bg-gradient-to-l from-[#020617] to-transparent" />
 
-                  {/* Drag-to-scroll, centered content */}
                   <div
                     ref={timelineScrollRef}
-                    className="absolute inset-0 top-8 cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-                    style={{ scrollbarWidth: "none" }}
+                    className="cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
+                    style={{ scrollbarWidth: "none", height: 310 }}
                   >
-                    <div className="flex min-h-full items-center justify-center px-8">
-                      {/* Fixed-width inner: 6 nodes × 160px + margins */}
-                      <div className="relative flex-shrink-0 select-none" style={{ width: 960, height: 176 }}>
+                    <div className="relative px-16" style={{ minWidth: "max-content" }}>
+                      {/* Flat copper connector line at vertical midpoint */}
+                      <div
+                        className="pointer-events-none absolute"
+                        style={{ left: 40, right: 40, top: 153, height: 1, background: "rgba(184,115,51,0.35)" }}
+                      />
 
-                        {/* Cubic bezier S-curve through alternating node heights */}
-                        <svg
-                          className="pointer-events-none absolute left-0 top-0"
-                          width="960"
-                          height="176"
-                          viewBox="0 0 960 176"
-                          fill="none"
-                        >
-                          <path
-                            d="M 80,64 C 160,64 160,112 240,112 C 320,112 320,64 400,64 C 480,64 480,112 560,112 C 640,112 640,64 720,64 C 800,64 800,112 880,112"
-                            stroke="rgba(184,115,51,0.4)"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                          />
-                        </svg>
-
+                      <div className="flex" style={{ height: 310 }}>
                         {timelineItems.map((item, i) => {
-                          const cx = 80 + i * 160
                           const isEven = i % 2 === 0
-                          const cy = isEven ? 64 : 112
-
                           return (
                             <div
                               key={i}
-                              className="about-tl-item absolute"
-                              style={{ left: cx - 70, width: 140 }}
+                              className="about-tl-item relative flex-shrink-0"
+                              style={{ width: 210 }}
                             >
-                              {/* Oval marker */}
+                              {/* Connector dot on line */}
                               <div
                                 className="absolute z-10"
                                 style={{
                                   left: "50%",
-                                  top: cy - 8,
+                                  top: 146,
                                   transform: "translateX(-50%)",
-                                  width: 16,
-                                  height: 16,
+                                  width: 14,
+                                  height: 14,
                                   borderRadius: "50%",
                                   border: "2px solid #B87333",
-                                  background: item.year ? "#B87333" : "rgba(2,6,23,0.97)",
-                                  boxShadow: item.year
-                                    ? "0 0 12px rgba(184,115,51,0.6)"
-                                    : "none",
+                                  background: item.year ? "#B87333" : "rgba(2,6,23,1)",
+                                  boxShadow: item.year ? "0 0 12px rgba(184,115,51,0.55)" : "none",
                                 }}
                               />
 
-                              {/* Card — even nodes above line, odd nodes below */}
+                              {/* Card: even above line, odd below */}
                               <div
-                                className="absolute border border-[#B87333]/25 bg-[#07111f]/90 px-2 py-1.5 transition-colors hover:border-[#B87333]/55"
-                                style={{ width: 140, ...(isEven ? { top: 2 } : { top: cy + 14 }) }}
+                                className="absolute mx-3 border border-[#B87333]/25 bg-[#07111f]/95 px-3 py-3 transition-colors hover:border-[#B87333]/50"
+                                style={isEven ? { top: 6, bottom: 167 } : { top: 167, bottom: 6 }}
                               >
-                                <div className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.15em] text-[#B87333]">
-                                  {item.year ? `${item.year} · ${item.label}` : item.label}
+                                {item.year && (
+                                  <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#B87333]">
+                                    {item.year}
+                                  </div>
+                                )}
+                                <div className="text-sm font-semibold leading-snug text-white">
+                                  {item.label}
                                 </div>
-                                <p className="line-clamp-2 text-[10px] leading-snug text-slate-400">
+                                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">
                                   {item.desc}
                                 </p>
                               </div>
