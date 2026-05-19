@@ -168,17 +168,21 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
-const CYLINDER_DEPTH = 500  // translateZ range (depth)
-const CYLINDER_Y     = 300  // translateY range (vertical spread)
 const CARD_ANGLE_STEP = 60  // degrees per card slot (360 / 6)
 
+function wheelScale(cardIdx: number, angle: number): number {
+  const a = (cardIdx * CARD_ANGLE_STEP + angle) * Math.PI / 180
+  return (Math.cos(a) + 1.5) / 2.5
+}
+
 function computeFrontIndex(angle: number, count: number): number {
+  let best = 0
+  let bestScale = -Infinity
   for (let i = 0; i < count; i++) {
-    const raw = (i * CARD_ANGLE_STEP + angle) % 360
-    const normalized = ((raw % 360) + 360) % 360
-    if (normalized < 30 || normalized > 330) return i
+    const s = wheelScale(i, angle)
+    if (s > bestScale) { bestScale = s; best = i }
   }
-  return 0
+  return best
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -238,7 +242,7 @@ export default function PageExperience({
   const timelineItems  = timelineSection.items
 
   const [currentScene, setCurrentScene]             = useState(0)
-  const [cylinderRotation, setCylinderRotation]        = useState(0)
+  const [wheelAngle, setWheelAngle]        = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -250,7 +254,7 @@ export default function PageExperience({
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
   const activeServiceRef     = useRef<Service | null>(null)
-  const cylinderRotationRef       = useRef(0)
+  const wheelAngleRef       = useRef(0)
   const isAnimating            = useRef(false)
   const touchStartY            = useRef(0)
   const projectGridRef         = useRef<HTMLDivElement>(null)
@@ -337,7 +341,7 @@ export default function PageExperience({
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
-  useEffect(() => { cylinderRotationRef.current = cylinderRotation }, [cylinderRotation])
+  useEffect(() => { wheelAngleRef.current = wheelAngle }, [wheelAngle])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
 
   // ── Transitions ───────────────────────────────────────────────────────────
@@ -427,8 +431,8 @@ export default function PageExperience({
     if (current === 1) aboutEntranceFired.current = false
     if (current === 2) {
       servicesEntranceFired.current = false
-      cylinderRotationRef.current = 0
-      setCylinderRotation(0)
+      wheelAngleRef.current = 0
+      setWheelAngle(0)
     }
 
     isAnimating.current = true
@@ -582,25 +586,26 @@ export default function PageExperience({
         }
       }
 
-      // On Services scene: spin vertical cylinder; navigate at full-rotation boundaries
+      // On Services scene: spin ferris wheel; navigate at boundary cards
       if (currentSceneRef.current === 2) {
-        const norm = ((cylinderRotationRef.current % 360) + 360) % 360
-        if (e.deltaY > 50) {
-          if (norm === 5 * CARD_ANGLE_STEP) {
+        if (e.deltaY > 30) {
+          const fi = computeFrontIndex(wheelAngleRef.current, services.length)
+          if (fi === services.length - 1) {
             goToScene(3)
           } else {
-            const next = cylinderRotationRef.current + CARD_ANGLE_STEP
-            cylinderRotationRef.current = next
-            setCylinderRotation(next)
+            const next = wheelAngleRef.current - CARD_ANGLE_STEP
+            wheelAngleRef.current = next
+            setWheelAngle(next)
           }
           return
-        } else if (e.deltaY < -50) {
-          if (norm === 0) {
+        } else if (e.deltaY < -30) {
+          const fi = computeFrontIndex(wheelAngleRef.current, services.length)
+          if (fi === 0) {
             goToScene(1)
           } else {
-            const next = cylinderRotationRef.current - CARD_ANGLE_STEP
-            cylinderRotationRef.current = next
-            setCylinderRotation(next)
+            const next = wheelAngleRef.current + CARD_ANGLE_STEP
+            wheelAngleRef.current = next
+            setWheelAngle(next)
           }
           return
         }
@@ -1517,16 +1522,16 @@ export default function PageExperience({
                     type="button"
                     onClick={() => {
                       const a = -(i * CARD_ANGLE_STEP)
-                      cylinderRotationRef.current = a
-                      setCylinderRotation(a)
+                      wheelAngleRef.current = a
+                      setWheelAngle(a)
                     }}
                     className={`group flex items-center gap-3 py-3 text-left transition-colors ${
-                      i === computeFrontIndex(cylinderRotation, services.length) ? "text-white" : "text-slate-400 hover:text-slate-300"
+                      i === computeFrontIndex(wheelAngle, services.length) ? "text-white" : "text-slate-400 hover:text-slate-300"
                     }`}
                   >
                     <div
                       className={`h-px flex-shrink-0 transition-all duration-300 ${
-                        i === computeFrontIndex(cylinderRotation, services.length) ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
+                        i === computeFrontIndex(wheelAngle, services.length) ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
                       }`}
                     />
                     <span className="text-xs font-semibold uppercase tracking-[0.12em] leading-tight">
@@ -1537,153 +1542,138 @@ export default function PageExperience({
               </nav>
             </div>
 
-            {/* Vertical cylinder — container rotates, cards are fixed on it */}
+            {/* Ferris wheel carousel — elliptical path, pure 2D transforms */}
             {(() => {
-              const frontIndex = computeFrontIndex(cylinderRotation, services.length)
+              const frontIndex = computeFrontIndex(wheelAngle, services.length)
               return (
                 <div
-                  style={{
-                    position: "relative",
-                    flex: 1,
-                    overflow: "hidden",
-                    perspective: "1400px",
-                    perspectiveOrigin: "50% 50%",
-                    background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)",
-                  }}
+                  className="relative flex-1 overflow-hidden"
+                  style={{ background: "#020617" }}
                 >
-                  {/* Rotating cylinder — single transition here drives all cards */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      width: "0px",
-                      height: "0px",
-                      transformStyle: "preserve-3d",
-                      transform: `translateX(-50%) translateY(-50%) rotateX(${cylinderRotation}deg)`,
-                      transition: "transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                    }}
-                  >
-                    {services.map((svc, i) => {
-                      const angle = i * CARD_ANGLE_STEP
-                      const effectiveAngle = ((angle + cylinderRotation) % 360 + 360) % 360
-                      const isFront = effectiveAngle < 30 || effectiveAngle > 330
-                      const isBack  = effectiveAngle > 150 && effectiveAngle < 210
-                      const activities = SERVICE_META[i]?.activities ?? []
+                  {services.map((svc, i) => {
+                    const a = (i * CARD_ANGLE_STEP + wheelAngle) * Math.PI / 180
+                    const x = Math.sin(a) * 200
+                    const y = -Math.cos(a) * 320
+                    const scale = (Math.cos(a) + 1.5) / 2.5
+                    const zIdx = Math.round(scale * 10)
+                    const opacity = scale > 0.5 ? 1 : scale * 2
+                    const blur = scale > 0.8 ? 0 : (1 - scale) * 4
+                    const isFront = i === frontIndex
 
-                      return (
+                    return (
+                      <div
+                        key={svc.id}
+                        style={{
+                          position: "absolute",
+                          left: "50%",
+                          top: "50%",
+                          width: "420px",
+                          height: "260px",
+                          marginLeft: "-210px",
+                          marginTop: "-130px",
+                          transform: `translate(${x}px, ${y}px) scale(${scale})`,
+                          zIndex: zIdx,
+                          opacity,
+                          filter: `blur(${blur}px) grayscale(${scale > 0.85 ? 0 : 80}%)`,
+                          transition: "all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                          cursor: "pointer",
+                          overflow: "hidden",
+                          borderRadius: "4px",
+                        }}
+                        onClick={() => {
+                          if (isFront) {
+                            setActiveService(svc)
+                          } else {
+                            const next = -(i * CARD_ANGLE_STEP)
+                            wheelAngleRef.current = next
+                            setWheelAngle(next)
+                          }
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = `blur(${blur}px) grayscale(20%)`
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = `blur(${blur}px) grayscale(80%)`
+                        }}
+                      >
+                        {svc.featuredImageUrl ? (
+                          <img
+                            src={svc.featuredImageUrl}
+                            alt=""
+                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #07111f 0%, #020617 100%)" }} />
+                        )}
+
                         <div
-                          key={svc.id}
                           style={{
                             position: "absolute",
-                            width: "440px",
-                            height: "280px",
-                            marginLeft: "-220px",
-                            marginTop: "-140px",
-                            transform: `rotateX(${-angle}deg) translateZ(480px)`,
-                            backfaceVisibility: "hidden",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            opacity: isBack ? 0 : 1,
-                            filter: isFront ? "none" : "grayscale(60%) brightness(0.6)",
-                            pointerEvents: isBack ? "none" : "auto",
-                            transition: "opacity 0.3s ease, filter 0.3s ease",
+                            inset: 0,
+                            background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)",
                           }}
-                          onClick={() => {
-                            if (isFront) {
-                              setActiveService(svc)
-                            } else {
-                              const a = -(i * CARD_ANGLE_STEP)
-                              cylinderRotationRef.current = a
-                              setCylinderRotation(a)
-                            }
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(20%) brightness(0.9)"
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(60%) brightness(0.6)"
+                        />
+
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            padding: isFront ? "20px 22px" : "14px 16px",
                           }}
                         >
-                          {svc.featuredImageUrl ? (
-                            <img
-                              src={svc.featuredImageUrl}
-                              alt=""
-                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-                          ) : (
-                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #07111f 0%, #020617 100%)" }} />
-                          )}
-
                           <div
                             style={{
-                              position: "absolute",
-                              inset: 0,
-                              background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)",
-                            }}
-                          />
-
-                          <div
-                            style={{
-                              position: "absolute",
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              padding: isFront ? "20px 22px" : "14px 16px",
+                              fontFamily: "monospace",
+                              fontSize: "11px",
+                              fontWeight: 900,
+                              letterSpacing: "0.25em",
+                              color: "#B87333",
+                              marginBottom: "4px",
                             }}
                           >
-                            <div
-                              style={{
-                                fontFamily: "monospace",
-                                fontSize: "11px",
-                                fontWeight: 900,
-                                letterSpacing: "0.25em",
-                                color: "#B87333",
-                                marginBottom: "4px",
-                              }}
-                            >
-                              {String(i + 1).padStart(2, "0")}
-                            </div>
+                            {String(i + 1).padStart(2, "0")}
+                          </div>
 
-                            <div
-                              style={{
-                                color: "white",
-                                fontWeight: 700,
-                                fontSize: isFront ? "1.1rem" : "0.8rem",
-                                lineHeight: 1.2,
-                                marginBottom: isFront ? "10px" : 0,
-                              }}
-                            >
-                              {svc.title}
-                            </div>
-
-                            {isFront && (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "6px",
-                                  color: "#B87333",
-                                  fontSize: "11px",
-                                  letterSpacing: "0.08em",
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {lang === "bg" ? "Виж услугата" : "View service"}
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                  <path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              </div>
-                            )}
+                          <div
+                            style={{
+                              color: "white",
+                              fontWeight: 700,
+                              fontSize: isFront ? "1.1rem" : "0.8rem",
+                              lineHeight: 1.2,
+                              marginBottom: isFront ? "10px" : 0,
+                            }}
+                          >
+                            {svc.title}
                           </div>
 
                           {isFront && (
-                            <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.45)", pointerEvents: "none" }} />
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                color: "#B87333",
+                                fontSize: "11px",
+                                letterSpacing: "0.08em",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {lang === "bg" ? "Виж услугата" : "View service"}
+                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </div>
                           )}
                         </div>
-                      )
-                    })}
-                  </div>
+
+                        {isFront && (
+                          <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.45)", pointerEvents: "none" }} />
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })()}
@@ -2164,7 +2154,7 @@ export default function PageExperience({
       </div>
 
       {/* ── SERVICE DETAIL — outside rootRef so fixed positioning works ─────── */}
-      {activeService && renderServiceDetail(activeService, computeFrontIndex(cylinderRotation, services.length))}
+      {activeService && renderServiceDetail(activeService, computeFrontIndex(wheelAngle, services.length))}
 
       {/* ── PROJECT DETAIL MODAL — outside rootRef ───────────────────────── */}
       {selectedProject && (() => {
