@@ -1,8 +1,6 @@
 "use client"
 
 import {
-  type ForwardRefExoticComponent,
-  type RefAttributes,
   useEffect,
   useRef,
   useState,
@@ -11,7 +9,6 @@ import Image from "next/image"
 import dynamic from "next/dynamic"
 import gsap from "gsap"
 import { MapPin, Phone, Mail, Clock, Shield, Waves, Scan, ClipboardCheck, Layers, Building2, Award } from "lucide-react"
-import type { ServicesCubeHandle } from "./3d/ServicesCube"
 import type {
   HomeContent,
   AboutContent,
@@ -25,14 +22,6 @@ import type {
 import TreasureMap from "./about/TreasureMap"
 
 const GlobalBackground = dynamic(() => import("./3d/GlobalBackground"), { ssr: false })
-const ServicesCube = dynamic(
-  () => import("./3d/ServicesCube"),
-  { ssr: false }
-) as ForwardRefExoticComponent<{
-  services: Service[]
-  onServiceSelect: (service: Service | null) => void
-  activeIndex: number
-} & RefAttributes<ServicesCubeHandle>>
 
 // ── Service detail metadata (per service index 0-5) ──────────────────────────
 
@@ -179,6 +168,27 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
+// Scattered card positions: slot 0 = active (center), slots 1-5 = inactive background cards
+const CARD_POSITIONS = [
+  { left: "50%", top: "50%",  rotate: 0,   scale: 1.0  },
+  { left: "18%", top: "30%",  rotate: -8,  scale: 0.65 },
+  { left: "78%", top: "25%",  rotate: 6,   scale: 0.6  },
+  { left: "22%", top: "72%",  rotate: 5,   scale: 0.6  },
+  { left: "80%", top: "68%",  rotate: -7,  scale: 0.65 },
+  { left: "52%", top: "15%",  rotate: -3,  scale: 0.55 },
+] as const
+
+function getSlot(cardIdx: number, activeIdx: number, total: number): number {
+  if (cardIdx === activeIdx) return 0
+  let slot = 1
+  for (let j = 0; j < total; j++) {
+    if (j === activeIdx) continue
+    if (j === cardIdx) return slot
+    slot++
+  }
+  return slot
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PageExperience({
@@ -248,11 +258,13 @@ export default function PageExperience({
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
   const activeServiceRef     = useRef<Service | null>(null)
+  const activeServiceIndexRef = useRef(0)
   const isAnimating          = useRef(false)
   const touchStartY          = useRef(0)
-  const cubeRef              = useRef<ServicesCubeHandle>(null)
   const projectGridRef       = useRef<HTMLDivElement>(null)
   const aboutEntranceFired   = useRef(false)
+  const servicesEntranceFired = useRef(false)
+  const cardRefs             = useRef<(HTMLDivElement | null)[]>([])
 
   const rootRef          = useRef<HTMLDivElement>(null)
   const heroRef          = useRef<HTMLDivElement>(null)
@@ -334,7 +346,28 @@ export default function PageExperience({
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
+  useEffect(() => { activeServiceIndexRef.current = activeServiceIndex }, [activeServiceIndex])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
+
+  // Reposition all cards when active service changes (only after entrance has fired)
+  useEffect(() => {
+    if (!servicesEntranceFired.current) return
+    cardRefs.current.forEach((el, i) => {
+      if (!el) return
+      const posIdx = getSlot(i, activeServiceIndex, services.length)
+      const pos = CARD_POSITIONS[posIdx]
+      gsap.to(el, {
+        left: pos.left,
+        top: pos.top,
+        xPercent: -50,
+        yPercent: -50,
+        rotation: pos.rotate,
+        scale: pos.scale,
+        duration: 0.7,
+        ease: "power3.out",
+      })
+    })
+  }, [activeServiceIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Transitions ───────────────────────────────────────────────────────────
 
@@ -394,8 +427,32 @@ export default function PageExperience({
     }
 
     if (sceneIndex === 2) {
+      if (servicesEntranceFired.current) return
+      servicesEntranceFired.current = true
       gsap.fromTo(".services-menu", { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, delay: delay + 0.4 })
-      cubeRef.current?.startEntrance()
+
+      const activeIdx = activeServiceIndexRef.current
+      cardRefs.current.forEach((el, i) => {
+        if (!el) return
+        const posIdx = getSlot(i, activeIdx, services.length)
+        const pos = CARD_POSITIONS[posIdx]
+        gsap.set(el, {
+          left: pos.left,
+          top: pos.top,
+          xPercent: -50,
+          yPercent: -50,
+          rotation: pos.rotate,
+          scale: pos.scale * 0.8,
+          opacity: 0,
+        })
+        gsap.to(el, {
+          scale: pos.scale,
+          opacity: 1,
+          duration: 0.55,
+          delay: delay + 0.5 + i * 0.06,
+          ease: "back.out(1.4)",
+        })
+      })
     }
 
     if (sceneIndex === 3) {
@@ -412,7 +469,6 @@ export default function PageExperience({
     // Close service detail if open so nav always works
     if (activeServiceRef.current) {
       setActiveService(null)
-      cubeRef.current?.zoomOut()
     }
 
     const current = currentSceneRef.current
@@ -421,6 +477,7 @@ export default function PageExperience({
     if (next === current) return
 
     if (current === 1) aboutEntranceFired.current = false
+    if (current === 2) servicesEntranceFired.current = false
 
     isAnimating.current = true
     window.dispatchEvent(new CustomEvent("bsdc:scene-transition"))
@@ -443,7 +500,7 @@ export default function PageExperience({
       }
     }
 
-    if (nextEl) gsap.set(nextEl, { opacity: next === 2 ? 0.001 : 0 })
+    if (nextEl) gsap.set(nextEl, { opacity: 0 })
 
     // Reset next scene's animated elements to hidden BEFORE dissolve starts
     if (next === 1) {
@@ -451,7 +508,10 @@ export default function PageExperience({
       gsap.set('.about-depth-card', { opacity: 0 })
       aboutScrollRef.current?.scrollTo({ top: 0 })
     }
-    if (next === 2) gsap.set('.services-menu', { opacity: 0, x: -100 })
+    if (next === 2) {
+      gsap.set('.services-menu', { opacity: 0, x: -100 })
+      gsap.set('.service-scatter-card', { opacity: 0 })
+    }
     if (next === 3) gsap.set('.project-card', { opacity: 0, y: 60 })
     if (next === 4) gsap.set('.contact-info,.contact-form', { opacity: 0, x: 0 })
 
@@ -467,7 +527,7 @@ export default function PageExperience({
       },
     })
 
-    if (currentEl) tl.to(currentEl, { opacity: current === 2 ? 0.001 : 0, duration: 1.4, ease: "power2.inOut" }, 0)
+    if (currentEl) tl.to(currentEl, { opacity: 0, duration: 1.4, ease: "power2.inOut" }, 0)
     if (nextEl)    tl.to(nextEl,    { opacity: 1, duration: 1.4, ease: "power2.inOut" }, 0)
 
     if (current === 0 && next === 1) {
@@ -519,6 +579,7 @@ export default function PageExperience({
     gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats', { opacity: 0, y: 20 })
     gsap.set('.about-depth-card', { opacity: 0 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
+    gsap.set('.service-scatter-card', { opacity: 0 })
     gsap.set('.project-card', { opacity: 0, y: 60 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
     gsap.set('.contact-form', { opacity: 0, x: 40 })
@@ -571,6 +632,29 @@ export default function PageExperience({
         }
       }
 
+      // On Services scene: cycle through services before navigating scenes
+      if (currentSceneRef.current === 2) {
+        if (e.deltaY > 50) {
+          if (activeServiceIndexRef.current < services.length - 1) {
+            const next = activeServiceIndexRef.current + 1
+            activeServiceIndexRef.current = next
+            setActiveServiceIndex(next)
+          } else {
+            goToScene(3)
+          }
+          return
+        } else if (e.deltaY < -50) {
+          if (activeServiceIndexRef.current > 0) {
+            const next = activeServiceIndexRef.current - 1
+            activeServiceIndexRef.current = next
+            setActiveServiceIndex(next)
+          } else {
+            goToScene(1)
+          }
+          return
+        }
+      }
+
       if (e.deltaY > 50)  goToScene(currentSceneRef.current + 1)
       else if (e.deltaY < -50) goToScene(currentSceneRef.current - 1)
     }
@@ -585,7 +669,6 @@ export default function PageExperience({
       if (e.key === "Escape") {
         if (activeServiceRef.current) {
           setActiveService(null)
-          cubeRef.current?.zoomOut()
         }
         setSelectedProject(null)
         setShowContactModal(false)
@@ -626,7 +709,6 @@ export default function PageExperience({
 
     const closeDetail = () => {
       setActiveService(null)
-      cubeRef.current?.zoomOut()
     }
 
     const CloseBtn = (
@@ -1482,10 +1564,7 @@ export default function PageExperience({
                   <button
                     key={svc.id}
                     type="button"
-                    onClick={() => {
-                      setActiveServiceIndex(i)
-                      cubeRef.current?.rotateTo(i)
-                    }}
+                    onClick={() => setActiveServiceIndex(i)}
                     className={`group flex items-center gap-3 py-3 text-left transition-colors ${
                       activeServiceIndex === i ? "text-white" : "text-slate-400 hover:text-slate-300"
                     }`}
@@ -1503,20 +1582,120 @@ export default function PageExperience({
               </nav>
             </div>
 
-            {/* 3D cube */}
-            <div className="relative flex-1">
-              <ServicesCube
-                ref={cubeRef}
-                services={services}
-                onServiceSelect={(svc) => {
-                  if (svc) {
-                    const idx = services.findIndex((s) => s.id === svc.id)
-                    if (idx >= 0) setActiveServiceIndex(idx)
-                    setActiveService(svc)
-                  }
-                }}
-                activeIndex={activeServiceIndex}
-              />
+            {/* Scattered 2D service cards */}
+            <div
+              className="relative flex-1 overflow-hidden"
+              style={{ background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)" }}
+            >
+              {services.map((svc, i) => {
+                const isActive = i === activeServiceIndex
+                const svcNum = String(i + 1).padStart(2, "0")
+                const activities = SERVICE_META[i]?.activities ?? []
+                return (
+                  <div
+                    key={svc.id}
+                    ref={(el) => { cardRefs.current[i] = el }}
+                    className="service-scatter-card absolute"
+                    style={{
+                      width: 420,
+                      cursor: "pointer",
+                      filter: isActive ? "none" : "grayscale(80%) brightness(0.7)",
+                      transition: "filter 0.4s ease",
+                    }}
+                    onClick={() => {
+                      if (isActive) {
+                        setActiveService(svc)
+                      } else {
+                        setActiveServiceIndex(i)
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLDivElement).style.filter = "grayscale(30%) brightness(0.9)"
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLDivElement).style.filter = "grayscale(80%) brightness(0.7)"
+                      }
+                    }}
+                  >
+                    <div
+                      className="relative overflow-hidden"
+                      style={{
+                        height: 280,
+                        background: "linear-gradient(135deg, #0c1a2e 0%, #07111f 100%)",
+                        border: isActive
+                          ? "1px solid rgba(184,115,51,0.4)"
+                          : "1px solid rgba(255,255,255,0.08)",
+                        transition: "border-color 0.4s ease",
+                        padding: "24px",
+                      }}
+                    >
+                      {/* Dim featured image background for active card */}
+                      {isActive && svc.featuredImageUrl && (
+                        <img
+                          src={svc.featuredImageUrl}
+                          alt=""
+                          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                          style={{ opacity: 0.12 }}
+                        />
+                      )}
+
+                      {/* Service number */}
+                      <div
+                        className="relative mb-2 font-mono text-xs tracking-[0.3em]"
+                        style={{ color: isActive ? "#B87333" : "rgba(255,255,255,0.3)" }}
+                      >
+                        {svcNum}
+                      </div>
+
+                      {/* Title */}
+                      <h3
+                        className="relative font-black leading-tight text-white"
+                        style={{ fontSize: isActive ? "1.35rem" : "0.9rem" }}
+                      >
+                        {svc.title}
+                      </h3>
+
+                      {isActive && (
+                        <>
+                          {activities.length > 0 && (
+                            <ul className="relative mt-3 space-y-1.5">
+                              {activities.slice(0, 3).map((act, ai) => (
+                                <li key={ai} className="flex items-start gap-2 text-xs leading-relaxed text-slate-400">
+                                  <span
+                                    className="mt-[5px] h-[4px] w-[4px] flex-shrink-0 rounded-full"
+                                    style={{ background: "#B87333" }}
+                                  />
+                                  {act}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {/* CTA */}
+                          <div
+                            className="relative mt-5 flex items-center gap-2 text-sm font-medium"
+                            style={{ color: "#B87333" }}
+                          >
+                            <span>{lang === "bg" ? "Виж услугата" : "View service"}</span>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+
+                          {/* Copper accent bottom line */}
+                          <div
+                            className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px]"
+                            style={{ background: "linear-gradient(to right, #B87333, transparent)" }}
+                          />
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
           </div>
