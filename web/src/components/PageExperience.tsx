@@ -10,7 +10,7 @@ import {
 import Image from "next/image"
 import dynamic from "next/dynamic"
 import gsap from "gsap"
-import { MapPin, Phone, Mail, Clock } from "lucide-react"
+import { MapPin, Phone, Mail, Clock, Shield, Waves, Scan, ClipboardCheck, Layers, Building2, Award } from "lucide-react"
 import type { ServicesCubeHandle } from "./3d/ServicesCube"
 import type {
   HomeContent,
@@ -21,6 +21,8 @@ import type {
   Partner,
   SiteSetting,
 } from "@/generated/prisma/client"
+
+import TreasureMap from "./about/TreasureMap"
 
 const GlobalBackground = dynamic(() => import("./3d/GlobalBackground"), { ssr: false })
 const ServicesCube = dynamic(
@@ -174,6 +176,9 @@ interface Props {
 
 const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 
+// Why-us icons cycle by index — CMS items may change, icons rotate gracefully
+const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PageExperience({
@@ -192,9 +197,28 @@ export default function PageExperience({
     try { return JSON.parse(String(raw)) as T[] } catch { return [] }
   }
 
-  const allStats   = parseCmsJson<{ value: string; label: string }>(about?.statistics)
-  const heroStats  = allStats.slice(0, 3)
-  const aboutStats = allStats.slice(3, 6)
+  type StatItem = { value: string; label: string }
+  function parseStats(raw: unknown): { hero: StatItem[]; about: StatItem[] } {
+    if (!raw) return { hero: [], about: [] }
+    // New format: { hero: [...], about: [...] }
+    if (typeof raw === "object" && !Array.isArray(raw)) {
+      const obj = raw as Record<string, unknown>
+      if (Array.isArray(obj.hero) || Array.isArray(obj.about)) {
+        return {
+          hero:  Array.isArray(obj.hero)  ? (obj.hero  as StatItem[]) : [],
+          about: Array.isArray(obj.about) ? (obj.about as StatItem[]) : [],
+        }
+      }
+    }
+    // Legacy flat array: first 3 = hero, rest = about
+    if (Array.isArray(raw)) {
+      const arr = raw as StatItem[]
+      return { hero: arr.slice(0, 3), about: arr.slice(3) }
+    }
+    return { hero: [], about: [] }
+  }
+
+  const { hero: heroStats, about: aboutStats } = parseStats(about?.statistics)
 
   function parseCmsSection<T>(raw: unknown, defaultLabel: string): { label: string; items: T[] } {
     const val = raw && typeof raw === "object" && !Array.isArray(raw)
@@ -237,7 +261,6 @@ export default function PageExperience({
   const servicesRef      = useRef<HTMLDivElement>(null)
   const projectsRef      = useRef<HTMLDivElement>(null)
   const contactRef       = useRef<HTMLDivElement>(null)
-  const timelineScrollRef = useRef<HTMLDivElement>(null)
 
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
@@ -336,25 +359,33 @@ export default function PageExperience({
     if (sceneIndex === 1) {
       if (aboutEntranceFired.current) return
       aboutEntranceFired.current = true
-      gsap.fromTo(".about-eyebrow",   { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
-      gsap.fromTo(".about-title",     { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
-      gsap.fromTo(".about-text",      { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
-      gsap.fromTo(".about-image",     { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
-      gsap.fromTo(".about-stats",     { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.3 })
-      gsap.fromTo(".about-why",       { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.4 })
-      gsap.fromTo(".about-timeline",  { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.5 })
-      gsap.fromTo(".about-tl-item",   { y: 14,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.06, delay: delay + 0.6 })
+      gsap.fromTo(".about-eyebrow",    { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
+      gsap.fromTo(".about-title",      { x: -60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, delay: delay + 0.1 })
+      gsap.fromTo(".about-text",       { y: 30,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, delay: delay + 0.2 })
+      gsap.fromTo(".about-image",      { x: 80,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, delay: delay + 0.1 })
+      gsap.fromTo(".about-stats",      { y: 20,  opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, delay: delay + 0.3 })
+      // Expedition map path draw
+      gsap.fromTo(".about-map-path",
+        { attr: { strokeDashoffset: "1000" } },
+        { attr: { strokeDashoffset: "0" }, duration: 2.8, ease: "power2.inOut", delay: delay + 0.3 },
+      )
+      // Markers staggered after path starts drawing
+      gsap.fromTo(".about-map-marker",
+        { opacity: 0 },
+        { opacity: 1, duration: 0.45, stagger: 0.32, ease: "power2.out", delay: delay + 0.8 },
+      )
 
+      // Counter animation for about-specific stats
       aboutRef.current?.querySelectorAll("[data-stat-value]").forEach((statEl) => {
         const raw = statEl.getAttribute("data-stat-value") ?? ""
         if (raw === "24/7") return
         const suffix = raw.includes("+") ? "+" : raw.includes("м") ? "м" : ""
         const num = parseInt(raw.replace(/\D/g, ""))
         if (isNaN(num)) return
-        const counter = { val: num > 1000 ? num - 20 : 0 }
+        const counter = { val: num > 50 ? num - 10 : 0 }
         gsap.to(counter, {
           val: num,
-          duration: 2.5,
+          duration: 2,
           delay: delay + 0.4,
           ease: "power2.out",
           onUpdate() { statEl.textContent = Math.round(counter.val) + suffix },
@@ -416,7 +447,8 @@ export default function PageExperience({
 
     // Reset next scene's animated elements to hidden BEFORE dissolve starts
     if (next === 1) {
-      gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats,.about-why,.about-timeline,.about-tl-item', { opacity: 0, y: 20, x: 0 })
+      gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats', { opacity: 0, y: 20, x: 0 })
+      gsap.set('.about-depth-card', { opacity: 0 })
       aboutScrollRef.current?.scrollTo({ top: 0 })
     }
     if (next === 2) gsap.set('.services-menu', { opacity: 0, x: -100 })
@@ -484,7 +516,8 @@ export default function PageExperience({
     })
 
     // GSAP owns initial hidden state for non-hero animated elements
-    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats, .about-why, .about-timeline, .about-tl-item', { opacity: 0, y: 20 })
+    gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats', { opacity: 0, y: 20 })
+    gsap.set('.about-depth-card', { opacity: 0 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
     gsap.set('.project-card', { opacity: 0, y: 60 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
@@ -518,30 +551,6 @@ export default function PageExperience({
     return () => ctx.revert()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Timeline drag-to-scroll ───────────────────────────────────────────────
-
-  useEffect(() => {
-    const el = timelineScrollRef.current
-    if (!el) return
-    let active = false, startX = 0, scrollStart = 0
-    const onDown = (e: MouseEvent) => {
-      active = true; startX = e.pageX; scrollStart = el.scrollLeft
-      el.style.userSelect = 'none'
-    }
-    const onMove = (e: MouseEvent) => {
-      if (!active) return
-      el.scrollLeft = scrollStart - (e.pageX - startX)
-    }
-    const onUp = () => { active = false; el.style.userSelect = '' }
-    el.addEventListener('mousedown', onDown)
-    window.addEventListener('mousemove', onMove)
-    window.addEventListener('mouseup', onUp)
-    return () => {
-      el.removeEventListener('mousedown', onDown)
-      window.removeEventListener('mousemove', onMove)
-      window.removeEventListener('mouseup', onUp)
-    }
-  }, [])
 
   // ── Event listeners ───────────────────────────────────────────────────────
 
@@ -1271,209 +1280,187 @@ export default function PageExperience({
 
         {/* ── ABOUT ────────────────────────────────────────────────────────── */}
         <div ref={aboutRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
-          {/* 3-row flex layout: Row1 story (flex-1) | Row2 why+certs (fixed) | Row3 timeline (fixed) */}
-          <div
-            ref={aboutScrollRef}
-            className="absolute inset-0 flex flex-col overflow-y-auto bg-[#07111f]"
-            style={{ scrollbarWidth: "none" }}
-          >
+          <div className="absolute inset-0 flex bg-[#07111f]">
 
-            {/* ── Row 1: Story + Image — takes all remaining space ── */}
-            <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+            {/* LEFT — scrollable content panel */}
+            <div
+              ref={aboutScrollRef}
+              className="flex h-full w-full flex-col overflow-y-auto md:w-[48%]"
+              style={{ scrollbarWidth: "none" }}
+            >
+              <div className="flex flex-col justify-center px-8 py-12 md:px-11">
 
-              {/* Left: narrative */}
-              <div className="flex flex-col justify-center overflow-hidden px-8 py-8 md:w-[54%] md:px-14">
-                <div className="about-eyebrow mb-3 flex items-center gap-3">
+                {/* Eyebrow */}
+                <div className="about-eyebrow mb-4 flex items-center gap-3">
                   <div className="h-px w-8 bg-[#B87333]" />
                   <span className="text-[11px] uppercase tracking-[0.3em] text-[#B87333]">
                     {about?.subtitle ?? "BSDC"}
                   </span>
                 </div>
 
-                <h2 className="about-title mb-4 text-3xl font-black leading-tight text-white md:text-4xl lg:text-[2.5rem]">
+                {/* Title */}
+                <h2 className="about-title mb-5 text-3xl font-black leading-tight text-white md:text-[2.2rem]">
                   {about?.title ?? "За нас"}
                 </h2>
 
+                {/* Story text */}
                 <div
-                  className="about-text mb-5 line-clamp-4 text-sm leading-relaxed text-slate-300 md:text-[15px]"
+                  className="about-text mb-5 text-[13px] leading-relaxed text-slate-300"
                   dangerouslySetInnerHTML={{
                     __html: (about?.content ?? "").replace(/\n\n+/g, "<br><br>"),
                   }}
                 />
 
-                {allStats.length > 0 && (
-                  <div className="about-stats flex flex-wrap gap-x-5 gap-y-3 border-t border-white/[0.07] pt-4">
-                    {allStats.map((stat, i) => (
-                      <div key={i}>
-                        <div data-stat-value={stat.value} className="text-xl font-black text-white">
+                {/* Stats — about-specific only (20+, 50+, 24/7 — hero shows 2001/300м/6+) */}
+                {aboutStats.length > 0 && (
+                  <div className="about-stats mb-6 grid grid-cols-3 gap-2">
+                    {aboutStats.map((stat, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center rounded border border-white/[0.07] bg-white/[0.03] px-2 py-2.5 text-center"
+                      >
+                        <div
+                          data-stat-value={stat.value}
+                          className="text-lg font-black text-white md:text-xl"
+                        >
                           {stat.value}
                         </div>
-                        <div className="mt-0.5 text-[9px] uppercase tracking-[0.14em] text-slate-400">
+                        <div className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-slate-400">
                           {stat.label}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
 
-              {/* Right: image */}
-              <div className="about-image relative hidden overflow-hidden md:block md:w-[46%]">
-                {about?.imageUrl ? (
-                  <img
-                    src={about.imageUrl}
-                    alt="About BSDC"
-                    className="absolute inset-0 h-full w-full object-cover object-center"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-[#040c18]" />
+                {/* Why Us — 2-col icon list */}
+                {whyUsItems.length > 0 && (
+                  <div className="mb-5">
+                    <div className="mb-2.5 flex items-center gap-2">
+                      <div className="h-px w-5 bg-[#B87333]" />
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-[#B87333]">
+                        {whyUsSection.label}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                      {whyUsItems.map((item, i) => {
+                        const Icon = WHY_US_ICONS[i % WHY_US_ICONS.length]
+                        return (
+                          <div key={i} className="flex items-start gap-2">
+                            <Icon size={13} className="mt-[2px] flex-shrink-0 text-[#B87333]" />
+                            <span className="text-[12px] leading-snug text-slate-300">{item.title}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#07111f] via-[#07111f]/30 to-transparent" />
+
+                {/* Certificates — document cards */}
+                {certificates.length > 0 && (
+                  <div className="mb-5">
+                    <div className="mb-2.5 flex items-center gap-2">
+                      <div className="h-px w-5 bg-[#B87333]" />
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-[#B87333]">
+                        Сертификати
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {certificates.slice(0, 6).map((cert) => (
+                        <div
+                          key={cert.id}
+                          className="relative border border-[#B87333]/30 bg-[#B87333]/[0.04] px-3 py-2.5"
+                        >
+                          {/* Corner fold accent */}
+                          <div
+                            className="pointer-events-none absolute right-0 top-0 h-0 w-0"
+                            style={{
+                              borderStyle: "solid",
+                              borderWidth: "0 10px 10px 0",
+                              borderColor: "transparent rgba(184,115,51,0.35) transparent transparent",
+                            }}
+                          />
+                          <div className="mb-1 flex items-start gap-1.5">
+                            <Award size={11} className="mt-[1px] flex-shrink-0 text-[#B87333]" />
+                            <span className="text-[11px] font-semibold leading-tight text-slate-100">
+                              {cert.title}
+                            </span>
+                          </div>
+                          {cert.issuer && (
+                            <div className="pl-[19px] text-[10px] leading-snug text-slate-400">
+                              {cert.issuer}
+                            </div>
+                          )}
+                          {cert.issueDate && (
+                            <div className="mt-1 pl-[19px] text-[9px] uppercase tracking-widest text-[#B87333]/60">
+                              {new Date(cert.issueDate).getFullYear()}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mobile-only timeline list (map hidden on mobile) */}
+                {timelineItems.length > 0 && (
+                  <div className="mt-2 md:hidden">
+                    <div className="mb-2.5 flex items-center gap-2">
+                      <div className="h-px w-5 bg-[#B87333]" />
+                      <span className="text-[10px] uppercase tracking-[0.25em] text-[#B87333]">
+                        {timelineSection.label}
+                      </span>
+                    </div>
+                    <ul className="space-y-3 border-l border-[#B87333]/25 pl-4">
+                      {timelineItems.map((item, i) => (
+                        <li key={i} className="relative">
+                          <div className="absolute -left-[17px] top-1.5 h-2.5 w-2.5 rounded-full border border-[#B87333] bg-[#B87333]/30" />
+                          {item.year && (
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-[#B87333]">
+                              {item.year}
+                            </div>
+                          )}
+                          <div className="text-[12px] font-semibold text-white">{item.label}</div>
+                          <div className="text-[11px] leading-snug text-slate-400">{item.desc}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
               </div>
             </div>
 
-            {/* ── Row 2: Why Us + Certificates side by side ── */}
-            {(whyUsItems.length > 0 || certificates.length > 0) && (
-              <div className="about-why flex-shrink-0 border-t border-white/[0.07] bg-[#020617] px-8 py-6 md:px-14">
-                <div className={`grid gap-x-10 gap-y-5 ${certificates.length > 0 ? "md:grid-cols-2" : ""}`}>
+            {/* RIGHT — expedition map (desktop only) */}
+            <div className="about-image relative hidden h-full overflow-hidden md:block md:w-[52%]">
+              {/* Image background */}
+              {about?.imageUrl ? (
+                <img
+                  src={about.imageUrl}
+                  alt="About BSDC"
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                />
+              ) : (
+                <div className="absolute inset-0 bg-[#040c18]" />
+              )}
 
-                  {/* Why Us */}
-                  {whyUsItems.length > 0 && (
-                    <div>
-                      <div className="mb-3 flex items-center gap-2">
-                        <div className="h-px w-5 bg-[#B87333]/60" />
-                        <span className="text-[10px] uppercase tracking-[0.28em] text-[#B87333]/80">
-                          {whyUsSection.label}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
-                        {whyUsItems.map((item, i) => (
-                          <div
-                            key={i}
-                            className="border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 transition-colors hover:border-[#B87333]/30"
-                          >
-                            <div className="flex items-start gap-1.5">
-                              <span className="mt-0.5 flex-shrink-0 text-[10px] text-[#B87333]">▸</span>
-                              <div>
-                                <div className="text-xs font-semibold leading-snug text-white">{item.title}</div>
-                                {item.desc && (
-                                  <div className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-slate-400">
-                                    {item.desc}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+              {/* Gradient overlays */}
+              <div className="absolute inset-0 bg-gradient-to-r from-[#07111f] via-[#07111f]/45 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#07111f]/20 via-transparent to-[#07111f]/55" />
 
-                  {/* Certificates */}
-                  {certificates.length > 0 && (
-                    <div>
-                      <div className="mb-3 flex items-center gap-2">
-                        <div className="h-px w-5 bg-[#B87333]/60" />
-                        <span className="text-[10px] uppercase tracking-[0.28em] text-[#B87333]/80">
-                          Сертификати
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        {certificates.map((cert) => (
-                          <div
-                            key={cert.id}
-                            className="border border-[#B87333]/25 bg-[#B87333]/[0.04] px-3 py-2.5 transition-colors hover:border-[#B87333]/50"
-                          >
-                            <div className="text-xs font-semibold text-slate-100 md:text-sm">{cert.title}</div>
-                            {cert.issuer && (
-                              <div className="text-[11px] text-slate-400">{cert.issuer}</div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              {/* Expedition map SVG overlay */}
+              {timelineItems.length > 0 && (
+                <TreasureMap items={timelineItems} />
+              )}
+
+              {/* Section label — bottom-right corner */}
+              <div className="absolute bottom-6 right-6 z-10 flex items-center gap-2">
+                <div className="h-px w-5 bg-[#B87333]/50" />
+                <span className="text-[9px] uppercase tracking-[0.35em] text-[#B87333]/60">
+                  {timelineSection.label}
+                </span>
               </div>
-            )}
-
-            {/* ── Row 3: Timeline — horizontal, drag-scroll ── */}
-            {timelineItems.length > 0 && (
-              <div className="about-timeline flex-shrink-0 border-t border-white/[0.07] bg-[#040c18] py-5">
-                <div className="mb-4 flex items-center gap-2 px-8 md:px-14">
-                  <div className="h-px w-5 bg-[#B87333]" />
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
-                    {timelineSection.label}
-                  </span>
-                </div>
-
-                <div className="relative">
-                  <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-12 bg-gradient-to-r from-[#040c18] to-transparent" />
-                  <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-12 bg-gradient-to-l from-[#040c18] to-transparent" />
-
-                  <div
-                    ref={timelineScrollRef}
-                    className="cursor-grab overflow-x-auto overflow-y-hidden active:cursor-grabbing"
-                    style={{ scrollbarWidth: "none", height: 210 }}
-                  >
-                    <div className="relative px-14" style={{ minWidth: "max-content" }}>
-                      {/* Copper connector line at midpoint (top 103px) */}
-                      <div
-                        className="pointer-events-none absolute"
-                        style={{ left: 40, right: 40, top: 103, height: 1, background: "rgba(184,115,51,0.35)" }}
-                      />
-
-                      <div className="flex" style={{ height: 210 }}>
-                        {timelineItems.map((item, i) => {
-                          const isEven = i % 2 === 0
-                          return (
-                            <div
-                              key={i}
-                              className="about-tl-item relative flex-shrink-0"
-                              style={{ width: 200 }}
-                            >
-                              {/* Dot on the line */}
-                              <div
-                                className="absolute z-10"
-                                style={{
-                                  left: "50%",
-                                  top: 96,
-                                  transform: "translateX(-50%)",
-                                  width: 12,
-                                  height: 12,
-                                  borderRadius: "50%",
-                                  border: "2px solid #B87333",
-                                  background: item.year ? "#B87333" : "rgba(4,12,24,1)",
-                                  boxShadow: item.year ? "0 0 10px rgba(184,115,51,0.5)" : "none",
-                                }}
-                              />
-
-                              {/* Card: even above, odd below */}
-                              <div
-                                className="absolute mx-2.5 border border-[#B87333]/25 bg-[#07111f]/90 px-2.5 py-2 transition-colors hover:border-[#B87333]/50"
-                                style={isEven ? { top: 4, bottom: 115 } : { top: 115, bottom: 4 }}
-                              >
-                                {item.year && (
-                                  <div className="mb-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-[#B87333]">
-                                    {item.year}
-                                  </div>
-                                )}
-                                <div className="text-xs font-semibold leading-snug text-white">
-                                  {item.label}
-                                </div>
-                                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                                  {item.desc}
-                                </p>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
 
           </div>
         </div>

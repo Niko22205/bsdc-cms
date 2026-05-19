@@ -15,6 +15,7 @@ import {
   MessageSquare,
   Settings,
   Search,
+  Hash,
   type LucideIcon,
 } from "lucide-react"
 
@@ -37,6 +38,7 @@ const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Assets",
     items: [
+      { label: "Statistics", href: "/admin/statistics", icon: Hash },
       { label: "Partners", href: "/admin/partners", icon: Handshake },
       { label: "Certificates", href: "/admin/certificates", icon: Award },
       { label: "Media", href: "/admin/media", icon: ImageIcon },

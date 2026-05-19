@@ -25,26 +25,23 @@ function parseJsonField(raw: string | null): JsonFieldResult {
 }
 
 function parseForm(formData: FormData) {
-  const statisticsRaw = String(formData.get("statistics") ?? "").trim() || null
-  const whyUsRaw      = String(formData.get("whyUs")      ?? "").trim() || null
-  const timelineRaw   = String(formData.get("timeline")   ?? "").trim() || null
+  // statistics intentionally excluded — managed via /admin/statistics
+  const whyUsRaw    = String(formData.get("whyUs")    ?? "").trim() || null
+  const timelineRaw = String(formData.get("timeline") ?? "").trim() || null
 
-  const stats    = parseJsonField(statisticsRaw)
   const whyUs    = parseJsonField(whyUsRaw)
   const timeline = parseJsonField(timelineRaw)
 
   return {
-    language:       (formData.get("language") as string) as Language,
-    title:          String(formData.get("title")    ?? "").trim(),
-    subtitle:       String(formData.get("subtitle") ?? "").trim() || null,
-    content:        String(formData.get("content")  ?? "").trim(),
-    imageUrl:       String(formData.get("imageUrl") ?? "").trim() || null,
-    statistics:     stats.value,
-    whyUs:          whyUs.value,
-    timeline:       timeline.value,
-    statisticsError: stats.error,
-    whyUsError:      whyUs.error,
-    timelineError:   timeline.error,
+    language:      (formData.get("language") as string) as Language,
+    title:         String(formData.get("title")    ?? "").trim(),
+    subtitle:      String(formData.get("subtitle") ?? "").trim() || null,
+    content:       String(formData.get("content")  ?? "").trim(),
+    imageUrl:      String(formData.get("imageUrl") ?? "").trim() || null,
+    whyUs:         whyUs.value,
+    timeline:      timeline.value,
+    whyUsError:    whyUs.error,
+    timelineError: timeline.error,
   }
 }
 
@@ -53,9 +50,8 @@ function validate(data: ReturnType<typeof parseForm>): Record<string, string> {
   if (!["BG", "EN"].includes(data.language)) errors.language = "Invalid language"
   if (!data.title)   errors.title   = "Required"
   if (!data.content) errors.content = "Required"
-  if (data.statisticsError) errors.statistics = data.statisticsError
-  if (data.whyUsError)      errors.whyUs      = data.whyUsError
-  if (data.timelineError)   errors.timeline   = data.timelineError
+  if (data.whyUsError)    errors.whyUs    = data.whyUsError
+  if (data.timelineError) errors.timeline = data.timelineError
   return errors
 }
 
@@ -68,13 +64,13 @@ export async function saveAboutContent(
   if (Object.keys(errors).length) return { errors }
 
   const fields = {
-    title:      data.title,
-    subtitle:   data.subtitle,
-    content:    data.content,
-    imageUrl:   data.imageUrl,
-    statistics: data.statistics,
-    whyUs:      data.whyUs,
-    timeline:   data.timeline,
+    title:    data.title,
+    subtitle: data.subtitle,
+    content:  data.content,
+    imageUrl: data.imageUrl,
+    whyUs:    data.whyUs,
+    timeline: data.timeline,
+    // statistics NOT touched here — managed via /admin/statistics
   }
 
   await prisma.aboutContent.upsert({
