@@ -168,25 +168,14 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
-// Scattered card positions: slot 0 = active (center), slots 1-5 = inactive background cards
-const CARD_POSITIONS = [
-  { left: "50%", top: "50%",  rotate: 0,   scale: 1.0  },
-  { left: "18%", top: "30%",  rotate: -8,  scale: 0.65 },
-  { left: "78%", top: "25%",  rotate: 6,   scale: 0.6  },
-  { left: "22%", top: "72%",  rotate: 5,   scale: 0.6  },
-  { left: "80%", top: "68%",  rotate: -7,  scale: 0.65 },
-  { left: "52%", top: "15%",  rotate: -3,  scale: 0.55 },
-] as const
-
-function getSlot(cardIdx: number, activeIdx: number, total: number): number {
-  if (cardIdx === activeIdx) return 0
-  let slot = 1
-  for (let j = 0; j < total; j++) {
-    if (j === activeIdx) continue
-    if (j === cardIdx) return slot
-    slot++
-  }
-  return slot
+function getCardTransform(index: number, activeIndex: number): string {
+  const diff = index - activeIndex
+  if (diff === 0) return "translateX(0px) translateZ(0px) rotateY(0deg) scale(1)"
+  const translateX = diff * 180
+  const translateZ = -400
+  const rotateY = diff * 40
+  const scale = Math.max(0.5, 1 - Math.abs(diff) * 0.2)
+  return `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -258,13 +247,12 @@ export default function PageExperience({
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
   const activeServiceRef     = useRef<Service | null>(null)
-  const activeServiceIndexRef = useRef(0)
-  const isAnimating          = useRef(false)
-  const touchStartY          = useRef(0)
-  const projectGridRef       = useRef<HTMLDivElement>(null)
-  const aboutEntranceFired   = useRef(false)
-  const servicesEntranceFired = useRef(false)
-  const cardRefs             = useRef<(HTMLDivElement | null)[]>([])
+  const activeServiceIndexRef  = useRef(0)
+  const isAnimating            = useRef(false)
+  const touchStartY            = useRef(0)
+  const projectGridRef         = useRef<HTMLDivElement>(null)
+  const aboutEntranceFired     = useRef(false)
+  const servicesEntranceFired  = useRef(false)
 
   const rootRef          = useRef<HTMLDivElement>(null)
   const heroRef          = useRef<HTMLDivElement>(null)
@@ -349,26 +337,6 @@ export default function PageExperience({
   useEffect(() => { activeServiceIndexRef.current = activeServiceIndex }, [activeServiceIndex])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
 
-  // Reposition all cards when active service changes (only after entrance has fired)
-  useEffect(() => {
-    if (!servicesEntranceFired.current) return
-    cardRefs.current.forEach((el, i) => {
-      if (!el) return
-      const posIdx = getSlot(i, activeServiceIndex, services.length)
-      const pos = CARD_POSITIONS[posIdx]
-      gsap.to(el, {
-        left: pos.left,
-        top: pos.top,
-        xPercent: -50,
-        yPercent: -50,
-        rotation: pos.rotate,
-        scale: pos.scale,
-        duration: 0.7,
-        ease: "power3.out",
-      })
-    })
-  }, [activeServiceIndex]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── Transitions ───────────────────────────────────────────────────────────
 
   function triggerSceneEntrance(sceneIndex: number) {
@@ -430,29 +398,6 @@ export default function PageExperience({
       if (servicesEntranceFired.current) return
       servicesEntranceFired.current = true
       gsap.fromTo(".services-menu", { x: -100, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, delay: delay + 0.4 })
-
-      const activeIdx = activeServiceIndexRef.current
-      cardRefs.current.forEach((el, i) => {
-        if (!el) return
-        const posIdx = getSlot(i, activeIdx, services.length)
-        const pos = CARD_POSITIONS[posIdx]
-        gsap.set(el, {
-          left: pos.left,
-          top: pos.top,
-          xPercent: -50,
-          yPercent: -50,
-          rotation: pos.rotate,
-          scale: pos.scale * 0.8,
-          opacity: 0,
-        })
-        gsap.to(el, {
-          scale: pos.scale,
-          opacity: 1,
-          duration: 0.55,
-          delay: delay + 0.5 + i * 0.06,
-          ease: "back.out(1.4)",
-        })
-      })
     }
 
     if (sceneIndex === 3) {
@@ -510,7 +455,6 @@ export default function PageExperience({
     }
     if (next === 2) {
       gsap.set('.services-menu', { opacity: 0, x: -100 })
-      gsap.set('.service-scatter-card', { opacity: 0 })
     }
     if (next === 3) gsap.set('.project-card', { opacity: 0, y: 60 })
     if (next === 4) gsap.set('.contact-info,.contact-form', { opacity: 0, x: 0 })
@@ -579,7 +523,6 @@ export default function PageExperience({
     gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats', { opacity: 0, y: 20 })
     gsap.set('.about-depth-card', { opacity: 0 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
-    gsap.set('.service-scatter-card', { opacity: 0 })
     gsap.set('.project-card', { opacity: 0, y: 60 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
     gsap.set('.contact-form', { opacity: 0, x: 40 })
@@ -1582,117 +1525,154 @@ export default function PageExperience({
               </nav>
             </div>
 
-            {/* Scattered 2D service cards */}
+            {/* CSS 3D perspective carousel */}
             <div
               className="relative flex-1 overflow-hidden"
-              style={{ background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                perspective: "1200px",
+                perspectiveOrigin: "50% 50%",
+                background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)",
+              }}
             >
               {services.map((svc, i) => {
-                const isActive = i === activeServiceIndex
-                const svcNum = String(i + 1).padStart(2, "0")
+                const diff = i - activeServiceIndex
+                const absDiff = Math.abs(diff)
+                const isActive = diff === 0
+                const opacity = absDiff > 2 ? 0 : 1 - absDiff * 0.2
+                const w = absDiff === 0 ? 520 : absDiff === 1 ? 380 : 280
+                const h = absDiff === 0 ? 360 : absDiff === 1 ? 260 : 190
+                const zIdx = absDiff === 0 ? 10 : absDiff === 1 ? 8 : absDiff === 2 ? 6 : 1
                 const activities = SERVICE_META[i]?.activities ?? []
+
                 return (
                   <div
                     key={svc.id}
-                    ref={(el) => { cardRefs.current[i] = el }}
-                    className="service-scatter-card absolute"
                     style={{
-                      width: 420,
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      width: w,
+                      height: h,
+                      transform: `translate(-50%, -50%) ${getCardTransform(i, activeServiceIndex)}`,
+                      opacity,
+                      zIndex: zIdx,
+                      pointerEvents: absDiff > 2 ? "none" : "auto",
+                      overflow: "hidden",
                       cursor: "pointer",
-                      filter: isActive ? "none" : "grayscale(80%) brightness(0.7)",
-                      transition: "filter 0.4s ease",
+                      filter: isActive ? "none" : "grayscale(70%) brightness(0.6)",
+                      transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.7s ease, filter 0.4s ease",
                     }}
                     onClick={() => {
-                      if (isActive) {
-                        setActiveService(svc)
-                      } else {
-                        setActiveServiceIndex(i)
-                      }
+                      if (isActive) setActiveService(svc)
+                      else setActiveServiceIndex(i)
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLDivElement).style.filter = "grayscale(30%) brightness(0.9)"
-                      }
+                      if (!isActive) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(20%) brightness(0.9)"
                     }}
                     onMouseLeave={(e) => {
-                      if (!isActive) {
-                        (e.currentTarget as HTMLDivElement).style.filter = "grayscale(80%) brightness(0.7)"
-                      }
+                      if (!isActive) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(70%) brightness(0.6)"
                     }}
                   >
+                    {/* Background image */}
+                    {svc.featuredImageUrl ? (
+                      <img
+                        src={svc.featuredImageUrl}
+                        alt=""
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #0c1a2e 0%, #07111f 100%)" }} />
+                    )}
+
+                    {/* Gradient overlay */}
                     <div
-                      className="relative overflow-hidden"
                       style={{
-                        height: 280,
-                        background: "linear-gradient(135deg, #0c1a2e 0%, #07111f 100%)",
-                        border: isActive
-                          ? "1px solid rgba(184,115,51,0.4)"
-                          : "1px solid rgba(255,255,255,0.08)",
-                        transition: "border-color 0.4s ease",
-                        padding: "24px",
+                        position: "absolute",
+                        inset: 0,
+                        background: isActive
+                          ? "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 55%, transparent 100%)"
+                          : "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.45) 100%)",
+                      }}
+                    />
+
+                    {/* Content */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        padding: isActive ? "28px" : "16px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "flex-end",
                       }}
                     >
-                      {/* Dim featured image background for active card */}
-                      {isActive && svc.featuredImageUrl && (
-                        <img
-                          src={svc.featuredImageUrl}
-                          alt=""
-                          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-                          style={{ opacity: 0.12 }}
-                        />
-                      )}
-
-                      {/* Service number */}
                       <div
-                        className="relative mb-2 font-mono text-xs tracking-[0.3em]"
-                        style={{ color: isActive ? "#B87333" : "rgba(255,255,255,0.3)" }}
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: "10px",
+                          letterSpacing: "0.3em",
+                          color: isActive ? "#B87333" : "rgba(255,255,255,0.4)",
+                          marginBottom: "6px",
+                        }}
                       >
-                        {svcNum}
+                        {String(i + 1).padStart(2, "0")}
                       </div>
 
-                      {/* Title */}
                       <h3
-                        className="relative font-black leading-tight text-white"
-                        style={{ fontSize: isActive ? "1.35rem" : "0.9rem" }}
+                        style={{
+                          margin: 0,
+                          color: "white",
+                          fontWeight: 900,
+                          lineHeight: 1.15,
+                          fontSize: isActive ? "1.5rem" : absDiff === 1 ? "1rem" : "0.8rem",
+                        }}
                       >
                         {svc.title}
                       </h3>
 
                       {isActive && (
                         <>
-                          {activities.length > 0 && (
-                            <ul className="relative mt-3 space-y-1.5">
-                              {activities.slice(0, 3).map((act, ai) => (
-                                <li key={ai} className="flex items-start gap-2 text-xs leading-relaxed text-slate-400">
-                                  <span
-                                    className="mt-[5px] h-[4px] w-[4px] flex-shrink-0 rounded-full"
-                                    style={{ background: "#B87333" }}
-                                  />
-                                  {act}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-
-                          {/* CTA */}
+                          {activities.slice(0, 3).map((act, ai) => (
+                            <div key={ai} style={{ display: "flex", alignItems: "flex-start", gap: "6px", marginTop: "6px" }}>
+                              <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#B87333", flexShrink: 0, marginTop: 5 }} />
+                              <span style={{ fontSize: "12px", color: "rgba(148,163,184,1)", lineHeight: 1.5 }}>{act}</span>
+                            </div>
+                          ))}
                           <div
-                            className="relative mt-5 flex items-center gap-2 text-sm font-medium"
-                            style={{ color: "#B87333" }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              marginTop: "16px",
+                              color: "#B87333",
+                              fontSize: "14px",
+                              fontWeight: 600,
+                            }}
                           >
                             <span>{lang === "bg" ? "Виж услугата" : "View service"}</span>
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                               <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </div>
-
-                          {/* Copper accent bottom line */}
-                          <div
-                            className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px]"
-                            style={{ background: "linear-gradient(to right, #B87333, transparent)" }}
-                          />
                         </>
                       )}
                     </div>
+
+                    {isActive && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: 2,
+                          background: "linear-gradient(to right, #B87333, transparent)",
+                        }}
+                      />
+                    )}
                   </div>
                 )
               })}
