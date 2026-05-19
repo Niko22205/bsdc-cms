@@ -168,8 +168,9 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
-const CYLINDER_RADIUS = 600
-const CARD_ANGLE_STEP = 60 // degrees per card slot (360 / 6)
+const CYLINDER_DEPTH = 500  // translateZ range (depth)
+const CYLINDER_Y     = 300  // translateY range (vertical spread)
+const CARD_ANGLE_STEP = 60  // degrees per card slot (360 / 6)
 
 function computeFrontIndex(angle: number, count: number): number {
   for (let i = 0; i < count; i++) {
@@ -424,7 +425,11 @@ export default function PageExperience({
     if (next === current) return
 
     if (current === 1) aboutEntranceFired.current = false
-    if (current === 2) servicesEntranceFired.current = false
+    if (current === 2) {
+      servicesEntranceFired.current = false
+      cylinderAngleRef.current = 0
+      setCylinderAngle(0)
+    }
 
     isAnimating.current = true
     window.dispatchEvent(new CustomEvent("bsdc:scene-transition"))
@@ -577,24 +582,23 @@ export default function PageExperience({
         }
       }
 
-      // On Services scene: rotate cylinder, navigate at boundaries
+      // On Services scene: spin vertical cylinder; navigate at full-rotation boundaries
       if (currentSceneRef.current === 2) {
+        const norm = ((cylinderAngleRef.current % 360) + 360) % 360
         if (e.deltaY > 50) {
-          const fi = computeFrontIndex(cylinderAngleRef.current, services.length)
-          if (fi === services.length - 1) {
+          if (norm === 5 * CARD_ANGLE_STEP) {
             goToScene(3)
           } else {
-            const next = cylinderAngleRef.current - CARD_ANGLE_STEP
+            const next = cylinderAngleRef.current + CARD_ANGLE_STEP
             cylinderAngleRef.current = next
             setCylinderAngle(next)
           }
           return
         } else if (e.deltaY < -50) {
-          const fi = computeFrontIndex(cylinderAngleRef.current, services.length)
-          if (fi === 0) {
+          if (norm === 0) {
             goToScene(1)
           } else {
-            const next = cylinderAngleRef.current + CARD_ANGLE_STEP
+            const next = cylinderAngleRef.current - CARD_ANGLE_STEP
             cylinderAngleRef.current = next
             setCylinderAngle(next)
           }
@@ -1533,7 +1537,7 @@ export default function PageExperience({
               </nav>
             </div>
 
-            {/* Cylinder 3D carousel */}
+            {/* Vertical cylinder 3D carousel */}
             {(() => {
               const frontIndex = computeFrontIndex(cylinderAngle, services.length)
               return (
@@ -1542,8 +1546,11 @@ export default function PageExperience({
                     position: "relative",
                     flex: 1,
                     overflow: "hidden",
-                    perspective: "1200px",
+                    perspective: "1400px",
                     perspectiveOrigin: "50% 50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)",
                   }}
                 >
@@ -1558,12 +1565,13 @@ export default function PageExperience({
                     }}
                   >
                     {services.map((svc, i) => {
-                      const cardAngle = (i * CARD_ANGLE_STEP) + cylinderAngle
-                      const cardAngleRad = cardAngle * Math.PI / 180
-                      const x = Math.sin(cardAngleRad) * CYLINDER_RADIUS
-                      const z = Math.cos(cardAngleRad) * CYLINDER_RADIUS
-                      const rotateY = -cardAngle
-                      const isFront = i === frontIndex
+                      const cardAngleDeg = (i * CARD_ANGLE_STEP) + cylinderAngle
+                      const cardAngleRad = cardAngleDeg * Math.PI / 180
+                      const y = Math.sin(cardAngleRad) * CYLINDER_Y
+                      const z = Math.cos(cardAngleRad) * CYLINDER_DEPTH
+                      const rotateX = -cardAngleDeg
+                      const normalizedAngle = ((cardAngleDeg % 360) + 360) % 360
+                      const isFront = normalizedAngle < 30 || normalizedAngle > 330
                       const activities = SERVICE_META[i]?.activities ?? []
 
                       return (
@@ -1571,18 +1579,18 @@ export default function PageExperience({
                           key={svc.id}
                           style={{
                             position: "absolute",
-                            width: "380px",
-                            height: "260px",
+                            width: "480px",
+                            height: "300px",
                             top: "50%",
                             left: "50%",
-                            marginTop: "-130px",
-                            marginLeft: "-190px",
-                            transform: `translateX(${x}px) translateZ(${z}px) rotateY(${rotateY}deg)${isFront ? " scale(1.1)" : ""}`,
+                            marginTop: "-150px",
+                            marginLeft: "-240px",
+                            transform: `translateY(${y}px) translateZ(${z}px) rotateX(${rotateX}deg)${isFront ? " scale(1.05)" : ""}`,
                             transition: "transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.4s ease",
                             backfaceVisibility: "hidden",
                             overflow: "hidden",
                             cursor: "pointer",
-                            filter: isFront ? "none" : "grayscale(40%) brightness(0.75)",
+                            filter: isFront ? "none" : "grayscale(50%) brightness(0.7)",
                           }}
                           onClick={() => {
                             if (isFront) {
@@ -1597,7 +1605,7 @@ export default function PageExperience({
                             if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(20%) brightness(0.9)"
                           }}
                           onMouseLeave={(e) => {
-                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(40%) brightness(0.75)"
+                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(50%) brightness(0.7)"
                           }}
                         >
                           {/* Background image */}
