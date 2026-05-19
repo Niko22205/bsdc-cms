@@ -168,14 +168,16 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
-function getCardTransform(index: number, activeIndex: number): string {
-  const diff = index - activeIndex
-  if (diff === 0) return "translateX(0px) translateZ(0px) rotateY(0deg) scale(1)"
-  const translateX = diff * 180
-  const translateZ = -400
-  const rotateY = diff * 40
-  const scale = Math.max(0.5, 1 - Math.abs(diff) * 0.2)
-  return `translateX(${translateX}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`
+const CYLINDER_RADIUS = 600
+const CARD_ANGLE_STEP = 60 // degrees per card slot (360 / 6)
+
+function computeFrontIndex(angle: number, count: number): number {
+  for (let i = 0; i < count; i++) {
+    const raw = (i * CARD_ANGLE_STEP + angle) % 360
+    const normalized = ((raw % 360) + 360) % 360
+    if (normalized < 30 || normalized > 330) return i
+  }
+  return 0
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -235,7 +237,7 @@ export default function PageExperience({
   const timelineItems  = timelineSection.items
 
   const [currentScene, setCurrentScene]             = useState(0)
-  const [activeServiceIndex, setActiveServiceIndex] = useState(0)
+  const [cylinderAngle, setCylinderAngle]           = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -247,7 +249,7 @@ export default function PageExperience({
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
   const activeServiceRef     = useRef<Service | null>(null)
-  const activeServiceIndexRef  = useRef(0)
+  const cylinderAngleRef       = useRef(0)
   const isAnimating            = useRef(false)
   const touchStartY            = useRef(0)
   const projectGridRef         = useRef<HTMLDivElement>(null)
@@ -334,7 +336,7 @@ export default function PageExperience({
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
-  useEffect(() => { activeServiceIndexRef.current = activeServiceIndex }, [activeServiceIndex])
+  useEffect(() => { cylinderAngleRef.current = cylinderAngle }, [cylinderAngle])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
 
   // ── Transitions ───────────────────────────────────────────────────────────
@@ -575,24 +577,26 @@ export default function PageExperience({
         }
       }
 
-      // On Services scene: cycle through services before navigating scenes
+      // On Services scene: rotate cylinder, navigate at boundaries
       if (currentSceneRef.current === 2) {
         if (e.deltaY > 50) {
-          if (activeServiceIndexRef.current < services.length - 1) {
-            const next = activeServiceIndexRef.current + 1
-            activeServiceIndexRef.current = next
-            setActiveServiceIndex(next)
-          } else {
+          const fi = computeFrontIndex(cylinderAngleRef.current, services.length)
+          if (fi === services.length - 1) {
             goToScene(3)
+          } else {
+            const next = cylinderAngleRef.current - CARD_ANGLE_STEP
+            cylinderAngleRef.current = next
+            setCylinderAngle(next)
           }
           return
         } else if (e.deltaY < -50) {
-          if (activeServiceIndexRef.current > 0) {
-            const next = activeServiceIndexRef.current - 1
-            activeServiceIndexRef.current = next
-            setActiveServiceIndex(next)
-          } else {
+          const fi = computeFrontIndex(cylinderAngleRef.current, services.length)
+          if (fi === 0) {
             goToScene(1)
+          } else {
+            const next = cylinderAngleRef.current + CARD_ANGLE_STEP
+            cylinderAngleRef.current = next
+            setCylinderAngle(next)
           }
           return
         }
@@ -1507,14 +1511,18 @@ export default function PageExperience({
                   <button
                     key={svc.id}
                     type="button"
-                    onClick={() => setActiveServiceIndex(i)}
+                    onClick={() => {
+                      const a = -(i * CARD_ANGLE_STEP)
+                      cylinderAngleRef.current = a
+                      setCylinderAngle(a)
+                    }}
                     className={`group flex items-center gap-3 py-3 text-left transition-colors ${
-                      activeServiceIndex === i ? "text-white" : "text-slate-400 hover:text-slate-300"
+                      i === computeFrontIndex(cylinderAngle, services.length) ? "text-white" : "text-slate-400 hover:text-slate-300"
                     }`}
                   >
                     <div
                       className={`h-px flex-shrink-0 transition-all duration-300 ${
-                        activeServiceIndex === i ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
+                        i === computeFrontIndex(cylinderAngle, services.length) ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
                       }`}
                     />
                     <span className="text-xs font-semibold uppercase tracking-[0.12em] leading-tight">
@@ -1525,158 +1533,159 @@ export default function PageExperience({
               </nav>
             </div>
 
-            {/* CSS 3D perspective carousel */}
-            <div
-              className="relative flex-1 overflow-hidden"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                perspective: "1200px",
-                perspectiveOrigin: "50% 50%",
-                background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)",
-              }}
-            >
-              {services.map((svc, i) => {
-                const diff = i - activeServiceIndex
-                const absDiff = Math.abs(diff)
-                const isActive = diff === 0
-                const opacity = absDiff > 2 ? 0 : 1 - absDiff * 0.2
-                const w = absDiff === 0 ? 520 : absDiff === 1 ? 380 : 280
-                const h = absDiff === 0 ? 360 : absDiff === 1 ? 260 : 190
-                const zIdx = absDiff === 0 ? 10 : absDiff === 1 ? 8 : absDiff === 2 ? 6 : 1
-                const activities = SERVICE_META[i]?.activities ?? []
-
-                return (
+            {/* Cylinder 3D carousel */}
+            {(() => {
+              const frontIndex = computeFrontIndex(cylinderAngle, services.length)
+              return (
+                <div
+                  style={{
+                    position: "relative",
+                    flex: 1,
+                    overflow: "hidden",
+                    perspective: "1200px",
+                    perspectiveOrigin: "50% 50%",
+                    background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)",
+                  }}
+                >
+                  {/* Cylinder stage — preserve-3d so children share a 3D space */}
                   <div
-                    key={svc.id}
                     style={{
                       position: "absolute",
                       top: "50%",
                       left: "50%",
-                      width: w,
-                      height: h,
-                      transform: `translate(-50%, -50%) ${getCardTransform(i, activeServiceIndex)}`,
-                      opacity,
-                      zIndex: zIdx,
-                      pointerEvents: absDiff > 2 ? "none" : "auto",
-                      overflow: "hidden",
-                      cursor: "pointer",
-                      filter: isActive ? "none" : "grayscale(70%) brightness(0.6)",
-                      transition: "transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.7s ease, filter 0.4s ease",
-                    }}
-                    onClick={() => {
-                      if (isActive) setActiveService(svc)
-                      else setActiveServiceIndex(i)
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(20%) brightness(0.9)"
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(70%) brightness(0.6)"
+                      transformStyle: "preserve-3d",
+                      transform: "translateX(-50%) translateY(-50%)",
                     }}
                   >
-                    {/* Background image */}
-                    {svc.featuredImageUrl ? (
-                      <img
-                        src={svc.featuredImageUrl}
-                        alt=""
-                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #0c1a2e 0%, #07111f 100%)" }} />
-                    )}
+                    {services.map((svc, i) => {
+                      const cardAngle = (i * CARD_ANGLE_STEP) + cylinderAngle
+                      const cardAngleRad = cardAngle * Math.PI / 180
+                      const x = Math.sin(cardAngleRad) * CYLINDER_RADIUS
+                      const z = Math.cos(cardAngleRad) * CYLINDER_RADIUS
+                      const rotateY = -cardAngle
+                      const isFront = i === frontIndex
+                      const activities = SERVICE_META[i]?.activities ?? []
 
-                    {/* Gradient overlay */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background: isActive
-                          ? "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 55%, transparent 100%)"
-                          : "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.45) 100%)",
-                      }}
-                    />
+                      return (
+                        <div
+                          key={svc.id}
+                          style={{
+                            position: "absolute",
+                            width: "380px",
+                            height: "260px",
+                            top: "50%",
+                            left: "50%",
+                            marginTop: "-130px",
+                            marginLeft: "-190px",
+                            transform: `translateX(${x}px) translateZ(${z}px) rotateY(${rotateY}deg)${isFront ? " scale(1.1)" : ""}`,
+                            transition: "transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.4s ease",
+                            backfaceVisibility: "hidden",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            filter: isFront ? "none" : "grayscale(40%) brightness(0.75)",
+                          }}
+                          onClick={() => {
+                            if (isFront) {
+                              setActiveService(svc)
+                            } else {
+                              const a = -(i * CARD_ANGLE_STEP)
+                              cylinderAngleRef.current = a
+                              setCylinderAngle(a)
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(20%) brightness(0.9)"
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(40%) brightness(0.75)"
+                          }}
+                        >
+                          {/* Background image */}
+                          {svc.featuredImageUrl ? (
+                            <img
+                              src={svc.featuredImageUrl}
+                              alt=""
+                              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                          ) : (
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #07111f 0%, #020617 100%)" }} />
+                          )}
 
-                    {/* Content */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        padding: isActive ? "28px" : "16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontFamily: "monospace",
-                          fontSize: "10px",
-                          letterSpacing: "0.3em",
-                          color: isActive ? "#B87333" : "rgba(255,255,255,0.4)",
-                          marginBottom: "6px",
-                        }}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </div>
-
-                      <h3
-                        style={{
-                          margin: 0,
-                          color: "white",
-                          fontWeight: 900,
-                          lineHeight: 1.15,
-                          fontSize: isActive ? "1.5rem" : absDiff === 1 ? "1rem" : "0.8rem",
-                        }}
-                      >
-                        {svc.title}
-                      </h3>
-
-                      {isActive && (
-                        <>
-                          {activities.slice(0, 3).map((act, ai) => (
-                            <div key={ai} style={{ display: "flex", alignItems: "flex-start", gap: "6px", marginTop: "6px" }}>
-                              <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#B87333", flexShrink: 0, marginTop: 5 }} />
-                              <span style={{ fontSize: "12px", color: "rgba(148,163,184,1)", lineHeight: 1.5 }}>{act}</span>
-                            </div>
-                          ))}
+                          {/* Bottom gradient */}
                           <div
                             style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              marginTop: "16px",
-                              color: "#B87333",
-                              fontSize: "14px",
-                              fontWeight: 600,
+                              position: "absolute",
+                              inset: 0,
+                              background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.3) 55%, transparent 100%)",
+                            }}
+                          />
+
+                          {/* Text content anchored to bottom */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              padding: isFront ? "20px 22px" : "14px 16px",
                             }}
                           >
-                            <span>{lang === "bg" ? "Виж услугата" : "View service"}</span>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                            <div
+                              style={{
+                                fontFamily: "monospace",
+                                fontSize: "11px",
+                                fontWeight: 900,
+                                letterSpacing: "0.25em",
+                                color: "#B87333",
+                                marginBottom: "4px",
+                              }}
+                            >
+                              {String(i + 1).padStart(2, "0")}
+                            </div>
 
-                    {isActive && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          height: 2,
-                          background: "linear-gradient(to right, #B87333, transparent)",
-                        }}
-                      />
-                    )}
+                            <div
+                              style={{
+                                color: "white",
+                                fontWeight: 700,
+                                fontSize: isFront ? "1.05rem" : "0.8rem",
+                                lineHeight: 1.2,
+                                marginBottom: isFront ? "10px" : 0,
+                              }}
+                            >
+                              {svc.title}
+                            </div>
+
+                            {isFront && (
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  color: "#B87333",
+                                  fontSize: "11px",
+                                  letterSpacing: "0.08em",
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {lang === "bg" ? "Виж услугата" : "View service"}
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                  <path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Copper border accent — front card only */}
+                          {isFront && (
+                            <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.45)", pointerEvents: "none" }} />
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
-            </div>
+                </div>
+              )
+            })()}
 
           </div>
         </div>
@@ -2154,7 +2163,7 @@ export default function PageExperience({
       </div>
 
       {/* ── SERVICE DETAIL — outside rootRef so fixed positioning works ─────── */}
-      {activeService && renderServiceDetail(activeService, activeServiceIndex)}
+      {activeService && renderServiceDetail(activeService, computeFrontIndex(cylinderAngle, services.length))}
 
       {/* ── PROJECT DETAIL MODAL — outside rootRef ───────────────────────── */}
       {selectedProject && (() => {
