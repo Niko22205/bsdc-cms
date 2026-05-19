@@ -168,21 +168,6 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
-interface CardTransform {
-  tx: number; ty: number; scale: number; opacity: number; blur: number; zIndex: number; clickable: boolean
-}
-
-function getCardTransform(i: number, active: number, total: number): CardTransform {
-  if (total === 0) return { tx: 0, ty: 0, scale: 1, opacity: 0, blur: 0, zIndex: 1, clickable: false }
-  const raw = ((i - active) + total) % total
-  const offset = raw <= Math.floor(total / 2) ? raw : raw - total
-  const abs = Math.abs(offset)
-  const sign = offset >= 0 ? 1 : -1
-  if (abs === 0) return { tx: 0,          ty: 0,          scale: 1.00, opacity: 1.00, blur: 0,   zIndex: 10, clickable: true  }
-  if (abs === 1) return { tx: sign * 72,  ty: sign * 44,  scale: 0.82, opacity: 0.58, blur: 1.2, zIndex: 7,  clickable: true  }
-  if (abs === 2) return { tx: sign * 128, ty: sign * 82,  scale: 0.67, opacity: 0.28, blur: 2.8, zIndex: 5,  clickable: true  }
-  return                 { tx: 0,          ty: 0,          scale: 0.50, opacity: 0,    blur: 8,   zIndex: 1,  clickable: false }
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -257,6 +242,7 @@ export default function PageExperience({
   const isAnimating            = useRef(false)
   const touchStartY            = useRef(0)
   const projectGridRef         = useRef<HTMLDivElement>(null)
+  const innerGroupRef          = useRef<HTMLDivElement>(null)
   const aboutEntranceFired     = useRef(false)
   const servicesEntranceFired  = useRef(false)
 
@@ -1684,150 +1670,183 @@ export default function PageExperience({
               </div>
             </div>
 
-            {/* ── RIGHT PANEL — Cinematic depth stack ─────────────────────── */}
-            <div className="relative min-h-[55vw] flex-1 overflow-hidden md:min-h-0">
-              {/* Atmospheric right-side gradient */}
-              <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 70% at 60% 50%, rgba(8,22,45,0.35) 0%, rgba(2,8,18,0.75) 100%)" }} />
+            {/* ── RIGHT PANEL — 3D helix card fan ─────────────────────────── */}
+            <div
+              className="relative min-h-[55vw] flex-1 md:min-h-0"
+              style={{
+                perspective: "1200px",
+                perspectiveOrigin: "50% 50%",
+                overflow: "hidden",
+              }}
+              onMouseMove={(e) => {
+                if (!innerGroupRef.current) return
+                const rect = e.currentTarget.getBoundingClientRect()
+                const x = (e.clientX - rect.left - rect.width / 2) / rect.width
+                const y = (e.clientY - rect.top - rect.height / 2) / rect.height
+                innerGroupRef.current.style.transform =
+                  `translateX(-50%) translateY(-50%) rotateY(${x * 8}deg) rotateX(${-y * 6}deg)`
+              }}
+              onMouseLeave={() => {
+                if (!innerGroupRef.current) return
+                innerGroupRef.current.style.transform =
+                  "translateX(-50%) translateY(-50%) rotateY(0deg) rotateX(0deg)"
+              }}
+            >
+              {/* Atmospheric gradient */}
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{ background: "radial-gradient(ellipse 80% 70% at 60% 50%, rgba(8,22,45,0.35) 0%, rgba(2,8,18,0.75) 100%)" }}
+              />
 
-              {/* Card stack */}
-              {services.map((svc, i) => {
-                const { tx, ty, scale, opacity, blur, zIndex, clickable } = getCardTransform(i, activeIdx, services.length)
-                const meta = SERVICE_META[i] ?? SERVICE_META[0]
-                const isFront = i === activeIdx
-                const imgSrc = svc.featuredImageUrl ?? svc.images?.[0] ?? null
+              {/* 3D preserve-3d group — mouse tilt applied here */}
+              <div
+                ref={innerGroupRef}
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translateX(-50%) translateY(-50%)",
+                  transformStyle: "preserve-3d",
+                  width: "0",
+                  height: "0",
+                  transition: "transform 0.3s ease",
+                }}
+              >
+                {services.map((svc, i) => {
+                  const offset    = ((i - activeIdx) + services.length) % services.length
+                  const rotateY   = offset * 35
+                  const rotateX   = offset * -15
+                  const translateZ = -offset * 120
+                  const translateY = offset * 60
+                  const translateX = offset * 30
+                  const scale     = Math.max(0.5, 1 - offset * 0.12)
+                  const opacity   = offset === 0 ? 1 : Math.max(0.2, 1 - offset * 0.18)
+                  const meta      = SERVICE_META[i] ?? SERVICE_META[0]
+                  const imgSrc    = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
-                return (
-                  <div
-                    key={svc.id}
-                    style={{
-                      position: "absolute",
-                      left: "50%",
-                      top: "50%",
-                      width: "min(680px, 88%)",
-                      height: "min(425px, 55vw)",
-                      marginLeft: "calc(-1 * min(340px, 44%))",
-                      marginTop: "calc(-1 * min(212px, 27.5vw))",
-                      transform: `translate3d(${tx}px, ${ty}px, 0) scale(${scale})`,
-                      zIndex,
-                      opacity,
-                      filter: `blur(${blur}px) brightness(${opacity > 0.9 ? 1 : 0.4 + opacity * 0.6})`,
-                      transition: "all 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                      cursor: clickable ? "pointer" : "default",
-                      overflow: "hidden",
-                    }}
-                    onClick={() => {
-                      if (isFront) {
-                        setActiveService(svc)
-                      } else if (clickable) {
-                        activeIdxRef.current = i
-                        setActiveIdx(i)
-                      }
-                    }}
-                  >
-                    {/* Image */}
-                    {imgSrc ? (
-                      <img
-                        src={imgSrc}
-                        alt=""
-                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                    ) : (
-                      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(145deg, ${meta.bg} 0%, #020812 100%)` }} />
-                    )}
-
-                    {/* Cinematic overlay */}
+                  return (
                     <div
+                      key={svc.id}
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        background: isFront
-                          ? "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)"
-                          : "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.50) 100%)",
+                        width: "420px",
+                        height: "280px",
+                        marginLeft: "-210px",
+                        marginTop: "-140px",
+                        transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`,
+                        opacity,
+                        zIndex: 6 - offset,
+                        backfaceVisibility: "hidden",
+                        overflow: "hidden",
+                        cursor: "pointer",
+                        transition: "all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                        filter: offset === 0 ? "none" : `grayscale(${offset * 20}%) brightness(${1 - offset * 0.1})`,
+                        borderRadius: "4px",
                       }}
-                    />
+                      onClick={() => {
+                        if (offset === 0) {
+                          setActiveService(svc)
+                        } else {
+                          activeIdxRef.current = i
+                          setActiveIdx(i)
+                        }
+                      }}
+                    >
+                      {/* Image */}
+                      {imgSrc ? (
+                        <img
+                          src={imgSrc}
+                          alt=""
+                          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(145deg, ${meta.bg} 0%, #07111f 100%)` }} />
+                      )}
 
-                    {/* Active card info */}
-                    {isFront && (
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "22px 26px" }}>
-                        <div
-                          style={{
-                            fontFamily: "monospace",
-                            fontSize: "10px",
-                            fontWeight: 900,
-                            letterSpacing: "0.32em",
-                            color: meta.accent,
-                            marginBottom: "7px",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {String(i + 1).padStart(2, "0")} — {lang === "bg" ? "АКТИВНА ОПЕРАЦИЯ" : "ACTIVE OPERATION"}
-                        </div>
-                        <div style={{ color: "white", fontWeight: 800, fontSize: "1.2rem", lineHeight: 1.15, marginBottom: "10px" }}>
-                          {svc.title}
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            color: meta.accent,
-                            fontSize: "10px",
-                            fontWeight: 600,
-                            letterSpacing: "0.12em",
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          {lang === "bg" ? "Отвори досие" : "Open dossier"}
-                          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                            <path d="M1.5 5.5h8M6.5 2l3 3.5-3 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Inactive card index tag */}
-                    {!isFront && opacity > 0.15 && (
+                      {/* Gradient overlay */}
                       <div
                         style={{
                           position: "absolute",
-                          top: 14,
-                          left: 14,
-                          fontFamily: "monospace",
-                          fontSize: "10px",
-                          fontWeight: 900,
-                          letterSpacing: "0.2em",
-                          color: "rgba(255,255,255,0.28)",
-                          background: "rgba(0,0,0,0.45)",
-                          padding: "3px 7px",
+                          inset: 0,
+                          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)",
                         }}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </div>
-                    )}
+                      />
 
-                    {/* Active copper border */}
-                    {isFront && (
-                      <div style={{ position: "absolute", inset: 0, border: `1px solid ${meta.accent}55`, pointerEvents: "none" }} />
-                    )}
+                      {/* Active card content */}
+                      {offset === 0 && (
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 22px" }}>
+                          <div
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "10px",
+                              fontWeight: 900,
+                              letterSpacing: "0.3em",
+                              color: meta.accent,
+                              marginBottom: "6px",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {String(i + 1).padStart(2, "0")} — {lang === "bg" ? "АКТИВНА ОПЕРАЦИЯ" : "ACTIVE OPERATION"}
+                          </div>
+                          <div style={{ color: "white", fontWeight: 800, fontSize: "1.15rem", lineHeight: 1.15, marginBottom: "10px" }}>
+                            {svc.title}
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              color: meta.accent,
+                              fontSize: "10px",
+                              fontWeight: 600,
+                              letterSpacing: "0.12em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {lang === "bg" ? "Виж услугата" : "View service"}
+                            <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                              <path d="M1.5 5.5h8M6.5 2l3 3.5-3 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                        </div>
+                      )}
 
-                    {/* HUD corner brackets — active only */}
-                    {isFront && (
-                      <>
-                        <div style={{ position: "absolute", top: 11, left: 11, width: 18, height: 18, borderTop: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                        <div style={{ position: "absolute", top: 11, right: 11, width: 18, height: 18, borderTop: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                        <div style={{ position: "absolute", bottom: 11, left: 11, width: 18, height: 18, borderBottom: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                        <div style={{ position: "absolute", bottom: 11, right: 11, width: 18, height: 18, borderBottom: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                      </>
-                    )}
-                  </div>
-                )
-              })}
+                      {/* Inactive card title */}
+                      {offset !== 0 && (
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 16px" }}>
+                          <div style={{ color: "white", fontWeight: 600, fontSize: "0.8rem", lineHeight: 1.2 }}>
+                            {svc.title}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Active copper border */}
+                      {offset === 0 && (
+                        <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.6)", pointerEvents: "none" }} />
+                      )}
+
+                      {/* HUD corner brackets — active only */}
+                      {offset === 0 && (
+                        <>
+                          <div style={{ position: "absolute", top: 10, left: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", top: 10, right: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", bottom: 10, left: 10, width: 16, height: 16, borderBottom: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", bottom: 10, right: 10, width: 16, height: 16, borderBottom: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
 
               {/* HUD labels */}
               <div className="pointer-events-none absolute right-7 top-7 flex items-center gap-2">
                 <div
                   className="h-1.5 w-1.5 rounded-full"
-                  style={{ background: SERVICE_META[activeIdx]?.accent ?? "#B87333", boxShadow: `0 0 7px ${SERVICE_META[activeIdx]?.accent ?? "#B87333"}` }}
+                  style={{
+                    background: SERVICE_META[activeIdx]?.accent ?? "#B87333",
+                    boxShadow: `0 0 7px ${SERVICE_META[activeIdx]?.accent ?? "#B87333"}`,
+                  }}
                 />
                 <span className="font-mono text-[8px] uppercase tracking-[0.35em] text-slate-700">
                   MISSION CONTROL
@@ -1838,7 +1857,10 @@ export default function PageExperience({
               </div>
 
               {/* Right-edge depth vignette */}
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-24" style={{ background: "linear-gradient(to left, rgba(2,8,18,0.85) 0%, transparent 100%)" }} />
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 w-24"
+                style={{ background: "linear-gradient(to left, rgba(2,8,18,0.85) 0%, transparent 100%)" }}
+              />
             </div>
 
           </div>
