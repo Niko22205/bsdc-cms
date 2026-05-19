@@ -238,7 +238,7 @@ export default function PageExperience({
   const timelineItems  = timelineSection.items
 
   const [currentScene, setCurrentScene]             = useState(0)
-  const [cylinderAngle, setCylinderAngle]           = useState(0)
+  const [cylinderRotation, setCylinderRotation]        = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -250,7 +250,7 @@ export default function PageExperience({
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
   const activeServiceRef     = useRef<Service | null>(null)
-  const cylinderAngleRef       = useRef(0)
+  const cylinderRotationRef       = useRef(0)
   const isAnimating            = useRef(false)
   const touchStartY            = useRef(0)
   const projectGridRef         = useRef<HTMLDivElement>(null)
@@ -337,7 +337,7 @@ export default function PageExperience({
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
-  useEffect(() => { cylinderAngleRef.current = cylinderAngle }, [cylinderAngle])
+  useEffect(() => { cylinderRotationRef.current = cylinderRotation }, [cylinderRotation])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
 
   // ── Transitions ───────────────────────────────────────────────────────────
@@ -427,8 +427,8 @@ export default function PageExperience({
     if (current === 1) aboutEntranceFired.current = false
     if (current === 2) {
       servicesEntranceFired.current = false
-      cylinderAngleRef.current = 0
-      setCylinderAngle(0)
+      cylinderRotationRef.current = 0
+      setCylinderRotation(0)
     }
 
     isAnimating.current = true
@@ -584,23 +584,23 @@ export default function PageExperience({
 
       // On Services scene: spin vertical cylinder; navigate at full-rotation boundaries
       if (currentSceneRef.current === 2) {
-        const norm = ((cylinderAngleRef.current % 360) + 360) % 360
+        const norm = ((cylinderRotationRef.current % 360) + 360) % 360
         if (e.deltaY > 50) {
           if (norm === 5 * CARD_ANGLE_STEP) {
             goToScene(3)
           } else {
-            const next = cylinderAngleRef.current + CARD_ANGLE_STEP
-            cylinderAngleRef.current = next
-            setCylinderAngle(next)
+            const next = cylinderRotationRef.current + CARD_ANGLE_STEP
+            cylinderRotationRef.current = next
+            setCylinderRotation(next)
           }
           return
         } else if (e.deltaY < -50) {
           if (norm === 0) {
             goToScene(1)
           } else {
-            const next = cylinderAngleRef.current - CARD_ANGLE_STEP
-            cylinderAngleRef.current = next
-            setCylinderAngle(next)
+            const next = cylinderRotationRef.current - CARD_ANGLE_STEP
+            cylinderRotationRef.current = next
+            setCylinderRotation(next)
           }
           return
         }
@@ -1517,16 +1517,16 @@ export default function PageExperience({
                     type="button"
                     onClick={() => {
                       const a = -(i * CARD_ANGLE_STEP)
-                      cylinderAngleRef.current = a
-                      setCylinderAngle(a)
+                      cylinderRotationRef.current = a
+                      setCylinderRotation(a)
                     }}
                     className={`group flex items-center gap-3 py-3 text-left transition-colors ${
-                      i === computeFrontIndex(cylinderAngle, services.length) ? "text-white" : "text-slate-400 hover:text-slate-300"
+                      i === computeFrontIndex(cylinderRotation, services.length) ? "text-white" : "text-slate-400 hover:text-slate-300"
                     }`}
                   >
                     <div
                       className={`h-px flex-shrink-0 transition-all duration-300 ${
-                        i === computeFrontIndex(cylinderAngle, services.length) ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
+                        i === computeFrontIndex(cylinderRotation, services.length) ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
                       }`}
                     />
                     <span className="text-xs font-semibold uppercase tracking-[0.12em] leading-tight">
@@ -1537,9 +1537,9 @@ export default function PageExperience({
               </nav>
             </div>
 
-            {/* Vertical cylinder 3D carousel */}
+            {/* Vertical cylinder — container rotates, cards are fixed on it */}
             {(() => {
-              const frontIndex = computeFrontIndex(cylinderAngle, services.length)
+              const frontIndex = computeFrontIndex(cylinderRotation, services.length)
               return (
                 <div
                   style={{
@@ -1548,30 +1548,27 @@ export default function PageExperience({
                     overflow: "hidden",
                     perspective: "1400px",
                     perspectiveOrigin: "50% 50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
                     background: "radial-gradient(ellipse at 55% 50%, #0c1525 0%, #020617 70%)",
                   }}
                 >
-                  {/* Cylinder stage — preserve-3d so children share a 3D space */}
+                  {/* Rotating cylinder — single transition here drives all cards */}
                   <div
                     style={{
                       position: "absolute",
                       top: "50%",
                       left: "50%",
+                      width: "0px",
+                      height: "0px",
                       transformStyle: "preserve-3d",
-                      transform: "translateX(-50%) translateY(-50%)",
+                      transform: `translateX(-50%) translateY(-50%) rotateX(${cylinderRotation}deg)`,
+                      transition: "transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                     }}
                   >
                     {services.map((svc, i) => {
-                      const cardAngleDeg = (i * CARD_ANGLE_STEP) + cylinderAngle
-                      const cardAngleRad = cardAngleDeg * Math.PI / 180
-                      const y = Math.sin(cardAngleRad) * CYLINDER_Y
-                      const z = Math.cos(cardAngleRad) * CYLINDER_DEPTH
-                      const rotateX = -cardAngleDeg
-                      const normalizedAngle = ((cardAngleDeg % 360) + 360) % 360
-                      const isFront = normalizedAngle < 30 || normalizedAngle > 330
+                      const angle = i * CARD_ANGLE_STEP
+                      const effectiveAngle = ((angle + cylinderRotation) % 360 + 360) % 360
+                      const isFront = effectiveAngle < 30 || effectiveAngle > 330
+                      const isBack  = effectiveAngle > 150 && effectiveAngle < 210
                       const activities = SERVICE_META[i]?.activities ?? []
 
                       return (
@@ -1579,36 +1576,35 @@ export default function PageExperience({
                           key={svc.id}
                           style={{
                             position: "absolute",
-                            width: "480px",
-                            height: "300px",
-                            top: "50%",
-                            left: "50%",
-                            marginTop: "-150px",
-                            marginLeft: "-240px",
-                            transform: `translateY(${y}px) translateZ(${z}px) rotateX(${rotateX}deg)${isFront ? " scale(1.05)" : ""}`,
-                            transition: "transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.4s ease",
+                            width: "440px",
+                            height: "280px",
+                            marginLeft: "-220px",
+                            marginTop: "-140px",
+                            transform: `rotateX(${-angle}deg) translateZ(480px)`,
                             backfaceVisibility: "hidden",
                             overflow: "hidden",
                             cursor: "pointer",
-                            filter: isFront ? "none" : "grayscale(50%) brightness(0.7)",
+                            opacity: isBack ? 0 : 1,
+                            filter: isFront ? "none" : "grayscale(60%) brightness(0.6)",
+                            pointerEvents: isBack ? "none" : "auto",
+                            transition: "opacity 0.3s ease, filter 0.3s ease",
                           }}
                           onClick={() => {
                             if (isFront) {
                               setActiveService(svc)
                             } else {
                               const a = -(i * CARD_ANGLE_STEP)
-                              cylinderAngleRef.current = a
-                              setCylinderAngle(a)
+                              cylinderRotationRef.current = a
+                              setCylinderRotation(a)
                             }
                           }}
                           onMouseEnter={(e) => {
                             if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(20%) brightness(0.9)"
                           }}
                           onMouseLeave={(e) => {
-                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(50%) brightness(0.7)"
+                            if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = "grayscale(60%) brightness(0.6)"
                           }}
                         >
-                          {/* Background image */}
                           {svc.featuredImageUrl ? (
                             <img
                               src={svc.featuredImageUrl}
@@ -1619,7 +1615,6 @@ export default function PageExperience({
                             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #07111f 0%, #020617 100%)" }} />
                           )}
 
-                          {/* Bottom gradient */}
                           <div
                             style={{
                               position: "absolute",
@@ -1628,7 +1623,6 @@ export default function PageExperience({
                             }}
                           />
 
-                          {/* Text content anchored to bottom */}
                           <div
                             style={{
                               position: "absolute",
@@ -1655,7 +1649,7 @@ export default function PageExperience({
                               style={{
                                 color: "white",
                                 fontWeight: 700,
-                                fontSize: isFront ? "1.05rem" : "0.8rem",
+                                fontSize: isFront ? "1.1rem" : "0.8rem",
                                 lineHeight: 1.2,
                                 marginBottom: isFront ? "10px" : 0,
                               }}
@@ -1683,7 +1677,6 @@ export default function PageExperience({
                             )}
                           </div>
 
-                          {/* Copper border accent — front card only */}
                           {isFront && (
                             <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.45)", pointerEvents: "none" }} />
                           )}
@@ -2171,7 +2164,7 @@ export default function PageExperience({
       </div>
 
       {/* ── SERVICE DETAIL — outside rootRef so fixed positioning works ─────── */}
-      {activeService && renderServiceDetail(activeService, computeFrontIndex(cylinderAngle, services.length))}
+      {activeService && renderServiceDetail(activeService, computeFrontIndex(cylinderRotation, services.length))}
 
       {/* ── PROJECT DETAIL MODAL — outside rootRef ───────────────────────── */}
       {selectedProject && (() => {
