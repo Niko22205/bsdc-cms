@@ -1670,7 +1670,7 @@ export default function PageExperience({
               </div>
             </div>
 
-            {/* ── RIGHT PANEL — 3D helix card fan ─────────────────────────── */}
+            {/* ── RIGHT PANEL — vertical spiral staircase / tornado ────────── */}
             <div
               className="relative min-h-[55vw] flex-1 md:min-h-0"
               style={{
@@ -1684,7 +1684,7 @@ export default function PageExperience({
                 const x = (e.clientX - rect.left - rect.width / 2) / rect.width
                 const y = (e.clientY - rect.top - rect.height / 2) / rect.height
                 innerGroupRef.current.style.transform =
-                  `translateX(-50%) translateY(-50%) rotateY(${x * 8}deg) rotateX(${-y * 6}deg)`
+                  `translateX(-50%) translateY(-50%) rotateY(${x * 7}deg) rotateX(${-y * 5}deg)`
               }}
               onMouseLeave={() => {
                 if (!innerGroupRef.current) return
@@ -1695,34 +1695,49 @@ export default function PageExperience({
               {/* Atmospheric gradient */}
               <div
                 className="pointer-events-none absolute inset-0"
-                style={{ background: "radial-gradient(ellipse 80% 70% at 60% 50%, rgba(8,22,45,0.35) 0%, rgba(2,8,18,0.75) 100%)" }}
+                style={{ background: "radial-gradient(ellipse 80% 90% at 55% 50%, rgba(6,18,40,0.4) 0%, rgba(2,8,18,0.82) 100%)" }}
               />
 
-              {/* 3D preserve-3d group — mouse tilt applied here */}
+              {/* Top/bottom fade — softens the spiral ends */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-32" style={{ background: "linear-gradient(to bottom, rgba(2,8,18,0.9) 0%, transparent 100%)" }} />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32" style={{ background: "linear-gradient(to top, rgba(2,8,18,0.9) 0%, transparent 100%)" }} />
+
+              {/* 3D pivot — zero-size anchor at viewport center */}
               <div
                 ref={innerGroupRef}
                 style={{
                   position: "absolute",
                   top: "50%",
                   left: "50%",
-                  transform: "translateX(-50%) translateY(-50%)",
-                  transformStyle: "preserve-3d",
                   width: "0",
                   height: "0",
+                  transformStyle: "preserve-3d",
+                  transform: "translateX(-50%) translateY(-50%)",
                   transition: "transform 0.3s ease",
                 }}
               >
                 {services.map((svc, i) => {
-                  const offset    = ((i - activeIdx) + services.length) % services.length
-                  const rotateY   = offset * 35
-                  const rotateX   = offset * -15
-                  const translateZ = -offset * 120
-                  const translateY = offset * 60
-                  const translateX = offset * 30
-                  const scale     = Math.max(0.5, 1 - offset * 0.12)
-                  const opacity   = offset === 0 ? 1 : Math.max(0.2, 1 - offset * 0.18)
-                  const meta      = SERVICE_META[i] ?? SERVICE_META[0]
-                  const imgSrc    = svc.featuredImageUrl ?? svc.images?.[0] ?? null
+                  const n = services.length
+                  // Signed slot: 0=active, +1=one below, -1=one above, etc.
+                  const raw  = ((i - activeIdx) + n) % n
+                  const slot = raw <= Math.floor(n / 2) ? raw : raw - n
+
+                  // Spiral staircase path
+                  const translateY = slot * 92          // large vertical step
+                  const translateX = slot * 10          // minimal horizontal drift
+                  const translateZ = -Math.abs(slot) * 150  // depth pullback
+
+                  // Each card rotates around its own Y-axis — the tornado spin
+                  // slot ±1 → ±40°, slot ±2 → ±80° (almost edge-on / mirrored)
+                  const rotateY = slot * 40
+                  // Subtle X tilt adds helix feel
+                  const rotateX = slot * -4
+
+                  const scale   = Math.max(0.52, 1 - Math.abs(slot) * 0.13)
+                  const opacity = slot === 0 ? 1 : Math.max(0.22, 1 - Math.abs(slot) * 0.2)
+                  const absSlot = Math.abs(slot)
+                  const meta    = SERVICE_META[i] ?? SERVICE_META[0]
+                  const imgSrc  = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
                   return (
                     <div
@@ -1730,21 +1745,23 @@ export default function PageExperience({
                       style={{
                         position: "absolute",
                         width: "420px",
-                        height: "280px",
+                        height: "268px",
                         marginLeft: "-210px",
-                        marginTop: "-140px",
+                        marginTop: "-134px",
                         transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`,
                         opacity,
-                        zIndex: 6 - offset,
+                        zIndex: 10 - absSlot,
                         backfaceVisibility: "hidden",
                         overflow: "hidden",
                         cursor: "pointer",
                         transition: "all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                        filter: offset === 0 ? "none" : `grayscale(${offset * 20}%) brightness(${1 - offset * 0.1})`,
-                        borderRadius: "4px",
+                        filter: slot === 0
+                          ? "none"
+                          : `grayscale(${absSlot * 22}%) brightness(${Math.max(0.5, 1 - absSlot * 0.12)})`,
+                        borderRadius: "3px",
                       }}
                       onClick={() => {
-                        if (offset === 0) {
+                        if (slot === 0) {
                           setActiveService(svc)
                         } else {
                           activeIdxRef.current = i
@@ -1763,18 +1780,20 @@ export default function PageExperience({
                         <div style={{ position: "absolute", inset: 0, background: `linear-gradient(145deg, ${meta.bg} 0%, #07111f 100%)` }} />
                       )}
 
-                      {/* Gradient overlay */}
+                      {/* Overlay */}
                       <div
                         style={{
                           position: "absolute",
                           inset: 0,
-                          background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)",
+                          background: slot === 0
+                            ? "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)"
+                            : "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 100%)",
                         }}
                       />
 
-                      {/* Active card content */}
-                      {offset === 0 && (
-                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 22px" }}>
+                      {/* Active card label */}
+                      {slot === 0 && (
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "18px 22px" }}>
                           <div
                             style={{
                               fontFamily: "monospace",
@@ -1812,21 +1831,21 @@ export default function PageExperience({
                       )}
 
                       {/* Inactive card title */}
-                      {offset !== 0 && (
-                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "14px 16px" }}>
-                          <div style={{ color: "white", fontWeight: 600, fontSize: "0.8rem", lineHeight: 1.2 }}>
+                      {slot !== 0 && (
+                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 16px" }}>
+                          <div style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "0.78rem", lineHeight: 1.2 }}>
                             {svc.title}
                           </div>
                         </div>
                       )}
 
                       {/* Active copper border */}
-                      {offset === 0 && (
+                      {slot === 0 && (
                         <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.6)", pointerEvents: "none" }} />
                       )}
 
                       {/* HUD corner brackets — active only */}
-                      {offset === 0 && (
+                      {slot === 0 && (
                         <>
                           <div style={{ position: "absolute", top: 10, left: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
                           <div style={{ position: "absolute", top: 10, right: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
@@ -1855,12 +1874,6 @@ export default function PageExperience({
               <div className="pointer-events-none absolute bottom-7 right-7 font-mono text-[8px] uppercase tracking-[0.28em] text-slate-800">
                 {lang === "bg" ? "BSDC — ПОДВОДНИ ОПЕРАЦИИ" : "BSDC — UNDERWATER OPS"}
               </div>
-
-              {/* Right-edge depth vignette */}
-              <div
-                className="pointer-events-none absolute inset-y-0 right-0 w-24"
-                style={{ background: "linear-gradient(to left, rgba(2,8,18,0.85) 0%, transparent 100%)" }}
-              />
             </div>
 
           </div>
