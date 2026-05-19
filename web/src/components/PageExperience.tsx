@@ -168,21 +168,20 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 // Why-us icons cycle by index — CMS items may change, icons rotate gracefully
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
-const CARD_ANGLE_STEP = 60  // degrees per card slot (360 / 6)
-
-function wheelScale(cardIdx: number, angle: number): number {
-  const a = (cardIdx * CARD_ANGLE_STEP + angle) * Math.PI / 180
-  return (Math.cos(a) + 1.5) / 2.5
+interface CardTransform {
+  tx: number; ty: number; scale: number; opacity: number; blur: number; zIndex: number; clickable: boolean
 }
 
-function computeFrontIndex(angle: number, count: number): number {
-  let best = 0
-  let bestScale = -Infinity
-  for (let i = 0; i < count; i++) {
-    const s = wheelScale(i, angle)
-    if (s > bestScale) { bestScale = s; best = i }
-  }
-  return best
+function getCardTransform(i: number, active: number, total: number): CardTransform {
+  if (total === 0) return { tx: 0, ty: 0, scale: 1, opacity: 0, blur: 0, zIndex: 1, clickable: false }
+  const raw = ((i - active) + total) % total
+  const offset = raw <= Math.floor(total / 2) ? raw : raw - total
+  const abs = Math.abs(offset)
+  const sign = offset >= 0 ? 1 : -1
+  if (abs === 0) return { tx: 0,          ty: 0,          scale: 1.00, opacity: 1.00, blur: 0,   zIndex: 10, clickable: true  }
+  if (abs === 1) return { tx: sign * 72,  ty: sign * 44,  scale: 0.82, opacity: 0.58, blur: 1.2, zIndex: 7,  clickable: true  }
+  if (abs === 2) return { tx: sign * 128, ty: sign * 82,  scale: 0.67, opacity: 0.28, blur: 2.8, zIndex: 5,  clickable: true  }
+  return                 { tx: 0,          ty: 0,          scale: 0.50, opacity: 0,    blur: 8,   zIndex: 1,  clickable: false }
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -242,7 +241,7 @@ export default function PageExperience({
   const timelineItems  = timelineSection.items
 
   const [currentScene, setCurrentScene]             = useState(0)
-  const [wheelAngle, setWheelAngle]        = useState(0)
+  const [activeIdx, setActiveIdx]          = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -254,7 +253,7 @@ export default function PageExperience({
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
   const activeServiceRef     = useRef<Service | null>(null)
-  const wheelAngleRef       = useRef(0)
+  const activeIdxRef        = useRef(0)
   const isAnimating            = useRef(false)
   const touchStartY            = useRef(0)
   const projectGridRef         = useRef<HTMLDivElement>(null)
@@ -341,8 +340,21 @@ export default function PageExperience({
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
-  useEffect(() => { wheelAngleRef.current = wheelAngle }, [wheelAngle])
+  useEffect(() => { activeIdxRef.current = activeIdx }, [activeIdx])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
+
+  // Animate left panel text on service change
+  useEffect(() => {
+    if (currentSceneRef.current !== 2) return
+    gsap.to('.svc-text-block', { opacity: 0, y: -10, duration: 0.22, ease: 'power2.in' })
+    const t = setTimeout(() => {
+      gsap.fromTo('.svc-text-block',
+        { opacity: 0, y: 12 },
+        { opacity: 1, y: 0, duration: 0.48, ease: 'power2.out' },
+      )
+    }, 260)
+    return () => clearTimeout(t)
+  }, [activeIdx]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Transitions ───────────────────────────────────────────────────────────
 
@@ -431,8 +443,8 @@ export default function PageExperience({
     if (current === 1) aboutEntranceFired.current = false
     if (current === 2) {
       servicesEntranceFired.current = false
-      wheelAngleRef.current = 0
-      setWheelAngle(0)
+      activeIdxRef.current = 0
+      setActiveIdx(0)
     }
 
     isAnimating.current = true
@@ -586,26 +598,24 @@ export default function PageExperience({
         }
       }
 
-      // On Services scene: spin ferris wheel; navigate at boundary cards
+      // On Services scene: step through service stack
       if (currentSceneRef.current === 2) {
         if (e.deltaY > 30) {
-          const fi = computeFrontIndex(wheelAngleRef.current, services.length)
-          if (fi === services.length - 1) {
+          if (activeIdxRef.current === services.length - 1) {
             goToScene(3)
           } else {
-            const next = wheelAngleRef.current - CARD_ANGLE_STEP
-            wheelAngleRef.current = next
-            setWheelAngle(next)
+            const next = activeIdxRef.current + 1
+            activeIdxRef.current = next
+            setActiveIdx(next)
           }
           return
         } else if (e.deltaY < -30) {
-          const fi = computeFrontIndex(wheelAngleRef.current, services.length)
-          if (fi === 0) {
+          if (activeIdxRef.current === 0) {
             goToScene(1)
           } else {
-            const next = wheelAngleRef.current + CARD_ANGLE_STEP
-            wheelAngleRef.current = next
-            setWheelAngle(next)
+            const next = activeIdxRef.current - 1
+            activeIdxRef.current = next
+            setActiveIdx(next)
           }
           return
         }
@@ -618,6 +628,16 @@ export default function PageExperience({
     function handleTouchEnd(e: TouchEvent) {
       if (selectedProjectRef.current || activeServiceRef.current) return
       const delta = touchStartY.current - e.changedTouches[0].clientY
+      if (currentSceneRef.current === 2) {
+        if (delta > 50) {
+          if (activeIdxRef.current === services.length - 1) goToScene(3)
+          else { const n = activeIdxRef.current + 1; activeIdxRef.current = n; setActiveIdx(n) }
+        } else if (delta < -50) {
+          if (activeIdxRef.current === 0) goToScene(1)
+          else { const n = activeIdxRef.current - 1; activeIdxRef.current = n; setActiveIdx(n) }
+        }
+        return
+      }
       if (delta > 50) goToScene(currentSceneRef.current + 1)
       else if (delta < -50) goToScene(currentSceneRef.current - 1)
     }
@@ -1503,180 +1523,323 @@ export default function PageExperience({
           </div>
         </div>
 
-        {/* ── SERVICES ─────────────────────────────────────────────────────── */}
+        {/* ── SERVICES — Mission Control ───────────────────────────────────── */}
         <div ref={servicesRef} className="absolute inset-0" style={{ willChange: "opacity, transform" }}>
-          <div className="absolute inset-0 flex">
 
-            {/* Left menu */}
-            <div className="services-menu flex w-52 flex-shrink-0 flex-col justify-center border-r border-white/[0.06] bg-[#07111f] px-6 py-12">
-              <div className="mb-8 flex items-center gap-3">
-                <div className="h-px w-6 bg-[#B87333]" />
-                <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
-                  {lang === "bg" ? "Услуги" : "Services"}
-                </span>
-              </div>
-              <nav className="flex flex-col gap-1">
-                {services.map((svc, i) => (
-                  <button
-                    key={svc.id}
-                    type="button"
-                    onClick={() => {
-                      const a = -(i * CARD_ANGLE_STEP)
-                      wheelAngleRef.current = a
-                      setWheelAngle(a)
-                    }}
-                    className={`group flex items-center gap-3 py-3 text-left transition-colors ${
-                      i === computeFrontIndex(wheelAngle, services.length) ? "text-white" : "text-slate-400 hover:text-slate-300"
-                    }`}
-                  >
-                    <div
-                      className={`h-px flex-shrink-0 transition-all duration-300 ${
-                        i === computeFrontIndex(wheelAngle, services.length) ? "w-8 bg-[#B87333]" : "w-4 bg-slate-600 group-hover:bg-slate-400"
-                      }`}
-                    />
-                    <span className="text-xs font-semibold uppercase tracking-[0.12em] leading-tight">
-                      {svc.title}
-                    </span>
-                  </button>
-                ))}
-              </nav>
-            </div>
+          {/* Deep ocean atmosphere */}
+          <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(145deg, #020c1a 0%, #04101f 45%, #020812 100%)" }} />
+          <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 90% 80% at 35% 55%, rgba(6,20,45,0.6) 0%, transparent 65%)" }} />
+          <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 140% 140% at 50% 50%, transparent 30%, rgba(0,0,0,0.72) 100%)" }} />
 
-            {/* Ferris wheel carousel — elliptical path, pure 2D transforms */}
-            {(() => {
-              const frontIndex = computeFrontIndex(wheelAngle, services.length)
-              return (
-                <div
-                  className="relative flex-1 overflow-hidden"
-                  style={{ background: "#020617" }}
-                >
-                  {services.map((svc, i) => {
-                    const a = (i * CARD_ANGLE_STEP + wheelAngle) * Math.PI / 180
-                    const x = Math.sin(a) * 200
-                    const y = -Math.cos(a) * 320
-                    const scale = (Math.cos(a) + 1.5) / 2.5
-                    const zIdx = Math.round(scale * 10)
-                    const opacity = scale > 0.5 ? 1 : scale * 2
-                    const blur = scale > 0.8 ? 0 : (1 - scale) * 4
-                    const isFront = i === frontIndex
+          {/* Layout */}
+          <div className="absolute inset-0 flex flex-col md:flex-row">
 
-                    return (
-                      <div
-                        key={svc.id}
-                        style={{
-                          position: "absolute",
-                          left: "50%",
-                          top: "50%",
-                          width: "420px",
-                          height: "260px",
-                          marginLeft: "-210px",
-                          marginTop: "-130px",
-                          transform: `translate(${x}px, ${y}px) scale(${scale})`,
-                          zIndex: zIdx,
-                          opacity,
-                          filter: `blur(${blur}px) grayscale(${scale > 0.85 ? 0 : 80}%)`,
-                          transition: "all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                          cursor: "pointer",
-                          overflow: "hidden",
-                          borderRadius: "4px",
-                        }}
-                        onClick={() => {
-                          if (isFront) {
-                            setActiveService(svc)
-                          } else {
-                            const next = -(i * CARD_ANGLE_STEP)
-                            wheelAngleRef.current = next
-                            setWheelAngle(next)
-                          }
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = `blur(${blur}px) grayscale(20%)`
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isFront) (e.currentTarget as HTMLDivElement).style.filter = `blur(${blur}px) grayscale(80%)`
-                        }}
-                      >
-                        {svc.featuredImageUrl ? (
-                          <img
-                            src={svc.featuredImageUrl}
-                            alt=""
-                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                        ) : (
-                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #07111f 0%, #020617 100%)" }} />
-                        )}
+            {/* ── LEFT PANEL ─────────────────────────────────────────────── */}
+            <div className="services-menu relative z-10 flex w-full flex-shrink-0 flex-col justify-center overflow-hidden px-7 py-6 md:w-[42%] md:px-14 md:py-0">
+              {/* Panel gradient */}
+              <div className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(to right, rgba(2,8,20,0.98) 0%, rgba(2,8,20,0.90) 75%, rgba(2,8,20,0.50) 100%)" }} />
+              {/* Left copper rule */}
+              <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-px" style={{ background: "linear-gradient(to bottom, transparent 5%, rgba(184,115,51,0.5) 35%, rgba(184,115,51,0.7) 50%, rgba(184,115,51,0.5) 65%, transparent 95%)" }} />
 
+              <div className="relative z-10 flex flex-col justify-center">
+
+                {/* Eyebrow */}
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="h-px w-8 bg-[#B87333]" />
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.45em] text-[#B87333]">
+                    {lang === "bg" ? "BSDC · ОПЕРАЦИИ" : "BSDC · OPERATIONS"}
+                  </span>
+                </div>
+
+                {/* Counter */}
+                <div className="svc-counter mb-2 font-mono text-[11px] tracking-[0.22em] text-slate-600">
+                  {String(activeIdx + 1).padStart(2, "0")}
+                  <span className="mx-2 text-slate-800">/</span>
+                  {String(services.length).padStart(2, "0")}
+                </div>
+
+                {/* Animated text block */}
+                <div className="svc-text-block">
+                  <h2 className="mb-4 text-[1.85rem] font-black leading-[1.05] tracking-tight text-white md:text-[2.3rem]">
+                    {services[activeIdx]?.title ?? ""}
+                  </h2>
+
+                  {services[activeIdx]?.shortDescription && (
+                    <p className="mb-5 line-clamp-3 text-[13px] leading-relaxed text-slate-300/70">
+                      {services[activeIdx].shortDescription}
+                    </p>
+                  )}
+
+                  {/* Activity chips */}
+                  {(SERVICE_META[activeIdx]?.activities?.length ?? 0) > 0 && (
+                    <div className="mb-5 flex flex-wrap gap-1.5">
+                      {SERVICE_META[activeIdx].activities.slice(0, 4).map((act, j) => (
+                        <span
+                          key={j}
+                          className="border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[10px] uppercase tracking-[0.09em] text-slate-400"
+                        >
+                          {act}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Technical metadata */}
+                  {(SERVICE_META[activeIdx]?.cards?.length ?? 0) > 0 && (
+                    <div className="mb-7 grid grid-cols-3 gap-2">
+                      {SERVICE_META[activeIdx].cards.map((card, j) => (
                         <div
+                          key={j}
+                          className="bg-white/[0.025] p-3"
                           style={{
-                            position: "absolute",
-                            inset: 0,
-                            background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)",
-                          }}
-                        />
-
-                        <div
-                          style={{
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            padding: isFront ? "20px 22px" : "14px 16px",
+                            borderLeft: `2px solid ${SERVICE_META[activeIdx]?.accent ?? "#B87333"}38`,
+                            borderBottom: "1px solid rgba(255,255,255,0.04)",
                           }}
                         >
-                          <div
-                            style={{
-                              fontFamily: "monospace",
-                              fontSize: "11px",
-                              fontWeight: 900,
-                              letterSpacing: "0.25em",
-                              color: "#B87333",
-                              marginBottom: "4px",
-                            }}
-                          >
-                            {String(i + 1).padStart(2, "0")}
-                          </div>
-
-                          <div
-                            style={{
-                              color: "white",
-                              fontWeight: 700,
-                              fontSize: isFront ? "1.1rem" : "0.8rem",
-                              lineHeight: 1.2,
-                              marginBottom: isFront ? "10px" : 0,
-                            }}
-                          >
-                            {svc.title}
-                          </div>
-
-                          {isFront && (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                color: "#B87333",
-                                fontSize: "11px",
-                                letterSpacing: "0.08em",
-                                fontWeight: 600,
-                              }}
-                            >
-                              {lang === "bg" ? "Виж услугата" : "View service"}
-                              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                <path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </div>
-                          )}
+                          <div className="mb-0.5 text-[9px] uppercase tracking-[0.2em] text-slate-700">{card.title}</div>
+                          <div className="text-base font-black leading-none text-white">{card.value}</div>
+                          <div className="text-[10px] leading-snug text-slate-500">{card.sub}</div>
                         </div>
-
-                        {isFront && (
-                          <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.45)", pointerEvents: "none" }} />
-                        )}
-                      </div>
-                    )
-                  })}
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )
-            })()}
+
+                {/* Navigation row */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    disabled={activeIdx === 0}
+                    onClick={() => { if (activeIdx > 0) { const n = activeIdx - 1; activeIdxRef.current = n; setActiveIdx(n) } }}
+                    className="flex h-9 w-9 items-center justify-center border border-white/10 text-slate-500 transition-all hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M8.5 2.5L4 6.5l4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    {services.map((_, j) => (
+                      <button
+                        key={j}
+                        type="button"
+                        onClick={() => { activeIdxRef.current = j; setActiveIdx(j) }}
+                        className="h-0.5 transition-all duration-300"
+                        style={{
+                          width: j === activeIdx ? "28px" : "8px",
+                          background: j === activeIdx
+                            ? (SERVICE_META[activeIdx]?.accent ?? "#B87333")
+                            : "rgba(255,255,255,0.18)",
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={activeIdx === services.length - 1}
+                    onClick={() => { if (activeIdx < services.length - 1) { const n = activeIdx + 1; activeIdxRef.current = n; setActiveIdx(n) } }}
+                    className="flex h-9 w-9 items-center justify-center border border-white/10 text-slate-500 transition-all hover:border-white/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M4.5 2.5L9 6.5l-4.5 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => services[activeIdx] && setActiveService(services[activeIdx])}
+                    className="ml-1 flex items-center gap-2 border border-white/12 bg-white/[0.04] px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-slate-300 transition-all hover:border-white/25 hover:bg-white/[0.07] hover:text-white"
+                  >
+                    {lang === "bg" ? "Детайли" : "Details"}
+                    <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <path d="M1.5 5.5h8M6.5 2l3 3.5-3 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Compact service list — desktop only */}
+                <div className="mt-6 hidden flex-col border-t border-white/[0.05] pt-4 md:flex">
+                  {services.map((svc, i) => (
+                    <button
+                      key={svc.id}
+                      type="button"
+                      onClick={() => { activeIdxRef.current = i; setActiveIdx(i) }}
+                      className={`flex items-center gap-3 py-1.5 text-left transition-colors ${i === activeIdx ? "text-white" : "text-slate-600 hover:text-slate-400"}`}
+                    >
+                      <div
+                        className="h-px flex-shrink-0 transition-all duration-300"
+                        style={{
+                          width: i === activeIdx ? "22px" : "9px",
+                          background: i === activeIdx
+                            ? (SERVICE_META[i]?.accent ?? "#B87333")
+                            : "rgba(255,255,255,0.12)",
+                        }}
+                      />
+                      <span className="text-[10px] uppercase tracking-[0.1em] leading-snug">{svc.title}</span>
+                    </button>
+                  ))}
+                </div>
+
+              </div>
+            </div>
+
+            {/* ── RIGHT PANEL — Cinematic depth stack ─────────────────────── */}
+            <div className="relative min-h-[55vw] flex-1 overflow-hidden md:min-h-0">
+              {/* Atmospheric right-side gradient */}
+              <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 70% at 60% 50%, rgba(8,22,45,0.35) 0%, rgba(2,8,18,0.75) 100%)" }} />
+
+              {/* Card stack */}
+              {services.map((svc, i) => {
+                const { tx, ty, scale, opacity, blur, zIndex, clickable } = getCardTransform(i, activeIdx, services.length)
+                const meta = SERVICE_META[i] ?? SERVICE_META[0]
+                const isFront = i === activeIdx
+                const imgSrc = svc.featuredImageUrl ?? svc.images?.[0] ?? null
+
+                return (
+                  <div
+                    key={svc.id}
+                    style={{
+                      position: "absolute",
+                      left: "50%",
+                      top: "50%",
+                      width: "min(680px, 88%)",
+                      height: "min(425px, 55vw)",
+                      marginLeft: "calc(-1 * min(340px, 44%))",
+                      marginTop: "calc(-1 * min(212px, 27.5vw))",
+                      transform: `translate3d(${tx}px, ${ty}px, 0) scale(${scale})`,
+                      zIndex,
+                      opacity,
+                      filter: `blur(${blur}px) brightness(${opacity > 0.9 ? 1 : 0.4 + opacity * 0.6})`,
+                      transition: "all 0.72s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                      cursor: clickable ? "pointer" : "default",
+                      overflow: "hidden",
+                    }}
+                    onClick={() => {
+                      if (isFront) {
+                        setActiveService(svc)
+                      } else if (clickable) {
+                        activeIdxRef.current = i
+                        setActiveIdx(i)
+                      }
+                    }}
+                  >
+                    {/* Image */}
+                    {imgSrc ? (
+                      <img
+                        src={imgSrc}
+                        alt=""
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(145deg, ${meta.bg} 0%, #020812 100%)` }} />
+                    )}
+
+                    {/* Cinematic overlay */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background: isFront
+                          ? "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.12) 55%, transparent 100%)"
+                          : "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.50) 100%)",
+                      }}
+                    />
+
+                    {/* Active card info */}
+                    {isFront && (
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "22px 26px" }}>
+                        <div
+                          style={{
+                            fontFamily: "monospace",
+                            fontSize: "10px",
+                            fontWeight: 900,
+                            letterSpacing: "0.32em",
+                            color: meta.accent,
+                            marginBottom: "7px",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {String(i + 1).padStart(2, "0")} — {lang === "bg" ? "АКТИВНА ОПЕРАЦИЯ" : "ACTIVE OPERATION"}
+                        </div>
+                        <div style={{ color: "white", fontWeight: 800, fontSize: "1.2rem", lineHeight: 1.15, marginBottom: "10px" }}>
+                          {svc.title}
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            color: meta.accent,
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            letterSpacing: "0.12em",
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          {lang === "bg" ? "Отвори досие" : "Open dossier"}
+                          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                            <path d="M1.5 5.5h8M6.5 2l3 3.5-3 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Inactive card index tag */}
+                    {!isFront && opacity > 0.15 && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 14,
+                          left: 14,
+                          fontFamily: "monospace",
+                          fontSize: "10px",
+                          fontWeight: 900,
+                          letterSpacing: "0.2em",
+                          color: "rgba(255,255,255,0.28)",
+                          background: "rgba(0,0,0,0.45)",
+                          padding: "3px 7px",
+                        }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                    )}
+
+                    {/* Active copper border */}
+                    {isFront && (
+                      <div style={{ position: "absolute", inset: 0, border: `1px solid ${meta.accent}55`, pointerEvents: "none" }} />
+                    )}
+
+                    {/* HUD corner brackets — active only */}
+                    {isFront && (
+                      <>
+                        <div style={{ position: "absolute", top: 11, left: 11, width: 18, height: 18, borderTop: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                        <div style={{ position: "absolute", top: 11, right: 11, width: 18, height: 18, borderTop: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                        <div style={{ position: "absolute", bottom: 11, left: 11, width: 18, height: 18, borderBottom: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                        <div style={{ position: "absolute", bottom: 11, right: 11, width: 18, height: 18, borderBottom: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* HUD labels */}
+              <div className="pointer-events-none absolute right-7 top-7 flex items-center gap-2">
+                <div
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: SERVICE_META[activeIdx]?.accent ?? "#B87333", boxShadow: `0 0 7px ${SERVICE_META[activeIdx]?.accent ?? "#B87333"}` }}
+                />
+                <span className="font-mono text-[8px] uppercase tracking-[0.35em] text-slate-700">
+                  MISSION CONTROL
+                </span>
+              </div>
+              <div className="pointer-events-none absolute bottom-7 right-7 font-mono text-[8px] uppercase tracking-[0.28em] text-slate-800">
+                {lang === "bg" ? "BSDC — ПОДВОДНИ ОПЕРАЦИИ" : "BSDC — UNDERWATER OPS"}
+              </div>
+
+              {/* Right-edge depth vignette */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-24" style={{ background: "linear-gradient(to left, rgba(2,8,18,0.85) 0%, transparent 100%)" }} />
+            </div>
 
           </div>
         </div>
@@ -2154,7 +2317,7 @@ export default function PageExperience({
       </div>
 
       {/* ── SERVICE DETAIL — outside rootRef so fixed positioning works ─────── */}
-      {activeService && renderServiceDetail(activeService, computeFrontIndex(wheelAngle, services.length))}
+      {activeService && renderServiceDetail(activeService, activeIdx)}
 
       {/* ── PROJECT DETAIL MODAL — outside rootRef ───────────────────────── */}
       {selectedProject && (() => {
