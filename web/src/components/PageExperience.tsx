@@ -34,21 +34,21 @@ interface ServiceMeta {
 
 const SERVICE_META: ServiceMeta[] = [
   {
-    // 0 — Индустриални водолазни услуги (diving-services, sortOrder 0)
+    // 0 — Индустриални водолазни услуги
     accent: "#B87333",
     bg: "#07111f",
     activities: [
-      "Подводни огледи и инспекции",
-      "Подводни ремонти и укрепване",
-      "Монтаж и демонтаж на конструкции",
-      "Почистване на подводни повърхности",
-      "Подводно бетониране",
-      "Аварийни водолазни операции",
+      "Подводни огледи и диагностика на конструкции",
+      "Ремонти под вода — бетон, метал, хидроизолация",
+      "Монтаж и демонтаж на подводно оборудване",
+      "Аварийни операции при нулева видимост",
+      "Подводно бетониране и укрепване",
+      "Видео и фото документация в реално време",
     ],
     cards: [
-      { title: "Услуга", value: "Подводна", sub: "индустриална" },
-      { title: "Метод", value: "Водолазен", sub: "инспекции" },
-      { title: "Изход", value: "Доклад", sub: "документиране" },
+      { title: "Работна дълбочина", value: "50м+", sub: "и по-дълбоко" },
+      { title: "Реакция", value: "24ч", sub: "аварийна готовност" },
+      { title: "Стандарт", value: "ISO", sub: "45001 · QM" },
     ],
   },
   {
@@ -56,17 +56,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#00c8e8",
     bg: "#040e1a",
     activities: [
-      "Видео и фотодокументиране на конструкции",
-      "Обследване на тръбопроводи и кабели",
-      "ROV инспекции при ограничена видимост",
-      "Инспекция на труднодостъпни зони",
-      "Документиране на дефекти и повреди",
-      "Изготвяне на технически доклади",
+      "HD видео инспекция на потопени конструкции",
+      "Обследване на тръбопроводи, кабели и кейове",
+      "Инспекция при нулева видимост и голяма дълбочина",
+      "Картиране на труднодостъпни подводни зони",
+      "Детектиране и документиране на дефекти",
+      "Технически доклади с GPS координати",
     ],
     cards: [
-      { title: "Метод", value: "ROV", sub: "дистанционен" },
-      { title: "Изход", value: "Видео", sub: "документиране" },
-      { title: "Приложение", value: "Инспекция", sub: "обследване" },
+      { title: "Макс. дълбочина", value: "200м", sub: "LBV-200 / LBV-300" },
+      { title: "Камера", value: "HD", sub: "видео в реално време" },
+      { title: "Точност", value: "±2см", sub: "позициониране" },
     ],
   },
   {
@@ -74,17 +74,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#38bdf8",
     bg: "#040c18",
     activities: [
-      "Батиметрични измервания",
-      "Сонарни обследвания на дъното",
-      "Хидрографски изследвания",
-      "Мониторинг на наносни отложения",
-      "Изготвяне на цифрови модели на дъното",
-      "Технически доклади и карти",
+      "Батиметрично картиране на дъното",
+      "Многолъчев сонар — пълно зонално покритие",
+      "Хидрографски проучвания по БДС/ISO",
+      "Мониторинг на наносни отложения и обеми",
+      "Цифрови 3D модели на дъното (DEM)",
+      "Сертифицирани хидрографски доклади",
     ],
     cards: [
-      { title: "Метод", value: "Сонар", sub: "измерване" },
-      { title: "Изход", value: "Карта", sub: "на дъното" },
-      { title: "Данни", value: "Цифров", sub: "модел" },
+      { title: "Точност", value: "±5см", sub: "вертикална" },
+      { title: "Покритие", value: "100%", sub: "зонално" },
+      { title: "Формат", value: "DXF/PDF", sub: "изходни данни" },
     ],
   },
   {
@@ -92,35 +92,35 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#B87333",
     bg: "#0c0e14",
     activities: [
-      "Мониторинг на техническото състояние",
+      "Ежедневен обход и визуален мониторинг",
       "Контрол на водоизпускателните органи",
-      "Профилактика и текущи ремонти",
-      "Технически отчети и документация",
-      "Действия при аварийни ситуации",
-      "Координация с компетентните органи",
+      "Превантивна поддръжка и текущи ремонти",
+      "Технически дневник и регулаторни отчети",
+      "Аварийни действия — денонощна готовност",
+      "Координация с ДАМТН и водно стопанство",
     ],
     cards: [
-      { title: "Тип", value: "Язовири", sub: "оператор" },
-      { title: "Обслужване", value: "Редовно", sub: "поддръжка" },
-      { title: "Изход", value: "Отчет", sub: "документация" },
+      { title: "Покритие", value: "Цяла BG", sub: "всички язовири" },
+      { title: "Обход", value: "Ежедн.", sub: "при необходимост" },
+      { title: "Реакция", value: "24/7", sub: "при инцидент" },
     ],
   },
   {
     // 4 — Хидротехническо строителство
-    accent: "#B87333",
+    accent: "#9ca3af",
     bg: "#0a0b0d",
     activities: [
-      "Ремонт на хидротехнически съоръжения",
-      "Подводно и надводно бетониране",
-      "Монтаж на метални конструкции",
-      "Укрепителни и защитни работи",
-      "Хидроизолация на съоръжения",
-      "Строително-монтажни работи",
+      "Ремонт и укрепване на бетонни съоръжения",
+      "Подводно бетониране с водоустойчиви смеси",
+      "Монтаж на стоманени конструкции и шпунтове",
+      "Хидроизолация на стени, дъна и шахти",
+      "Укрепване на свлачища и брегозащитни работи",
+      "Сухи СМР — кейове, диги, водовземни кули",
     ],
     cards: [
-      { title: "Тип", value: "СМР", sub: "строителство" },
-      { title: "Метод", value: "Подводен", sub: "и надводен" },
-      { title: "Изход", value: "Доклад", sub: "документация" },
+      { title: "Работна дълб.", value: "50м", sub: "под вода" },
+      { title: "Методи", value: "Мокри+Сухи", sub: "СМР" },
+      { title: "Документация", value: "Пълна", sub: "строит. досие" },
     ],
   },
   {
@@ -128,17 +128,17 @@ const SERVICE_META: ServiceMeta[] = [
     accent: "#60a5fa",
     bg: "#061020",
     activities: [
-      "Пробни водолазни изживявания",
-      "Начални курсове по NAUI",
-      "Начални курсове по CMAS",
-      "Курсове за напреднали водолази",
-      "Обучение на открита вода",
-      "Теоретична и практическа подготовка",
+      "Пробно гмуркане за начинаещи — Черно море",
+      "Open Water Diver — NAUI & CMAS ★",
+      "Advanced Open Water — NAUI & CMAS ★★",
+      "Rescue Diver и First Aid",
+      "Специализирани курсове — нощно, wreck, deep",
+      "Теоретична и практическа подготовка в басейн",
     ],
     cards: [
-      { title: "Система", value: "NAUI", sub: "сертификати" },
-      { title: "Система", value: "CMAS", sub: "сертификати" },
-      { title: "Обучение", value: "Открита", sub: "вода" },
+      { title: "NAUI", value: "OW→DM", sub: "пълна прогресия" },
+      { title: "CMAS", value: "★→★★★", sub: "международен стандарт" },
+      { title: "Група", value: "≤ 4", sub: "студента/инструктор" },
     ],
   },
 ]
@@ -229,12 +229,14 @@ export default function PageExperience({
   const [activeIdx, setActiveIdx]          = useState(0)
   const [scrollPos, setScrollPos]          = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
+  const [expandedAct, setExpandedAct]              = useState<number | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
   const [showContactModal, setShowContactModal]     = useState(false)
   const [selectedProject, setSelectedProject]       = useState<ProjectNewsItem | null>(null)
   const [projectFilter, setProjectFilter]           = useState<'ALL' | 'PROJECT' | 'NEWS'>('ALL')
   const [categoryFilter, setCategoryFilter]         = useState<string>('ALL')
+  const [lightboxSrc, setLightboxSrc]               = useState<string | null>(null)
 
   const currentSceneRef      = useRef(0)
   const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
@@ -338,6 +340,60 @@ export default function PageExperience({
     if (currentSceneRef.current !== 2) return
     gsap.fromTo('.svc-text-block', { opacity: 0.3 }, { opacity: 1, duration: 0.55, ease: 'power1.out' })
   }, [activeIdx]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cinematic entrance animations for service detail overlays
+  useEffect(() => {
+    if (!activeService) return
+
+    // Read stat numbers before hiding (GSAP only changes opacity/transform, not textContent,
+    // but we save references here so the counter closure captures the correct DOM nodes)
+    type StatCounter = { el: HTMLElement; prefix: string; num: number; suffix: string }
+    const statCounters: StatCounter[] = []
+    document.querySelectorAll<HTMLElement>('.sd-stat').forEach((statEl) => {
+      const valueEl = statEl.querySelector<HTMLElement>('div')
+      if (!valueEl) return
+      const raw = valueEl.textContent ?? ''
+      const match = raw.match(/^([^0-9]*)(\d+)(.*)$/)
+      if (!match) return
+      const num = parseFloat(match[2])
+      if (isNaN(num) || num < 2) return
+      statCounters.push({ el: valueEl, prefix: match[1], num, suffix: match[3] })
+    })
+
+    // Set everything invisible before panel-in completes
+    gsap.set('.sd-image, .sd-eyebrow, .sd-title, .sd-desc, .sd-card, .sd-row, .sd-stat', { opacity: 0 })
+    const tl = gsap.timeline()
+    // Image: dramatic scale-in
+    tl.fromTo('.sd-image',   { scale: 1.07, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.1, ease: 'power2.out' }, 0.1)
+    // Eyebrow: slide from left
+    tl.fromTo('.sd-eyebrow', { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 0.55, ease: 'power3.out' }, 0.3)
+    // Title: clip-path wipe from bottom upward + slide up — more cinematic than plain fade
+    tl.fromTo('.sd-title',   { y: 36, opacity: 0, clipPath: 'inset(100% 0 0 0)' }, { y: 0, opacity: 1, clipPath: 'inset(0% 0 0 0)', duration: 0.68, ease: 'power3.out' }, 0.45)
+    // Description
+    tl.fromTo('.sd-desc',    { y: 18, opacity: 0 },  { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.6)
+    // Activity cards stagger in with bounce
+    tl.fromTo('.sd-card',    { y: 24, opacity: 0 },  { y: 0, opacity: 1, stagger: 0.055, duration: 0.48, ease: 'back.out(1.2)' }, 0.72)
+    // List rows slide in from left
+    tl.fromTo('.sd-row',     { x: -16, opacity: 0 }, { x: 0, opacity: 1, stagger: 0.04, duration: 0.4, ease: 'power2.out' }, 0.75)
+    // Stat tiles pop in with back-ease
+    tl.fromTo('.sd-stat',    { y: 18, opacity: 0, scale: 0.93 }, { y: 0, opacity: 1, scale: 1, stagger: 0.07, duration: 0.5, ease: 'back.out(1.3)' }, 0.78)
+
+    // After sd-image entrance ends (~1.2s), clear GSAP inline transform so
+    // CSS animations (dam-drift) can take over without being blocked by inline style
+    tl.call(() => gsap.set('.sd-image', { clearProps: 'transform' }), [], 1.25)
+
+    // Counter animation: numbers count up as stat tiles materialize
+    statCounters.forEach(({ el, prefix, num, suffix }, idx) => {
+      const counter = { val: num > 20 ? Math.round(num * 0.25) : 0 }
+      gsap.to(counter, {
+        val: num,
+        duration: 1.3,
+        delay: 0.92 + idx * 0.07,
+        ease: 'power2.out',
+        onUpdate() { el.textContent = prefix + Math.round(counter.val) + suffix },
+      })
+    })
+  }, [activeService]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Transitions ───────────────────────────────────────────────────────────
 
@@ -703,21 +759,20 @@ export default function PageExperience({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Service detail overlay (6 unique layouts) ─────────────────────────────
+  // ── Service detail overlay (6 unique cinematic layouts) ──────────────────
 
   function renderServiceDetail(svc: Service, svcIdx: number) {
     const meta = SERVICE_META[svcIdx] ?? SERVICE_META[0]
-
-    const closeDetail = () => {
-      setActiveService(null)
-    }
+    const closeDetail = () => setActiveService(null)
+    const galleryImages: string[] = svc.images?.length > 0 ? svc.images : []
+    const imgSrc = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
     const CloseBtn = (
       <button
         type="button"
         onClick={closeDetail}
         className="fixed right-8 bottom-8 z-[510] flex h-12 w-12 cursor-pointer items-center justify-center border border-white/25 bg-black/70 text-white/70 backdrop-blur-sm transition-all hover:border-white/50 hover:bg-black/90 hover:text-white"
-        aria-label={lang === "bg" ? "Затвори" : "Close"}
+        aria-label="Close"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <path d="M14 4L4 14M4 4l10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -735,537 +790,556 @@ export default function PageExperience({
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M9 2.5L4.5 7 9 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {lang === "bg" ? "Назад към услугите" : "Back to services"}
+        {lang === "bg" ? "Назад" : "Back"}
       </button>
     )
 
-    const galleryImages = svc.images?.length > 0 ? svc.images : []
-
-    const GalleryStrip = galleryImages.length > 0 ? (
-      <div className="flex gap-2">
-        {galleryImages.map((src, i) => (
-          <div
-            key={i}
-            className="relative h-48 flex-1 overflow-hidden"
-            style={{ border: `1px solid ${meta.accent}30` }}
-          >
-            <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-75 transition-opacity hover:opacity-100" />
-          </div>
-        ))}
-      </div>
-    ) : null
-
-    const ActivitiesList = (
-      <ul className="flex flex-col gap-2">
-        {meta.activities.map((act, i) => (
-          <li key={i} className="flex items-start gap-3 text-sm leading-relaxed text-slate-300">
-            <span
-              className="mt-[7px] h-[5px] w-[5px] flex-shrink-0 rounded-full"
-              style={{ background: meta.accent }}
-            />
-            {act}
-          </li>
-        ))}
-      </ul>
-    )
-
-    const StatCards = (
-      <div className="flex gap-3">
-        {meta.cards.map((card, i) => (
-          <div
-            key={i}
-            className="flex-1 p-3"
-            style={{ border: `1px solid ${meta.accent}40`, background: `${meta.accent}10` }}
-          >
-            <div className="text-lg font-black" style={{ color: meta.accent }}>{card.value}</div>
-            <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-white/70">{card.title}</div>
-            <div className="text-[9px] text-white/35">{card.sub}</div>
-          </div>
-        ))}
-      </div>
-    )
-
-    // ── Layout 0: Industrial — side-by-side, image left ─────────────────────
+    // ── Layout 0 — Industrial Diving — SPLIT SCREEN (Operations Room) ────────
     if (svcIdx === 0) {
       return (
-        <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
-          style={{ background: meta.bg }}
-        >
-          {CloseBtn}
-          {BackBtn}
-          <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
-            {/* Left: main image — full height, no scroll */}
-            <div className="relative h-64 flex-shrink-0 lg:h-auto lg:w-[44%]">
-              {(svc.featuredImageUrl || svc.images.length > 0) ? (
-                <img
-                  src={svc.featuredImageUrl ?? svc.images[0]}
-                  alt={svc.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
-              )}
-              <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, #07111f)" }} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07111f] via-transparent to-transparent lg:hidden" />
-              {/* Vertical accent line */}
-              <div
-                className="absolute right-0 top-0 hidden h-full w-0.5 lg:block"
-                style={{ background: `linear-gradient(to bottom, transparent, ${meta.accent}, transparent)` }}
-              />
-            </div>
+        <div className="animate-bsdc-panel-in fixed inset-0 z-[500] flex overflow-hidden pointer-events-auto" style={{ background: "#07111f" }}>
+          {CloseBtn}{BackBtn}
 
-            {/* Right: scrollable content column */}
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-16 lg:py-20">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="h-px w-8" style={{ background: meta.accent }} />
-                  <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                    {lang === "bg" ? "Индустриален водолазен отдел" : "Industrial diving"}
-                  </span>
-                </div>
-                <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
-                {svc.content && (
-                  <div
-                    className="mb-6 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                    dangerouslySetInnerHTML={{ __html: svc.content }}
-                  />
-                )}
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Основни дейности" : "Key activities"}
-                </h3>
-                <div className="mb-6">{ActivitiesList}</div>
-                <div className="mb-2">{StatCards}</div>
-              </div>
-              {GalleryStrip ? (
-                <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
-              ) : (
-                <div className="h-24 flex-shrink-0" />
-              )}
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    // ── Layout 1: ROV — monitor viewport top, columns below ─────────────────
-    if (svcIdx === 1) {
-      return (
-        <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
-          style={{ background: meta.bg }}
-        >
-          {CloseBtn}
-          {BackBtn}
-
-          {/* Monitor viewport frame — flex-shrink-0 at top */}
-          <div className="flex-shrink-0 mx-6 mt-10 mb-5 border-2 lg:mx-16 lg:mt-12" style={{ borderColor: `${meta.accent}60` }}>
-            <div className="relative h-56 overflow-hidden lg:h-72">
-              {(svc.featuredImageUrl || svc.images.length > 0) ? (
-                <img
-                  src={svc.featuredImageUrl ?? svc.images[0]}
-                  alt={svc.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
-              )}
-              {/* Scan-line overlay */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{ background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,200,232,0.03) 2px, rgba(0,200,232,0.03) 4px)" }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#040e1a]/80 to-transparent" />
-              {/* HUD corners */}
-              {[["left-2 top-2 border-l-2 border-t-2",""],["right-2 top-2 border-r-2 border-t-2",""],["left-2 bottom-2 border-l-2 border-b-2",""],["right-2 bottom-2 border-r-2 border-b-2",""]].map(([cls], i) => (
-                <div key={i} className={`absolute h-4 w-4 ${cls}`} style={{ borderColor: meta.accent }} />
-              ))}
-              <div className="absolute bottom-3 left-3 font-mono text-[10px] uppercase tracking-wider" style={{ color: meta.accent }}>
-                ROV LIVE · HD REC
-              </div>
-            </div>
+          {/* LEFT — full-height atmospheric image */}
+          <div className="relative hidden w-[45%] flex-shrink-0 md:block">
+            {imgSrc
+              ? <img src={imgSrc} alt={svc.title} className="sd-image absolute inset-0 h-full w-full object-cover object-center" style={{ filter: "brightness(0.45) saturate(0.7)" }} />
+              : <div className="absolute inset-0 bg-[#030a14]" />
+            }
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent 60%, #07111f 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.7) 100%)" }} />
+            <div className="absolute bottom-0 left-0 top-0 w-[3px]" style={{ background: "linear-gradient(to bottom, transparent, #B87333, transparent)" }} />
+            <div className="absolute bottom-14 left-8 font-mono text-[10px] tracking-[0.35em] text-[#B87333]/50 uppercase">BSDC · {lang === "bg" ? "ОТ 2001" : "SINCE 2001"}</div>
           </div>
 
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-5 lg:px-16">
-            <h2 className="mb-5 text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
+          {/* RIGHT — content panel, scrollable */}
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="flex min-h-full flex-col px-10 py-14 lg:px-16 lg:py-20">
 
-            <div className="grid gap-8 lg:grid-cols-2">
-              <div>
-                {svc.content && (
-                  <div
-                    className="mb-4 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                    dangerouslySetInnerHTML={{ __html: svc.content }}
-                  />
-                )}
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Обхват на инспекциите" : "Inspection scope"}
-                </h3>
-                {ActivitiesList}
-              </div>
-              <div>
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Технически параметри" : "Technical specs"}
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {meta.cards.map((card, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-4 border-l-2 px-4 py-3"
-                      style={{ borderColor: meta.accent, background: `${meta.accent}08` }}
-                    >
-                      <div className="font-mono text-2xl font-black" style={{ color: meta.accent }}>{card.value}</div>
-                      <div>
-                        <div className="text-xs font-bold uppercase tracking-wider text-white">{card.title}</div>
-                        <div className="text-[10px] text-white/40">{card.sub}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {GalleryStrip ? (
-            <div className="flex-shrink-0 px-6 pb-24 lg:px-16">{GalleryStrip}</div>
-          ) : (
-            <div className="h-24 flex-shrink-0" />
-          )}
-        </div>
-      )
-    }
-
-    // ── Layout 2: Bathymetry — data panels left, sonar image right ───────────
-    if (svcIdx === 2) {
-      return (
-        <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
-          style={{ background: meta.bg }}
-        >
-          {CloseBtn}
-          {BackBtn}
-          <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
-            {/* Left: scrollable text column */}
-            <div className="flex flex-1 flex-col overflow-hidden lg:w-1/2">
-              <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-16 lg:py-20">
-                <div className="mb-3 flex items-center gap-3">
-                  <div className="h-px w-8" style={{ background: meta.accent }} />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                    SURVEY / HYDROGRAPHY
-                  </span>
-                </div>
-                <h2 className="mb-5 text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
-
-                {/* Measurement cards */}
-                <div className="mb-5 grid grid-cols-3 gap-2">
-                  {meta.cards.map((card, i) => (
-                    <div
-                      key={i}
-                      className="p-3 text-center"
-                      style={{
-                        background: `linear-gradient(135deg, ${meta.accent}15 0%, transparent 100%)`,
-                        border: `1px solid ${meta.accent}30`,
-                      }}
-                    >
-                      <div className="mb-1 font-mono text-base font-black" style={{ color: meta.accent }}>{card.value}</div>
-                      <div className="text-[9px] uppercase tracking-wider text-white/60">{card.title}</div>
-                      <div className="text-[9px] text-white/30">{card.sub}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {svc.content && (
-                  <div
-                    className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                    dangerouslySetInnerHTML={{ __html: svc.content }}
-                  />
-                )}
-                <h3 className="mb-3 text-[10px] font-mono uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Методи и обхват" : "Methods & scope"}
-                </h3>
-                {ActivitiesList}
-              </div>
-              {GalleryStrip ? (
-                <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
-              ) : (
-                <div className="h-24 flex-shrink-0" />
-              )}
-            </div>
-
-            {/* Right: image with sonar overlay — full height */}
-            <div className="relative hidden lg:block lg:w-1/2">
-              {(svc.featuredImageUrl || svc.images.length > 0) ? (
-                <img
-                  src={svc.featuredImageUrl ?? svc.images[0]}
-                  alt={svc.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#040c18]/50" />
-              {/* Sonar rings */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                {[80, 140, 200, 270].map((r) => (
-                  <div
-                    key={r}
-                    className="absolute rounded-full border"
-                    style={{ width: r, height: r, borderColor: `${meta.accent}22` }}
-                  />
-                ))}
-                <div
-                  className="h-3 w-3 rounded-full"
-                  style={{ background: meta.accent, boxShadow: `0 0 14px ${meta.accent}` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    }
-
-    // ── Layout 3: Dam — image strip top, columns below ───────────────────────
-    if (svcIdx === 3) {
-      return (
-        <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
-          style={{ background: meta.bg }}
-        >
-          {CloseBtn}
-          {BackBtn}
-
-          {/* Top image strip — flex-shrink-0 */}
-          <div
-            className="relative flex-shrink-0 h-52 overflow-hidden border-b lg:h-64"
-            style={{ borderColor: `${meta.accent}30` }}
-          >
-            {(svc.featuredImageUrl || svc.images.length > 0) ? (
-              <img
-                src={svc.featuredImageUrl ?? svc.images[0]}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
-            )}
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(to top, #0c0e14 0%, rgba(12,14,20,0.3) 50%, transparent 100%)" }}
-            />
-            <div className="absolute bottom-4 left-6 right-0 lg:left-16">
-              <div className="mb-1.5 flex items-center gap-3">
-                <div className="h-px w-8" style={{ background: meta.accent }} />
-                <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Управление & Експлоатация" : "Operations & Management"}
+              <div className="sd-eyebrow mb-5 flex items-center gap-3">
+                <div className="h-px w-10 bg-[#B87333]" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#B87333]">
+                  {lang === "bg" ? "Индустриален водолазен отдел" : "Industrial Diving Division"}
                 </span>
               </div>
-              <h2 className="text-2xl font-black leading-tight text-white lg:text-3xl">{svc.title}</h2>
-            </div>
-          </div>
 
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto px-6 py-8 lg:px-16">
-            <div className="grid gap-8 lg:grid-cols-3">
-              {/* Content */}
-              <div className="lg:col-span-2">
-                {svc.content && (
-                  <div
-                    className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                    dangerouslySetInnerHTML={{ __html: svc.content }}
-                  />
-                )}
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Основни задачи" : "Core responsibilities"}
-                </h3>
-                {ActivitiesList}
-              </div>
+              <h2 className="sd-title mb-8 text-4xl font-black leading-[1.0] tracking-tight text-white lg:text-5xl">
+                {svc.title}
+              </h2>
 
-              {/* Key metric cards */}
-              <div>
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Ключови показатели" : "Key metrics"}
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {meta.cards.map((card, i) => (
-                    <div
-                      key={i}
-                      className="border p-4"
-                      style={{ borderColor: `${meta.accent}40`, background: `${meta.accent}0a` }}
-                    >
-                      <div className="text-2xl font-black" style={{ color: meta.accent }}>{card.value}</div>
-                      <div className="mt-0.5 text-xs font-bold uppercase tracking-wider text-white/80">{card.title}</div>
-                      <div className="text-[10px] text-white/40">{card.sub}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {GalleryStrip ? (
-            <div className="flex-shrink-0 px-6 pb-24 lg:px-16">{GalleryStrip}</div>
-          ) : (
-            <div className="h-24 flex-shrink-0" />
-          )}
-        </div>
-      )
-    }
-
-    // ── Layout 4: Construction — fullbleed image with title, cards below ─────
-    if (svcIdx === 4) {
-      return (
-        <div
-          className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
-          style={{ background: meta.bg }}
-        >
-          {CloseBtn}
-          {BackBtn}
-
-          {/* Hero image with title overlay — flex-shrink-0 */}
-          <div className="relative flex-shrink-0 h-72 lg:h-96">
-            {(svc.featuredImageUrl || svc.images.length > 0) ? (
-              <img
-                src={svc.featuredImageUrl ?? svc.images[0]}
-                alt={svc.title}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
-            )}
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(to top, #0a0b0d 0%, rgba(10,11,13,0.45) 55%, rgba(10,11,13,0.2) 100%)" }}
-            />
-            <div className="absolute bottom-0 left-0 right-0 px-8 pb-8 lg:px-16">
-              <div className="mb-2 flex items-center gap-3">
-                <div className="h-px w-8" style={{ background: meta.accent }} />
-                <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Строителство & СМР" : "Civil & Maritime Works"}
-                </span>
-              </div>
-              <h2 className="text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
-            </div>
-          </div>
-
-          {/* Scrollable content below image */}
-          <div className="flex-1 overflow-y-auto px-8 py-8 lg:px-16">
-            <div className="grid gap-10 lg:grid-cols-2">
-              <div>
-                {svc.content && (
-                  <div
-                    className="mb-5 text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
-                    dangerouslySetInnerHTML={{ __html: svc.content }}
-                  />
-                )}
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Видове работи" : "Types of works"}
-                </h3>
-                {ActivitiesList}
-              </div>
-              <div>
-                <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Спецификации" : "Specifications"}
-                </h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {meta.cards.map((card, i) => (
-                    <div
-                      key={i}
-                      className="border p-4 text-center"
-                      style={{ borderColor: `${meta.accent}40`, background: "#131415" }}
-                    >
-                      <div className="text-xl font-black" style={{ color: meta.accent }}>{card.value}</div>
-                      <div className="mt-1 text-[9px] uppercase tracking-wider text-white/60">{card.title}</div>
-                      <div className="text-[9px] text-white/30">{card.sub}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {GalleryStrip ? (
-            <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
-          ) : (
-            <div className="h-24 flex-shrink-0" />
-          )}
-        </div>
-      )
-    }
-
-    // ── Layout 5: Courses — split, accreditation cards right ─────────────────
-    return (
-      <div
-        className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden flex flex-col pointer-events-auto"
-        style={{ background: meta.bg }}
-      >
-        {CloseBtn}
-        {BackBtn}
-        <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
-          {/* Left: scrollable text column */}
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-8 py-10 lg:px-16 lg:py-20">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="h-px w-8" style={{ background: meta.accent }} />
-                <span className="text-[10px] uppercase tracking-[0.35em]" style={{ color: meta.accent }}>
-                  {lang === "bg" ? "Обучение & Сертификация" : "Training & Certification"}
-                </span>
-              </div>
-              <h2 className="mb-5 text-3xl font-black leading-tight text-white lg:text-4xl">{svc.title}</h2>
               {svc.content && (
                 <div
-                  className="mb-5 max-w-lg text-sm leading-relaxed text-slate-300 [&_p]:mb-3"
+                  className="sd-desc mb-10 max-w-2xl text-base leading-[1.8] text-slate-300 [&_p]:mb-4"
                   dangerouslySetInnerHTML={{ __html: svc.content }}
                 />
               )}
-              <h3 className="mb-3 text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-                {lang === "bg" ? "Програми на обучение" : "Training programs"}
-              </h3>
-              {ActivitiesList}
-            </div>
-            {GalleryStrip ? (
-              <div className="flex-shrink-0 px-8 pb-24 lg:px-16">{GalleryStrip}</div>
-            ) : (
-              <div className="h-24 flex-shrink-0" />
-            )}
-          </div>
 
-          {/* Right: image + accreditation cards — full height */}
-          <div
-            className="flex flex-col justify-center gap-4 px-8 py-10 lg:w-80 lg:flex-shrink-0 lg:px-10"
-            style={{ background: `${meta.accent}08`, borderLeft: `1px solid ${meta.accent}20` }}
-          >
-            <div className="relative h-44 overflow-hidden">
-              {(svc.featuredImageUrl || svc.images.length > 0) ? (
-                <img
-                  src={svc.featuredImageUrl ?? svc.images[0]}
-                  alt={svc.title}
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
-              ) : (
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1a2744 0%, #0d1f3c 100%)' }} />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#061020]/80 to-transparent" />
-            </div>
-            <h3 className="text-[10px] uppercase tracking-[0.3em]" style={{ color: meta.accent }}>
-              {lang === "bg" ? "Акредитации & резултати" : "Accreditations & results"}
-            </h3>
-            {meta.cards.map((card, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 border-l-2 px-4 py-3"
-                style={{ borderColor: meta.accent, background: "rgba(255,255,255,0.03)" }}
-              >
-                <div className="text-2xl font-black" style={{ color: meta.accent }}>{card.value}</div>
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-white">{card.title}</div>
-                  <div className="text-[10px] text-white/40">{card.sub}</div>
+              <div className="mb-10">
+                <div className="mb-5 flex items-center gap-4">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#B87333]">
+                    {lang === "bg" ? "Операции" : "Operations"}
+                  </span>
+                  <div className="h-px flex-1" style={{ background: "linear-gradient(to right, rgba(184,115,51,0.4), transparent)" }} />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {meta.activities.map((act, i) => (
+                    <div key={i} className="sd-card flex items-start gap-4 py-4 px-5" style={{ borderLeft: "2px solid rgba(184,115,51,0.25)", background: "rgba(184,115,51,0.04)" }}>
+                      <svg className="mt-1 flex-shrink-0" width="8" height="8" viewBox="0 0 8 8" fill="none">
+                        <rect x="4" y="0.5" width="5" height="5" transform="rotate(45 4 0.5)" fill="#B87333" fillOpacity="0.7" />
+                      </svg>
+                      <span className="text-sm leading-snug text-slate-200">{act}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+
+              <div className="grid grid-cols-3 gap-4 mb-10">
+                {meta.cards.map((card, i) => (
+                  <div key={i} className="sd-stat relative p-5 overflow-hidden" style={{ background: "rgba(184,115,51,0.06)", border: "1px solid rgba(184,115,51,0.2)" }}>
+                    <div className="font-mono text-4xl font-black leading-none text-white">{card.value}</div>
+                    <div className="mt-2 text-[11px] font-bold uppercase tracking-wider text-[#B87333]">{card.title}</div>
+                    <div className="mt-0.5 text-[10px] text-slate-500">{card.sub}</div>
+                    <div className="absolute right-0 bottom-0 h-6 w-6" style={{ background: "linear-gradient(315deg, rgba(184,115,51,0.3) 0%, transparent 70%)" }} />
+                  </div>
+                ))}
+              </div>
+
+              {galleryImages.length > 0 && (
+                <div className="flex gap-2 pb-24">
+                  {galleryImages.map((src, i) => (
+                    <div key={i} className="sd-row relative h-40 flex-1 cursor-pointer overflow-hidden" style={{ border: "1px solid rgba(184,115,51,0.2)" }} onClick={() => setLightboxSrc(src)}>
+                      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70 transition-opacity hover:opacity-100" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {galleryImages.length === 0 && <div className="h-24" />}
+            </div>
           </div>
         </div>
-      </div>
-    )
+      )
+    }
+
+    // ── Layout 1 — ROV — TERMINAL / MONITOR ROOM ──────────────────────────────
+    if (svcIdx === 1) {
+      return (
+        <div className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-hidden pointer-events-auto" style={{ background: "#040e1a" }}>
+          {CloseBtn}{BackBtn}
+
+          {/* Terminal scanline bg */}
+          <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0,200,232,0.015) 4px, rgba(0,200,232,0.015) 5px)" }} />
+
+          <div className="relative flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="flex min-h-full flex-col px-10 py-14 lg:px-16">
+
+              {/* TOP SECTION: text left + monitor frame right */}
+              <div className="flex flex-col gap-8 mb-12 lg:flex-row lg:items-start lg:gap-14">
+
+                {/* LEFT: title + description */}
+                <div className="flex-1">
+                  <div className="sd-eyebrow mb-4 font-mono text-[9px] tracking-[0.5em] text-[#00c8e8]/50 uppercase">
+                    {lang === "bg" ? "МІСІЯ БРИФ" : "MISSION BRIEF"}
+                  </div>
+                  <h2 className="sd-title mb-6 text-3xl font-black leading-tight text-white lg:text-5xl">
+                    {svc.title}
+                  </h2>
+                  {svc.content && (
+                    <div
+                      className="sd-desc mb-8 text-sm leading-[1.85] text-slate-400 [&_p]:mb-3"
+                      dangerouslySetInnerHTML={{ __html: svc.content }}
+                    />
+                  )}
+                  {/* Stats below description */}
+                  <div className="grid grid-cols-3 gap-3">
+                    {meta.cards.map((card, i) => (
+                      <div key={i} className="sd-stat p-4" style={{ border: "1px solid rgba(0,200,232,0.2)", background: "rgba(0,200,232,0.04)" }}>
+                        <div className="font-mono text-2xl font-black text-[#00c8e8]">{card.value}</div>
+                        <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-white/55">{card.title}</div>
+                        <div className="text-[9px] text-slate-600">{card.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* RIGHT: framed LIVE FEED monitor (compact, atmospheric) */}
+                {imgSrc && (
+                  <div className="lg:w-[40%] lg:flex-shrink-0">
+                    {/* Monitor outer bezel — click to view full image */}
+                    <div className="relative cursor-pointer overflow-hidden" style={{ border: "2px solid rgba(0,200,232,0.3)", aspectRatio: "4/3", boxShadow: "0 0 40px rgba(0,200,232,0.08), inset 0 0 20px rgba(0,0,0,0.6)" }} onClick={() => imgSrc && setLightboxSrc(imgSrc)}>
+                      <img
+                        src={imgSrc}
+                        alt={svc.title}
+                        className="sd-image h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                        style={{ filter: "brightness(0.6) hue-rotate(165deg) saturate(1.3)" }}
+                      />
+                      {/* Scanlines on monitor */}
+                      <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.25) 2px, rgba(0,0,0,0.25) 3px)" }} />
+                      {/* Animated scan line that sweeps downward */}
+                      <div
+                        className="pointer-events-none absolute left-0 right-0 h-[2px]"
+                        style={{
+                          top: 0,
+                          background: "linear-gradient(to right, transparent 0%, rgba(0,200,232,0.7) 40%, rgba(0,200,232,0.9) 50%, rgba(0,200,232,0.7) 60%, transparent 100%)",
+                          animation: "rov-scanline 3.2s linear 1.1s infinite",
+                        }}
+                      />
+                      {/* Screen vignette */}
+                      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 50%, transparent 50%, rgba(0,0,0,0.65) 100%)" }} />
+                      {/* HUD top bar */}
+                      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-3 py-2" style={{ background: "rgba(0,200,232,0.08)", borderBottom: "1px solid rgba(0,200,232,0.2)" }}>
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-1.5 rounded-full bg-[#00c8e8] animate-pulse" />
+                          <span className="font-mono text-[8px] font-bold tracking-[0.35em] text-[#00c8e8]">LIVE · REC</span>
+                          <span className="font-mono text-[9px] text-[#00c8e8]/80 leading-none" style={{ animation: "cursor-blink 1.1s step-start infinite" }}>▌</span>
+                        </div>
+                        <span className="font-mono text-[8px] text-[#00c8e8]/50">LBV-ROV</span>
+                      </div>
+                      {/* HUD corner marks */}
+                      {(["top-2 left-2", "top-2 right-2", "bottom-2 left-2", "bottom-2 right-2"] as const).map((pos, i) => (
+                        <div key={i} className={`absolute ${pos} h-3 w-3`} style={{ border: "1.5px solid rgba(0,200,232,0.45)", borderRadius: 0, ...(i === 0 ? { borderRight: "none", borderBottom: "none" } : i === 1 ? { borderLeft: "none", borderBottom: "none" } : i === 2 ? { borderRight: "none", borderTop: "none" } : { borderLeft: "none", borderTop: "none" }) }} />
+                      ))}
+                      {/* HUD bottom info */}
+                      <div className="absolute bottom-0 left-0 right-0 px-3 py-2" style={{ background: "rgba(0,0,0,0.6)", borderTop: "1px solid rgba(0,200,232,0.15)" }}>
+                        <span className="font-mono text-[8px] text-[#00c8e8]/50">DEPTH — · VIS HD · GPS –</span>
+                      </div>
+                    </div>
+                    {/* Monitor label */}
+                    <div className="mt-2 text-center font-mono text-[9px] tracking-[0.4em] text-[#00c8e8]/30 uppercase">
+                      {lang === "bg" ? "Видеопоток в реално време" : "Live video feed"}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* MISSION SCOPE — numbered log entries, full width */}
+              <div className="mb-10">
+                <div className="mb-4 flex items-center gap-4">
+                  <span className="font-mono text-[9px] tracking-[0.5em] text-[#00c8e8]/50 uppercase">
+                    {lang === "bg" ? "Обхват на мисията" : "Mission scope"}
+                  </span>
+                  <div className="h-px flex-1 bg-[#00c8e8]/10" />
+                </div>
+                <div className="grid gap-0 sm:grid-cols-2">
+                  {meta.activities.map((act, i) => (
+                    <div
+                      key={i}
+                      className="sd-row flex items-baseline gap-4 py-3.5 px-4"
+                      style={{ borderBottom: "1px solid rgba(0,200,232,0.08)", background: i % 2 === 0 ? "rgba(0,200,232,0.02)" : "transparent" }}
+                    >
+                      <span className="flex-shrink-0 font-mono text-[11px] font-bold text-[#00c8e8]/35">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="text-sm leading-snug text-slate-300">{act}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Gallery */}
+              {galleryImages.length > 0 && (
+                <div className="flex gap-2 pb-24">
+                  {galleryImages.map((src, i) => (
+                    <div key={i} className="sd-row relative h-32 flex-1 cursor-pointer overflow-hidden" style={{ border: "1px solid rgba(0,200,232,0.15)" }} onClick={() => setLightboxSrc(src)}>
+                      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity hover:opacity-100" style={{ filter: "hue-rotate(160deg) saturate(1.2)" }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {galleryImages.length === 0 && <div className="h-24" />}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ── Layout 2 — Bathymetry — SCIENTIFIC DATA REPORT ───────────────────────
+    if (svcIdx === 2) {
+      return (
+        <div className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-hidden pointer-events-auto" style={{ background: "#040c18" }}>
+          {CloseBtn}{BackBtn}
+
+          {/* BANNER — sonar grid + rings, image faint background */}
+          <div className="relative flex-shrink-0 overflow-hidden" style={{ height: "34vh" }}>
+            {imgSrc
+              ? <img src={imgSrc} alt={svc.title} className="sd-image absolute inset-0 h-full w-full object-cover object-top" style={{ filter: "brightness(0.4) saturate(0.5)" }} />
+              : <div className="absolute inset-0 bg-[#020a14]" />
+            }
+            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "linear-gradient(rgba(56,189,248,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(56,189,248,0.06) 1px, transparent 1px)", backgroundSize: "48px 48px" }} />
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              {[80, 160, 240, 320].map((r, i) => (
+                <div
+                  key={i}
+                  className="absolute rounded-full"
+                  style={{
+                    width: r * 2,
+                    height: r * 2,
+                    border: `1px solid rgba(56,189,248,${0.14 - i * 0.03})`,
+                    animation: `sonar-ping 4s ease-out ${i * 0.9}s infinite`,
+                  }}
+                />
+              ))}
+            </div>
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 20%, #040c18 100%)" }} />
+            <div className="absolute bottom-0 left-0 right-0 px-10 pb-8 lg:px-16">
+              <div className="sd-eyebrow mb-2 flex items-center gap-3">
+                <div className="h-px w-8 bg-[#38bdf8]" />
+                <span className="font-mono text-[10px] tracking-[0.4em] text-[#38bdf8]">
+                  {lang === "bg" ? "ХИДРОГРАФСКИ ОТДЕЛ" : "HYDROGRAPHIC DIVISION"}
+                </span>
+              </div>
+              <h2 className="sd-title text-4xl font-black leading-none text-white lg:text-5xl">{svc.title}</h2>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="px-10 pt-8 pb-20 lg:px-16">
+              <div className="flex flex-col gap-10 lg:flex-row lg:gap-16">
+
+                <div className="lg:w-[45%]">
+                  {svc.content && (
+                    <div
+                      className="sd-desc mb-8 text-sm leading-[1.9] text-slate-400 [&_p]:mb-4"
+                      dangerouslySetInnerHTML={{ __html: svc.content }}
+                    />
+                  )}
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {meta.cards.map((card, i) => (
+                        <tr key={i} className="sd-stat" style={{ borderBottom: "1px solid rgba(56,189,248,0.1)" }}>
+                          <td className="py-3 font-bold text-white/70 w-1/2">{card.title}</td>
+                          <td className="py-3 font-mono font-black text-right" style={{ color: "#38bdf8" }}>{card.value}</td>
+                          <td className="py-3 pl-3 text-xs text-slate-500">{card.sub}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex-1">
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className="font-mono text-[10px] tracking-[0.4em] text-[#38bdf8]/60 uppercase">
+                      {lang === "bg" ? "Обхват на услугата" : "Service scope"}
+                    </span>
+                    <div className="h-px flex-1 bg-[#38bdf8]/15" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {meta.activities.map((act, i) => (
+                      <div key={i} className="sd-row flex gap-5 py-3.5" style={{ borderBottom: "1px solid rgba(56,189,248,0.08)" }}>
+                        <div className="w-6 flex-shrink-0 font-mono text-xs font-bold text-[#38bdf8]/35 pt-0.5">{String(i + 1).padStart(2, "0")}</div>
+                        <div className="text-sm leading-snug text-slate-300">{act}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {galleryImages.length > 0 && (
+                    <div className="mt-6 flex gap-2">
+                      {galleryImages.map((src, i) => (
+                        <div key={i} className="sd-row relative h-36 flex-1 cursor-pointer overflow-hidden" style={{ border: "1px solid rgba(56,189,248,0.15)" }} onClick={() => setLightboxSrc(src)}>
+                          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-65 transition-opacity hover:opacity-100" style={{ filter: "saturate(0.5) hue-rotate(180deg)" }} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ── Layout 3 — Dam Operations — ATMOSPHERIC GLASSMORPHISM ────────────────
+    if (svcIdx === 3) {
+      return (
+        <div className="animate-bsdc-panel-in fixed inset-0 z-[500] overflow-hidden pointer-events-auto" style={{ background: "#0c0e14" }}>
+          {CloseBtn}{BackBtn}
+
+          {imgSrc && (
+            <div className="absolute inset-0">
+              <img src={imgSrc} alt="" className="sd-image h-full w-full object-cover object-center" style={{ filter: "brightness(0.22) saturate(0.45)", animation: "dam-drift 18s ease-in-out 1.3s infinite" }} />
+            </div>
+          )}
+          <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 60% 40%, rgba(184,115,51,0.12) 0%, transparent 60%), linear-gradient(to bottom, rgba(12,14,20,0.7) 0%, rgba(12,14,20,0.25) 50%, rgba(12,14,20,0.85) 100%)" }} />
+
+          <div className="absolute inset-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="flex min-h-full flex-col justify-center px-8 py-14 lg:px-16">
+
+              <div className="sd-eyebrow mb-4 flex items-center gap-3">
+                <div className="h-px w-8 bg-[#B87333]" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#B87333]">
+                  {lang === "bg" ? "Управление · Експлоатация" : "Operations · Management"}
+                </span>
+              </div>
+
+              <h2 className="sd-title mb-10 max-w-2xl text-5xl font-black leading-[1.0] tracking-tight text-white lg:text-6xl">
+                {svc.title}
+              </h2>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-10">
+                {meta.activities.map((act, i) => (
+                  <div key={i} className="sd-card p-5 backdrop-blur-sm" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)" }}>
+                    <div className="mb-3 font-mono text-xs font-bold" style={{ color: "#B87333" }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <p className="text-sm leading-snug text-white/85">{act}</p>
+                  </div>
+                ))}
+              </div>
+
+              {svc.content && (
+                <div
+                  className="sd-desc mb-8 p-7 text-sm leading-[1.85] text-slate-300 backdrop-blur-sm [&_p]:mb-3"
+                  style={{ background: "rgba(12,14,20,0.6)", border: "1px solid rgba(255,255,255,0.06)", maxWidth: "52rem" }}
+                  dangerouslySetInnerHTML={{ __html: svc.content }}
+                />
+              )}
+
+              <div className="flex flex-wrap gap-4 mb-10">
+                {meta.cards.map((card, i) => (
+                  <div key={i} className="sd-stat flex-1 min-w-[140px] p-5 backdrop-blur-sm" style={{ background: "rgba(184,115,51,0.07)", border: "1px solid rgba(184,115,51,0.22)" }}>
+                    <div className="font-mono text-3xl font-black text-white">{card.value}</div>
+                    <div className="mt-1 text-[11px] font-bold uppercase tracking-wider" style={{ color: "#B87333" }}>{card.title}</div>
+                    <div className="text-[10px] text-slate-500">{card.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {galleryImages.length > 0 && (
+                <div className="flex gap-3 pb-24">
+                  {galleryImages.map((src, i) => (
+                    <div key={i} className="sd-row relative h-44 flex-1 cursor-pointer overflow-hidden backdrop-blur-sm" style={{ border: "1px solid rgba(255,255,255,0.07)" }} onClick={() => setLightboxSrc(src)}>
+                      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60 transition-opacity hover:opacity-100" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              {galleryImages.length === 0 && <div className="h-24" />}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ── Layout 4 — Construction — BLUEPRINT / TECHNICAL DOSSIER ──────────────
+    if (svcIdx === 4) {
+      return (
+        <div className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-hidden pointer-events-auto" style={{ background: "#0a0b0d" }}>
+          {CloseBtn}{BackBtn}
+
+          <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(rgba(156,163,175,0.1) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+          <div className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,0.7) 100%)" }} />
+
+          <div className="relative flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="px-10 pt-14 pb-24 lg:px-16">
+
+              <div className="flex flex-col gap-8 mb-12 lg:flex-row lg:items-start lg:gap-12">
+                <div className="lg:flex-1">
+                  <div className="sd-eyebrow mb-3 flex items-center gap-3">
+                    <div className="h-px w-8 bg-[#9ca3af]" />
+                    <span className="font-mono text-[10px] tracking-[0.45em] text-[#9ca3af]/60 uppercase">
+                      {lang === "bg" ? "Строителство · СМР" : "Civil & Maritime Works"}
+                    </span>
+                  </div>
+                  <h2 className="sd-title mb-5 text-4xl font-black leading-[1.0] text-white lg:text-5xl">{svc.title}</h2>
+                  {svc.content && (
+                    <div
+                      className="sd-desc text-sm leading-[1.85] text-slate-400 [&_p]:mb-3"
+                      dangerouslySetInnerHTML={{ __html: svc.content }}
+                    />
+                  )}
+                </div>
+                {imgSrc && (
+                  <div className="relative h-64 w-full overflow-hidden lg:h-72 lg:w-[38%] lg:flex-shrink-0" style={{ transform: "rotate(-1.5deg)", border: "1px solid rgba(156,163,175,0.2)", boxShadow: "8px 8px 0 rgba(0,0,0,0.4)" }}>
+                    <img src={imgSrc} alt={svc.title} className="sd-image h-full w-full object-cover" style={{ filter: "brightness(0.75) saturate(0.7)" }} />
+                    <div className="absolute bottom-0 left-0 right-0 px-3 py-2" style={{ background: "rgba(0,0,0,0.7)" }}>
+                      <span className="font-mono text-[9px] tracking-widest text-[#9ca3af]/70 uppercase">
+                        {lang === "bg" ? "Снимка от обект" : "Site photograph"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-10">
+                <div className="mb-5 flex items-center gap-4">
+                  <span className="font-mono text-[10px] tracking-[0.4em] text-[#9ca3af]/60 uppercase">
+                    {lang === "bg" ? "Технически обхват" : "Technical scope"}
+                  </span>
+                  <div className="h-px flex-1 bg-white/10" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {meta.activities.map((act, i) => (
+                    <div key={i} className="sd-card flex items-start gap-4 px-5 py-4" style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderLeft: "3px solid rgba(156,163,175,0.35)" }}>
+                      <span className="flex-shrink-0 font-mono text-[11px] font-bold text-[#9ca3af]/40 w-7">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="text-sm leading-snug text-slate-300">{act}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-10 flex flex-wrap gap-0">
+                {meta.cards.map((card, i) => (
+                  <div key={i} className="sd-stat flex-1 min-w-[150px] px-6 py-5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRight: i < meta.cards.length - 1 ? "none" : undefined }}>
+                    <div className="font-mono text-3xl font-black text-white">{card.value}</div>
+                    <div className="mt-1 text-xs font-bold uppercase tracking-wider text-[#9ca3af]/70">{card.title}</div>
+                    <div className="text-[10px] text-slate-600">{card.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {galleryImages.length > 0 && (
+                <div className="flex gap-2">
+                  {galleryImages.map((src, i) => (
+                    <div key={i} className="sd-row relative h-40 flex-1 cursor-pointer overflow-hidden" style={{ border: "1px solid rgba(156,163,175,0.15)" }} onClick={() => setLightboxSrc(src)}>
+                      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-65 transition-opacity hover:opacity-100" style={{ filter: "saturate(0.6)" }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // ── Layout 5 — Courses — ADVENTURE POSTER ─────────────────────────────────
+    {
+      const courseColors = ["#60a5fa", "#34d399", "#a78bfa", "#fb923c", "#f472b6", "#fbbf24"]
+      return (
+        <div className="animate-bsdc-panel-in fixed inset-0 z-[500] flex flex-col overflow-hidden pointer-events-auto" style={{ background: "#061020" }}>
+          {CloseBtn}{BackBtn}
+
+          {/* POSTER HEADER */}
+          <div className="relative flex-shrink-0 overflow-hidden" style={{ height: "56vh", minHeight: 340 }}>
+            {imgSrc
+              ? <img src={imgSrc} alt={svc.title} className="sd-image absolute inset-0 h-full w-full object-cover object-center" />
+              : <div className="absolute inset-0 bg-[#030d1a]" />
+            }
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #061020 0%, rgba(6,16,32,0.6) 40%, rgba(0,0,0,0.2) 70%, transparent 100%)" }} />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(6,16,32,0.8) 0%, transparent 50%)" }} />
+            <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: "linear-gradient(to right, #60a5fa, #3b82f6, transparent)" }} />
+            <div className="absolute bottom-0 left-0 right-0 px-10 pb-10 lg:px-16">
+              <div className="sd-eyebrow mb-3 flex items-center gap-3">
+                <div className="h-px w-8 bg-[#60a5fa]" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.45em] text-[#60a5fa]">
+                  {lang === "bg" ? "Обучение · Сертификация" : "Training · Certification"}
+                </span>
+              </div>
+              <h2 className="sd-title mb-2 text-4xl font-black leading-[1.0] text-white lg:text-6xl">{svc.title}</h2>
+              {svc.shortDescription && (
+                <p className="max-w-xl text-base text-slate-300/70">{svc.shortDescription}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="px-10 pt-10 pb-24 lg:px-16">
+              {svc.content && (
+                <div
+                  className="sd-desc mb-10 max-w-3xl text-sm leading-[1.9] text-slate-400 [&_p]:mb-3"
+                  dangerouslySetInnerHTML={{ __html: svc.content }}
+                />
+              )}
+              <div className="mb-8">
+                <div className="mb-5 flex items-center gap-4">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#60a5fa]/70">
+                    {lang === "bg" ? "Модули на обучението" : "Training modules"}
+                  </span>
+                  <div className="h-px flex-1" style={{ background: "rgba(96,165,250,0.2)" }} />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {meta.activities.map((act, i) => {
+                    const col = courseColors[i % courseColors.length]
+                    return (
+                      <div key={i} className="sd-card group relative overflow-hidden p-5 transition-transform duration-300 hover:-translate-y-0.5" style={{ background: `${col}0c`, border: `1px solid ${col}28` }}>
+                        <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(to right, ${col}, transparent)` }} />
+                        <div className="mb-3 font-mono text-xs font-bold" style={{ color: col }}>{String(i + 1).padStart(2, "0")}</div>
+                        <p className="text-sm leading-snug text-white/85">{act}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mb-8">
+                {meta.cards.map((card, i) => (
+                  <div key={i} className="sd-stat p-5" style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.18)" }}>
+                    <div className="font-mono text-4xl font-black text-white">{card.value}</div>
+                    <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-[#60a5fa]/80">{card.title}</div>
+                    <div className="text-[10px] text-slate-500">{card.sub}</div>
+                  </div>
+                ))}
+              </div>
+              {galleryImages.length > 0 && (
+                <div className="flex gap-2">
+                  {galleryImages.map((src, i) => (
+                    <div key={i} className="sd-row relative h-44 flex-1 cursor-pointer overflow-hidden" style={{ border: "1px solid rgba(96,165,250,0.12)" }} onClick={() => setLightboxSrc(src)}>
+                      <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70 transition-opacity hover:opacity-100" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )
+    }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -1799,7 +1873,7 @@ export default function PageExperience({
                       }}
                       onClick={() => {
                         if (proximity > 0.85) {
-                          setActiveService(svc)
+                          setActiveService(svc); setExpandedAct(null)
                         } else {
                           // Animate to clicked card via RAF
                           scrollVelRef.current = 0
@@ -2406,6 +2480,34 @@ export default function PageExperience({
 
       {/* ── SERVICE DETAIL — outside rootRef so fixed positioning works ─────── */}
       {activeService && renderServiceDetail(activeService, activeIdx)}
+
+      {/* ── LIGHTBOX — image zoom overlay ─────────────────────────────────── */}
+      {lightboxSrc && (
+        <div
+          className="fixed inset-0 z-[600] flex items-center justify-center bg-black/92 pointer-events-auto"
+          onClick={() => setLightboxSrc(null)}
+        >
+          <img
+            src={lightboxSrc}
+            alt=""
+            className="max-h-[88vh] max-w-[88vw] object-contain"
+            style={{ boxShadow: "0 0 80px rgba(0,0,0,0.8)" }}
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => setLightboxSrc(null)}
+            className="absolute top-6 right-6 flex h-11 w-11 items-center justify-center border border-white/25 bg-black/70 text-white/70 backdrop-blur-sm transition-all hover:border-white/50 hover:text-white"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.35em] text-white/30">
+            {lang === "bg" ? "Клик навсякъде за затваряне" : "Click anywhere to close"}
+          </div>
+        </div>
+      )}
 
       {/* ── PROJECT DETAIL MODAL — outside rootRef ───────────────────────── */}
       {selectedProject && (() => {
