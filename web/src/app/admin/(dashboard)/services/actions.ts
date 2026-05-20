@@ -10,6 +10,14 @@ export type ServiceFormState = {
 }
 
 function parseForm(formData: FormData) {
+  const statCards = [0, 1, 2]
+    .map((i) => ({
+      title: String(formData.get(`stat${i}title`) ?? "").trim(),
+      value: String(formData.get(`stat${i}value`) ?? "").trim(),
+      sub:   String(formData.get(`stat${i}sub`)   ?? "").trim(),
+    }))
+    .filter((c) => c.value || c.title)
+
   return {
     language: (formData.get("language") as string) as Language,
     translationKey: String(formData.get("translationKey") ?? "").trim(),
@@ -23,6 +31,13 @@ function parseForm(formData: FormData) {
       .split("\n")
       .map((s) => s.trim())
       .filter(Boolean),
+    accentColor: String(formData.get("accentColor") ?? "").trim() || null,
+    bgColor: String(formData.get("bgColor") ?? "").trim() || null,
+    activities: String(formData.get("activities") ?? "")
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    statCards: statCards.length > 0 ? statCards : undefined,
     seoTitle: String(formData.get("seoTitle") ?? "").trim() || null,
     seoDescription: String(formData.get("seoDescription") ?? "").trim() || null,
     sortOrder: Number(formData.get("sortOrder")) || 0,

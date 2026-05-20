@@ -4,8 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------
@@ -114,6 +113,10 @@ model Service {
   iconUrl          String?
   featuredImageUrl String?
   images           String[]
+  accentColor      String?
+  bgColor          String?
+  activities       String[]
+  statCards        Json?
   seoTitle         String?
   seoDescription   String?
   sortOrder        Int      @default(0)

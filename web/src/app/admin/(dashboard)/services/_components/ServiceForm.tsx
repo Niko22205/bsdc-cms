@@ -8,6 +8,9 @@ import { GalleryManager } from "../../../_components/ui/GalleryManager"
 import { IconPicker } from "../../../_components/ui/IconPicker"
 import type { ServiceFormState } from "../actions"
 import type { ServiceModel } from "@/generated/prisma/models/Service"
+import type { Prisma } from "@/generated/prisma/client"
+
+type StatCard = { title: string; value: string; sub: string }
 
 type Props = {
   action: (prev: ServiceFormState, formData: FormData) => Promise<ServiceFormState>
@@ -22,8 +25,14 @@ const labelCls = "flex flex-col gap-1.5 text-sm font-medium text-slate-300"
 
 const cardCls = "rounded-xl border border-white/[0.07] bg-white/[0.04] p-5 space-y-4"
 
+const sectionTitle = "text-[10px] font-semibold uppercase tracking-widest text-slate-600"
+
 export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState(action, {})
+
+  const existingCards = Array.isArray(initial.statCards)
+    ? (initial.statCards as Prisma.JsonArray).map((c) => c as StatCard)
+    : []
 
   return (
     <form action={formAction}>
@@ -31,11 +40,13 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
 
         {/* ── Left column: text fields ── */}
         <div className="min-w-0 flex-1 space-y-5">
+
+          {/* Identity */}
           <div className={cardCls}>
-            {/* Language + Translation Key */}
+            <p className={sectionTitle}>Идентификация</p>
             <div className="flex gap-4">
               <label className={`${labelCls} w-28`}>
-                Language *
+                Език *
                 <select name="language" defaultValue={initial.language ?? "BG"} className={inputCls}>
                   <option value="BG">BG</option>
                   <option value="EN">EN</option>
@@ -60,10 +71,9 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
               </label>
             </div>
 
-            {/* Title + Slug */}
             <div className="flex gap-4">
               <label className={`${labelCls} flex-1`}>
-                Title *
+                Заглавие *
                 <input
                   name="title"
                   type="text"
@@ -90,9 +100,8 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
               </label>
             </div>
 
-            {/* Short Description */}
             <label className={labelCls}>
-              Short Description
+              Кратко описание
               <textarea
                 name="shortDescription"
                 defaultValue={initial.shortDescription ?? ""}
@@ -104,19 +113,85 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
 
           {/* Content */}
           <div className={cardCls}>
+            <p className={sectionTitle}>Съдържание</p>
             <div className={labelCls}>
-              <span>Content</span>
               <RichTextEditor
                 name="content"
                 defaultValue={initial.content ?? ""}
-                placeholder="Describe this service in detail…"
+                placeholder="Опишете услугата подробно…"
               />
+            </div>
+          </div>
+
+          {/* Activities */}
+          <div className={cardCls}>
+            <p className={sectionTitle}>Дейности (Activities)</p>
+            <p className="text-xs text-slate-500">
+              Всеки ред = отделна дейност. Показват се в детайл страницата на услугата.
+            </p>
+            <label className={labelCls}>
+              <textarea
+                name="activities"
+                defaultValue={(initial.activities ?? []).join("\n")}
+                rows={7}
+                placeholder={"Подводни огледи и диагностика\nРемонти под вода — бетон, метал\nМонтаж и демонтаж на оборудване"}
+                className={`${inputCls} resize-y font-mono text-xs leading-relaxed`}
+              />
+            </label>
+          </div>
+
+          {/* Stat Cards */}
+          <div className={cardCls}>
+            <p className={sectionTitle}>Статистически плочки (3 броя)</p>
+            <p className="text-xs text-slate-500">
+              Показват се като „факт карти" в детайл страницата — стойност + заглавие + подпис.
+            </p>
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                    Плочка {i + 1}
+                  </p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <label className={labelCls}>
+                      Заглавие
+                      <input
+                        name={`stat${i}title`}
+                        type="text"
+                        defaultValue={existingCards[i]?.title ?? ""}
+                        placeholder="Работна дълбочина"
+                        className={inputCls}
+                      />
+                    </label>
+                    <label className={labelCls}>
+                      Стойност
+                      <input
+                        name={`stat${i}value`}
+                        type="text"
+                        defaultValue={existingCards[i]?.value ?? ""}
+                        placeholder="50м+"
+                        className={`${inputCls} font-mono`}
+                      />
+                    </label>
+                    <label className={labelCls}>
+                      Подпис
+                      <input
+                        name={`stat${i}sub`}
+                        type="text"
+                        defaultValue={existingCards[i]?.sub ?? ""}
+                        placeholder="и по-дълбоко"
+                        className={inputCls}
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* SEO */}
           <div className={cardCls}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">SEO</p>
+            <p className={sectionTitle}>SEO</p>
             <div className="flex gap-4">
               <label className={`${labelCls} flex-1`}>
                 SEO Title
@@ -135,15 +210,53 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
           </div>
         </div>
 
-        {/* ── Right column: visual assets + publish ── */}
+        {/* ── Right column: visual + publish ── */}
         <div className="w-72 shrink-0 space-y-4">
+
+          {/* Visual style */}
+          <div className={cardCls}>
+            <p className={sectionTitle}>Визуален стил</p>
+            <p className="text-xs text-slate-500">
+              Цветовете управляват акцентите и фона в детайл изгледа.
+            </p>
+            <div className="flex gap-4">
+              <label className={`${labelCls} flex-1`}>
+                Акцентен цвят
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    name="accentColor"
+                    defaultValue={initial.accentColor ?? "#B87333"}
+                    className="h-9 w-9 flex-shrink-0 cursor-pointer rounded-lg border border-white/[0.10] bg-transparent p-0.5"
+                  />
+                  <span className="font-mono text-xs text-slate-400">
+                    {initial.accentColor ?? "#B87333"}
+                  </span>
+                </div>
+              </label>
+              <label className={`${labelCls} flex-1`}>
+                Фонов цвят
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    name="bgColor"
+                    defaultValue={initial.bgColor ?? "#07111f"}
+                    className="h-9 w-9 flex-shrink-0 cursor-pointer rounded-lg border border-white/[0.10] bg-transparent p-0.5"
+                  />
+                  <span className="font-mono text-xs text-slate-400">
+                    {initial.bgColor ?? "#07111f"}
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
 
           {/* Icon Picker */}
           <div className={cardCls}>
             <IconPicker
               name="iconUrl"
               defaultValue={initial.iconUrl ?? ""}
-              label="Service Icon"
+              label="Икона на услугата"
             />
           </div>
 
@@ -152,7 +265,7 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
             <ImagePicker
               name="featuredImageUrl"
               defaultValue={initial.featuredImageUrl}
-              label="Featured Image"
+              label="Главна снимка"
               aspectRatio="video"
             />
           </div>
@@ -160,9 +273,9 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
           {/* Gallery */}
           <div className={cardCls}>
             <div className={labelCls}>
-              <span>Gallery</span>
+              <span>Галерия</span>
               <span className="text-xs font-normal text-slate-600">
-                Drag to reorder · hover to remove
+                Влачи за наредба · задръж за изтриване
               </span>
               <GalleryManager
                 name="images"
@@ -171,12 +284,12 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
             </div>
           </div>
 
-          {/* Publish settings */}
+          {/* Publish */}
           <div className={cardCls}>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Publish</p>
+            <p className={sectionTitle}>Публикуване</p>
 
             <label className={`${labelCls} w-28`}>
-              Sort Order
+              Наредба
               <input
                 name="sortOrder"
                 type="number"
@@ -192,7 +305,7 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
                 defaultChecked={initial.published ?? false}
                 className="h-4 w-4 rounded border-white/[0.20] bg-white/[0.08] accent-[#B87333]"
               />
-              Published
+              Публикувано
             </label>
 
             <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-4">
@@ -201,13 +314,13 @@ export function ServiceForm({ action, initial = {}, submitLabel }: Props) {
                 disabled={pending}
                 className="w-full rounded-lg bg-[#B87333] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c8833a] disabled:opacity-50"
               >
-                {pending ? "Saving…" : submitLabel}
+                {pending ? "Запазване…" : submitLabel}
               </button>
               <Link
                 href="/admin/services"
                 className="block text-center text-sm text-slate-500 transition hover:text-slate-300"
               >
-                Cancel
+                Отказ
               </Link>
             </div>
           </div>

@@ -23,125 +23,39 @@ import TreasureMap from "./about/TreasureMap"
 
 const GlobalBackground = dynamic(() => import("./3d/GlobalBackground"), { ssr: false })
 
-// ── Service detail metadata (per service index 0-5) ──────────────────────────
+// ── Service detail metadata helpers ──────────────────────────────────────────
+
+type StatCard = { title: string; value: string; sub: string }
 
 interface ServiceMeta {
   accent: string
   bg: string
   activities: string[]
-  cards: { title: string; value: string; sub: string }[]
+  cards: StatCard[]
 }
 
-const SERVICE_META: ServiceMeta[] = [
-  {
-    // 0 — Индустриални водолазни услуги
-    accent: "#B87333",
-    bg: "#07111f",
-    activities: [
-      "Подводни огледи и диагностика на конструкции",
-      "Ремонти под вода — бетон, метал, хидроизолация",
-      "Монтаж и демонтаж на подводно оборудване",
-      "Аварийни операции при нулева видимост",
-      "Подводно бетониране и укрепване",
-      "Видео и фото документация в реално време",
-    ],
-    cards: [
-      { title: "Работна дълбочина", value: "50м+", sub: "и по-дълбоко" },
-      { title: "Реакция", value: "24ч", sub: "аварийна готовност" },
-      { title: "Стандарт", value: "ISO", sub: "45001 · QM" },
-    ],
-  },
-  {
-    // 1 — ROV инспекции
-    accent: "#00c8e8",
-    bg: "#040e1a",
-    activities: [
-      "HD видео инспекция на потопени конструкции",
-      "Обследване на тръбопроводи, кабели и кейове",
-      "Инспекция при нулева видимост и голяма дълбочина",
-      "Картиране на труднодостъпни подводни зони",
-      "Детектиране и документиране на дефекти",
-      "Технически доклади с GPS координати",
-    ],
-    cards: [
-      { title: "Макс. дълбочина", value: "200м", sub: "LBV-200 / LBV-300" },
-      { title: "Камера", value: "HD", sub: "видео в реално време" },
-      { title: "Точност", value: "±2см", sub: "позициониране" },
-    ],
-  },
-  {
-    // 2 — Батиметрия
-    accent: "#38bdf8",
-    bg: "#040c18",
-    activities: [
-      "Батиметрично картиране на дъното",
-      "Многолъчев сонар — пълно зонално покритие",
-      "Хидрографски проучвания по БДС/ISO",
-      "Мониторинг на наносни отложения и обеми",
-      "Цифрови 3D модели на дъното (DEM)",
-      "Сертифицирани хидрографски доклади",
-    ],
-    cards: [
-      { title: "Точност", value: "±5см", sub: "вертикална" },
-      { title: "Покритие", value: "100%", sub: "зонално" },
-      { title: "Формат", value: "DXF/PDF", sub: "изходни данни" },
-    ],
-  },
-  {
-    // 3 — Оператор на язовири
-    accent: "#B87333",
-    bg: "#0c0e14",
-    activities: [
-      "Ежедневен обход и визуален мониторинг",
-      "Контрол на водоизпускателните органи",
-      "Превантивна поддръжка и текущи ремонти",
-      "Технически дневник и регулаторни отчети",
-      "Аварийни действия — денонощна готовност",
-      "Координация с ДАМТН и водно стопанство",
-    ],
-    cards: [
-      { title: "Покритие", value: "Цяла BG", sub: "всички язовири" },
-      { title: "Обход", value: "Ежедн.", sub: "при необходимост" },
-      { title: "Реакция", value: "24/7", sub: "при инцидент" },
-    ],
-  },
-  {
-    // 4 — Хидротехническо строителство
-    accent: "#9ca3af",
-    bg: "#0a0b0d",
-    activities: [
-      "Ремонт и укрепване на бетонни съоръжения",
-      "Подводно бетониране с водоустойчиви смеси",
-      "Монтаж на стоманени конструкции и шпунтове",
-      "Хидроизолация на стени, дъна и шахти",
-      "Укрепване на свлачища и брегозащитни работи",
-      "Сухи СМР — кейове, диги, водовземни кули",
-    ],
-    cards: [
-      { title: "Работна дълб.", value: "50м", sub: "под вода" },
-      { title: "Методи", value: "Мокри+Сухи", sub: "СМР" },
-      { title: "Документация", value: "Пълна", sub: "строит. досие" },
-    ],
-  },
-  {
-    // 5 — Водолазни курсове
-    accent: "#60a5fa",
-    bg: "#061020",
-    activities: [
-      "Пробно гмуркане за начинаещи — Черно море",
-      "Open Water Diver — NAUI & CMAS ★",
-      "Advanced Open Water — NAUI & CMAS ★★",
-      "Rescue Diver и First Aid",
-      "Специализирани курсове — нощно, wreck, deep",
-      "Теоретична и практическа подготовка в басейн",
-    ],
-    cards: [
-      { title: "NAUI", value: "OW→DM", sub: "пълна прогресия" },
-      { title: "CMAS", value: "★→★★★", sub: "международен стандарт" },
-      { title: "Група", value: "≤ 4", sub: "студента/инструктор" },
-    ],
-  },
+// Fallback values used only when DB fields are empty (e.g. for newly created services)
+const SERVICE_META_FALLBACK: ServiceMeta[] = [
+  { accent: "#B87333", bg: "#07111f", activities: [], cards: [] },
+  { accent: "#00c8e8", bg: "#040e1a", activities: [], cards: [] },
+  { accent: "#38bdf8", bg: "#040c18", activities: [], cards: [] },
+  { accent: "#B87333", bg: "#0c0e14", activities: [], cards: [] },
+  { accent: "#9ca3af", bg: "#0a0b0d", activities: [], cards: [] },
+  { accent: "#60a5fa", bg: "#061020", activities: [], cards: [] },
 ]
+
+function resolveServiceMeta(svc: Service, svcIdx: number): ServiceMeta {
+  const fallback = SERVICE_META_FALLBACK[svcIdx] ?? SERVICE_META_FALLBACK[0]
+  const cards = Array.isArray(svc.statCards) && (svc.statCards as unknown[]).length > 0
+    ? (svc.statCards as StatCard[])
+    : fallback.cards
+  return {
+    accent:     svc.accentColor ?? fallback.accent,
+    bg:         svc.bgColor     ?? fallback.bg,
+    activities: svc.activities.length > 0 ? svc.activities : fallback.activities,
+    cards,
+  }
+}
 
 // ── About CMS content types ───────────────────────────────────────────────────
 
@@ -762,7 +676,7 @@ export default function PageExperience({
   // ── Service detail overlay (6 unique cinematic layouts) ──────────────────
 
   function renderServiceDetail(svc: Service, svcIdx: number) {
-    const meta = SERVICE_META[svcIdx] ?? SERVICE_META[0]
+    const meta = resolveServiceMeta(svc, svcIdx)
     const closeDetail = () => setActiveService(null)
     const galleryImages: string[] = svc.images?.length > 0 ? svc.images : []
     const imgSrc = svc.featuredImageUrl ?? svc.images?.[0] ?? null
@@ -1670,9 +1584,9 @@ export default function PageExperience({
                   )}
 
                   {/* Activity chips */}
-                  {(SERVICE_META[activeIdx]?.activities?.length ?? 0) > 0 && (
+                  {(services[activeIdx]?.activities?.length ?? 0) > 0 && (
                     <div className="mb-5 flex flex-wrap gap-1.5">
-                      {SERVICE_META[activeIdx].activities.slice(0, 4).map((act, j) => (
+                      {services[activeIdx].activities.slice(0, 4).map((act, j) => (
                         <span
                           key={j}
                           className="border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[10px] uppercase tracking-[0.09em] text-slate-400"
@@ -1684,14 +1598,14 @@ export default function PageExperience({
                   )}
 
                   {/* Technical metadata */}
-                  {(SERVICE_META[activeIdx]?.cards?.length ?? 0) > 0 && (
+                  {Array.isArray(services[activeIdx]?.statCards) && (services[activeIdx].statCards as StatCard[]).length > 0 && (
                     <div className="mb-7 grid grid-cols-3 gap-2">
-                      {SERVICE_META[activeIdx].cards.map((card, j) => (
+                      {(services[activeIdx].statCards as StatCard[]).map((card, j) => (
                         <div
                           key={j}
                           className="bg-white/[0.025] p-3"
                           style={{
-                            borderLeft: `2px solid ${SERVICE_META[activeIdx]?.accent ?? "#B87333"}38`,
+                            borderLeft: `2px solid ${(services[activeIdx]?.accentColor ?? "#B87333")}38`,
                             borderBottom: "1px solid rgba(255,255,255,0.04)",
                           }}
                         >
@@ -1727,7 +1641,7 @@ export default function PageExperience({
                         style={{
                           width: j === activeIdx ? "28px" : "8px",
                           background: j === activeIdx
-                            ? (SERVICE_META[activeIdx]?.accent ?? "#B87333")
+                            ? (services[activeIdx]?.accentColor ?? "#B87333")
                             : "rgba(255,255,255,0.18)",
                         }}
                       />
@@ -1771,7 +1685,7 @@ export default function PageExperience({
                         style={{
                           width: i === activeIdx ? "22px" : "9px",
                           background: i === activeIdx
-                            ? (SERVICE_META[i]?.accent ?? "#B87333")
+                            ? (svc.accentColor ?? "#B87333")
                             : "rgba(255,255,255,0.12)",
                         }}
                       />
@@ -1849,7 +1763,7 @@ export default function PageExperience({
                   const opacity    = absSlot > 2 ? 0 : Math.max(0.22, 1 - absSlot * 0.20)
                   // Proximity to center (1 = exact center, 0 = 0.5+ slots away) — drives glow/border
                   const proximity  = Math.max(0, 1 - absSlot * 2)
-                  const meta    = SERVICE_META[i] ?? SERVICE_META[0]
+                  const meta    = resolveServiceMeta(svc, i)
                   const imgSrc  = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
                   return (
@@ -1990,8 +1904,8 @@ export default function PageExperience({
                 <div
                   className="h-1.5 w-1.5 rounded-full"
                   style={{
-                    background: SERVICE_META[activeIdx]?.accent ?? "#B87333",
-                    boxShadow: `0 0 7px ${SERVICE_META[activeIdx]?.accent ?? "#B87333"}`,
+                    background: services[activeIdx]?.accentColor ?? "#B87333",
+                    boxShadow: `0 0 7px ${services[activeIdx]?.accentColor ?? "#B87333"}`,
                   }}
                 />
                 <span className="font-mono text-[8px] uppercase tracking-[0.35em] text-slate-700">
