@@ -1730,24 +1730,22 @@ export default function PageExperience({
               >
                 {services.map((svc, i) => {
                   const n = services.length
-                  // Signed slot: 0=active, +1=one below, -1=one above, etc.
                   const raw  = ((i - activeIdx) + n) % n
                   const slot = raw <= Math.floor(n / 2) ? raw : raw - n
 
-                  // Spiral staircase path
-                  const translateY = slot * 115         // vertical staircase step
-                  const translateX = slot * 22          // slight horizontal spread
-                  const translateZ = -Math.abs(slot) * 150  // depth pullback
+                  // Cylinder path — each card on the outer surface of a vertical cylinder.
+                  // No overlaps: sin/cos distribute cards cleanly around the arc.
+                  const ANGLE_DEG = 42                             // degrees per slot
+                  const R         = 580                            // cylinder radius px
+                  const theta     = slot * ANGLE_DEG * (Math.PI / 180)
+                  const translateX = R * Math.sin(theta)           // arc X position
+                  const translateZ = R * (Math.cos(theta) - 1)    // 0 at front, -R at ±90°
+                  const translateY = slot * 105                    // vertical staircase
+                  const rotateY    = -slot * ANGLE_DEG            // card faces outward
 
-                  // Each card rotates around its own Y-axis — the tornado spin
-                  // slot ±1 → ±40°, slot ±2 → ±80° (almost edge-on / mirrored)
-                  const rotateY = slot * 40
-                  // Subtle X tilt adds helix feel
-                  const rotateX = slot * -4
-
-                  const scale   = Math.max(0.52, 1 - Math.abs(slot) * 0.13)
-                  const opacity = slot === 0 ? 1 : Math.max(0.22, 1 - Math.abs(slot) * 0.2)
                   const absSlot = Math.abs(slot)
+                  const scale   = Math.max(0.55, 1 - absSlot * 0.10)
+                  const opacity = slot === 0 ? 1 : Math.max(0.25, 1 - absSlot * 0.18)
                   const meta    = SERVICE_META[i] ?? SERVICE_META[0]
                   const imgSrc  = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
@@ -1760,7 +1758,7 @@ export default function PageExperience({
                         height: "268px",
                         marginLeft: "-210px",
                         marginTop: "-134px",
-                        transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) scale(${scale})`,
+                        transform: `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                         opacity,
                         zIndex: 10 - absSlot,
                         backfaceVisibility: "hidden",
