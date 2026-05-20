@@ -1740,7 +1740,7 @@ export default function PageExperience({
                   const theta     = slot * ANGLE_DEG * (Math.PI / 180)
                   const translateX = R * Math.sin(theta)           // arc X position
                   const translateZ = R * (Math.cos(theta) - 1)    // 0 at front, -R at ±90°
-                  const translateY = slot * 105                    // vertical staircase
+                  const translateY = slot * 140                    // vertical staircase
                   const rotateY    = -slot * ANGLE_DEG            // card faces outward
 
                   const absSlot = Math.abs(slot)
