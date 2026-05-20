@@ -227,6 +227,7 @@ export default function PageExperience({
 
   const [currentScene, setCurrentScene]             = useState(0)
   const [activeIdx, setActiveIdx]          = useState(0)
+  const [scrollPos, setScrollPos]          = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
   const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -243,6 +244,9 @@ export default function PageExperience({
   const touchStartY            = useRef(0)
   const projectGridRef         = useRef<HTMLDivElement>(null)
   const innerGroupRef          = useRef<HTMLDivElement>(null)
+  const scrollPosRef           = useRef(0)
+  const scrollVelRef           = useRef(0)
+  const rafIdRef               = useRef<number | null>(null)
   const aboutEntranceFired     = useRef(false)
   const servicesEntranceFired  = useRef(false)
 
@@ -329,17 +333,10 @@ export default function PageExperience({
   useEffect(() => { activeIdxRef.current = activeIdx }, [activeIdx])
   useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
 
-  // Animate left panel text on service change
+  // Left panel text fades gently when service changes — no abrupt flash
   useEffect(() => {
     if (currentSceneRef.current !== 2) return
-    gsap.to('.svc-text-block', { opacity: 0, y: -10, duration: 0.22, ease: 'power2.in' })
-    const t = setTimeout(() => {
-      gsap.fromTo('.svc-text-block',
-        { opacity: 0, y: 12 },
-        { opacity: 1, y: 0, duration: 0.48, ease: 'power2.out' },
-      )
-    }, 260)
-    return () => clearTimeout(t)
+    gsap.fromTo('.svc-text-block', { opacity: 0.3 }, { opacity: 1, duration: 0.55, ease: 'power1.out' })
   }, [activeIdx]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Transitions ───────────────────────────────────────────────────────────
@@ -431,6 +428,10 @@ export default function PageExperience({
       servicesEntranceFired.current = false
       activeIdxRef.current = 0
       setActiveIdx(0)
+      scrollPosRef.current = 0
+      scrollVelRef.current = 0
+      setScrollPos(0)
+      if (rafIdRef.current) { cancelAnimationFrame(rafIdRef.current); rafIdRef.current = null }
     }
 
     isAnimating.current = true
@@ -590,28 +591,53 @@ export default function PageExperience({
         const onRightPanel = isDesktop && e.clientX >= window.innerWidth * 0.44
 
         if (onRightPanel) {
-          // Cards area — service navigation only, no scene exit
-          if (e.deltaY > 30 && activeIdxRef.current < services.length - 1) {
-            const next = activeIdxRef.current + 1
-            activeIdxRef.current = next
-            setActiveIdx(next)
-          } else if (e.deltaY < -30 && activeIdxRef.current > 0) {
-            const next = activeIdxRef.current - 1
-            activeIdxRef.current = next
-            setActiveIdx(next)
+          // Physics scroll — accumulate velocity, RAF loop handles position
+          scrollVelRef.current += e.deltaY * 0.00035
+          scrollVelRef.current = Math.max(-0.05, Math.min(0.05, scrollVelRef.current))
+          if (!rafIdRef.current) {
+            const svcCount = services.length
+            const animate = () => {
+              scrollVelRef.current *= 0.955
+              scrollPosRef.current = Math.max(0, Math.min(svcCount - 1, scrollPosRef.current + scrollVelRef.current))
+              const rounded = Math.round(scrollPosRef.current)
+              if (rounded !== activeIdxRef.current) {
+                activeIdxRef.current = rounded
+                setActiveIdx(rounded)
+              }
+              setScrollPos(scrollPosRef.current)
+              if (Math.abs(scrollVelRef.current) > 0.002) {
+                rafIdRef.current = requestAnimationFrame(animate)
+              } else {
+                scrollVelRef.current = 0
+                rafIdRef.current = null
+              }
+            }
+            rafIdRef.current = requestAnimationFrame(animate)
           }
           return
         }
 
         if (!isDesktop) {
-          // Mobile — service nav with scene exit at boundaries
+          // Mobile — keep discrete nav with scene exit at boundaries
           if (e.deltaY > 30) {
             if (activeIdxRef.current === services.length - 1) goToScene(3)
-            else { const n = activeIdxRef.current + 1; activeIdxRef.current = n; setActiveIdx(n) }
+            else {
+              const n = activeIdxRef.current + 1
+              activeIdxRef.current = n
+              setActiveIdx(n)
+              scrollPosRef.current = n
+              setScrollPos(n)
+            }
             return
           } else if (e.deltaY < -30) {
             if (activeIdxRef.current === 0) goToScene(1)
-            else { const n = activeIdxRef.current - 1; activeIdxRef.current = n; setActiveIdx(n) }
+            else {
+              const n = activeIdxRef.current - 1
+              activeIdxRef.current = n
+              setActiveIdx(n)
+              scrollPosRef.current = n
+              setScrollPos(n)
+            }
             return
           }
         }
@@ -629,10 +655,10 @@ export default function PageExperience({
       if (currentSceneRef.current === 2) {
         if (delta > 50) {
           if (activeIdxRef.current === services.length - 1) goToScene(3)
-          else { const n = activeIdxRef.current + 1; activeIdxRef.current = n; setActiveIdx(n) }
+          else { const n = activeIdxRef.current + 1; activeIdxRef.current = n; setActiveIdx(n); scrollPosRef.current = n; setScrollPos(n) }
         } else if (delta < -50) {
           if (activeIdxRef.current === 0) goToScene(1)
-          else { const n = activeIdxRef.current - 1; activeIdxRef.current = n; setActiveIdx(n) }
+          else { const n = activeIdxRef.current - 1; activeIdxRef.current = n; setActiveIdx(n); scrollPosRef.current = n; setScrollPos(n) }
         }
         return
       }
@@ -673,6 +699,7 @@ export default function PageExperience({
       window.removeEventListener("keydown", handleKeyDown)
       window.removeEventListener("bsdc:navigate", handleNavigate)
       window.removeEventListener("bsdc:enquiry", handleEnquiry)
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1729,8 +1756,8 @@ export default function PageExperience({
                 }}
               >
                 {services.map((svc, i) => {
-                  // LINEAR slot — no wrapping. Card 0 always above, card n-1 always below.
-                  const slot    = i - activeIdx
+                  // Float slot from continuous scrollPos — no snapping, no wrapping
+                  const slot    = i - scrollPos
                   const absSlot = Math.abs(slot)
 
                   // Cylinder geometry clamped to visible range (sin/cos would cycle for |slot|>3)
@@ -1744,8 +1771,10 @@ export default function PageExperience({
                   const translateY = slot * 195
                   const rotateY    = -eff * ANGLE_DEG
 
-                  const scale   = absSlot > 2 ? 0.3 : Math.max(0.55, 1 - absSlot * 0.10)
-                  const opacity = slot === 0 ? 1 : absSlot > 2 ? 0 : Math.max(0.25, 1 - absSlot * 0.18)
+                  const scale      = absSlot > 2 ? 0.3 : Math.max(0.55, 1 - absSlot * 0.10)
+                  const opacity    = absSlot > 2 ? 0 : Math.max(0.22, 1 - absSlot * 0.20)
+                  // Proximity to center (1 = exact center, 0 = 0.5+ slots away) — drives glow/border
+                  const proximity  = Math.max(0, 1 - absSlot * 2)
                   const meta    = SERVICE_META[i] ?? SERVICE_META[0]
                   const imgSrc  = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
@@ -1764,18 +1793,38 @@ export default function PageExperience({
                         backfaceVisibility: "hidden",
                         overflow: "hidden",
                         cursor: "pointer",
-                        transition: "transform 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease, filter 0.6s ease",
-                        filter: slot === 0
-                          ? "none"
-                          : `grayscale(${absSlot * 22}%) brightness(${Math.max(0.5, 1 - absSlot * 0.12)})`,
+                        transition: "opacity 0.25s ease, filter 0.25s ease",
+                        filter: `grayscale(${(1 - proximity) * 22}%) brightness(${Math.max(0.5, 0.5 + proximity * 0.5)})`,
                         borderRadius: "3px",
                       }}
                       onClick={() => {
-                        if (slot === 0) {
+                        if (proximity > 0.85) {
                           setActiveService(svc)
                         } else {
-                          activeIdxRef.current = i
-                          setActiveIdx(i)
+                          // Animate to clicked card via RAF
+                          scrollVelRef.current = 0
+                          const target = i
+                          const animateTo = () => {
+                            const diff = target - scrollPosRef.current
+                            if (Math.abs(diff) < 0.01) {
+                              scrollPosRef.current = target
+                              setScrollPos(target)
+                              activeIdxRef.current = target
+                              setActiveIdx(target)
+                              rafIdRef.current = null
+                              return
+                            }
+                            scrollPosRef.current += diff * 0.18
+                            const rounded = Math.round(scrollPosRef.current)
+                            if (rounded !== activeIdxRef.current) {
+                              activeIdxRef.current = rounded
+                              setActiveIdx(rounded)
+                            }
+                            setScrollPos(scrollPosRef.current)
+                            rafIdRef.current = requestAnimationFrame(animateTo)
+                          }
+                          if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
+                          rafIdRef.current = requestAnimationFrame(animateTo)
                         }
                       }}
                     >
@@ -1791,19 +1840,18 @@ export default function PageExperience({
                       )}
 
                       {/* Overlay */}
+                      {/* Gradient overlay — lightens toward center */}
                       <div
                         style={{
                           position: "absolute",
                           inset: 0,
-                          background: slot === 0
-                            ? "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)"
-                            : "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 100%)",
+                          background: `linear-gradient(to top, rgba(0,0,0,${0.88 - proximity * 0.06}) 0%, rgba(0,0,0,${0.35 - proximity * 0.27}) 100%)`,
                         }}
                       />
 
-                      {/* Active card label */}
-                      {slot === 0 && (
-                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "18px 22px" }}>
+                      {/* Card label — fades in as card approaches center */}
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: proximity > 0.3 ? "18px 22px" : "12px 16px", opacity: proximity > 0.01 ? 1 : 0.6 }}>
+                        {proximity > 0.3 && (
                           <div
                             style={{
                               fontFamily: "monospace",
@@ -1813,13 +1861,16 @@ export default function PageExperience({
                               color: meta.accent,
                               marginBottom: "6px",
                               textTransform: "uppercase",
+                              opacity: proximity,
                             }}
                           >
                             {String(i + 1).padStart(2, "0")} — {lang === "bg" ? "АКТИВНА ОПЕРАЦИЯ" : "ACTIVE OPERATION"}
                           </div>
-                          <div style={{ color: "white", fontWeight: 800, fontSize: "1.15rem", lineHeight: 1.15, marginBottom: "10px" }}>
-                            {svc.title}
-                          </div>
+                        )}
+                        <div style={{ color: "white", fontWeight: proximity > 0.3 ? 800 : 600, fontSize: proximity > 0.3 ? "1.15rem" : "0.78rem", lineHeight: 1.2, marginBottom: proximity > 0.3 ? "10px" : 0 }}>
+                          {svc.title}
+                        </div>
+                        {proximity > 0.3 && (
                           <div
                             style={{
                               display: "flex",
@@ -1830,6 +1881,7 @@ export default function PageExperience({
                               fontWeight: 600,
                               letterSpacing: "0.12em",
                               textTransform: "uppercase",
+                              opacity: proximity,
                             }}
                           >
                             {lang === "bg" ? "Виж услугата" : "View service"}
@@ -1837,30 +1889,21 @@ export default function PageExperience({
                               <path d="M1.5 5.5h8M6.5 2l3 3.5-3 3.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
                           </div>
-                        </div>
+                        )}
+                      </div>
+
+                      {/* Copper border — fades in with proximity */}
+                      {proximity > 0.05 && (
+                        <div style={{ position: "absolute", inset: 0, border: `1px solid rgba(184,115,51,${proximity * 0.6})`, pointerEvents: "none" }} />
                       )}
 
-                      {/* Inactive card title */}
-                      {slot !== 0 && (
-                        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "12px 16px" }}>
-                          <div style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600, fontSize: "0.78rem", lineHeight: 1.2 }}>
-                            {svc.title}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Active copper border */}
-                      {slot === 0 && (
-                        <div style={{ position: "absolute", inset: 0, border: "1px solid rgba(184,115,51,0.6)", pointerEvents: "none" }} />
-                      )}
-
-                      {/* HUD corner brackets — active only */}
-                      {slot === 0 && (
+                      {/* HUD corner brackets — fade in with proximity */}
+                      {proximity > 0.2 && (
                         <>
-                          <div style={{ position: "absolute", top: 10, left: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                          <div style={{ position: "absolute", top: 10, right: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                          <div style={{ position: "absolute", bottom: 10, left: 10, width: 16, height: 16, borderBottom: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
-                          <div style={{ position: "absolute", bottom: 10, right: 10, width: 16, height: 16, borderBottom: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", top: 10, left: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, opacity: proximity, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", top: 10, right: 10, width: 16, height: 16, borderTop: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, opacity: proximity, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", bottom: 10, left: 10, width: 16, height: 16, borderBottom: `2px solid ${meta.accent}`, borderLeft: `2px solid ${meta.accent}`, opacity: proximity, pointerEvents: "none" }} />
+                          <div style={{ position: "absolute", bottom: 10, right: 10, width: 16, height: 16, borderBottom: `2px solid ${meta.accent}`, borderRight: `2px solid ${meta.accent}`, opacity: proximity, pointerEvents: "none" }} />
                         </>
                       )}
                     </div>
