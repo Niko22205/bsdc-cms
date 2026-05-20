@@ -1267,7 +1267,7 @@ export default function PageExperience({
           {CloseBtn}{BackBtn}
 
           {/* POSTER HEADER */}
-          <div className="relative flex-shrink-0 overflow-hidden" style={{ height: "56vh", minHeight: 340 }}>
+          <div className="relative flex-shrink-0 overflow-hidden" style={{ height: "38vh", minHeight: 240 }}>
             {imgSrc
               ? <img src={imgSrc} alt={svc.title} className="sd-image absolute inset-0 h-full w-full object-cover object-center" />
               : <div className="absolute inset-0 bg-[#030d1a]" />
