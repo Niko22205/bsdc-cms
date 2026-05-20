@@ -584,27 +584,39 @@ export default function PageExperience({
         }
       }
 
-      // On Services scene: step through service stack
+      // On Services scene: left panel scrolls scenes, right panel scrolls services only
       if (currentSceneRef.current === 2) {
-        if (e.deltaY > 30) {
-          if (activeIdxRef.current === services.length - 1) {
-            goToScene(3)
-          } else {
+        const isDesktop   = window.innerWidth >= 768
+        const onRightPanel = isDesktop && e.clientX >= window.innerWidth * 0.44
+
+        if (onRightPanel) {
+          // Cards area — service navigation only, no scene exit
+          if (e.deltaY > 30 && activeIdxRef.current < services.length - 1) {
             const next = activeIdxRef.current + 1
             activeIdxRef.current = next
             setActiveIdx(next)
-          }
-          return
-        } else if (e.deltaY < -30) {
-          if (activeIdxRef.current === 0) {
-            goToScene(1)
-          } else {
+          } else if (e.deltaY < -30 && activeIdxRef.current > 0) {
             const next = activeIdxRef.current - 1
             activeIdxRef.current = next
             setActiveIdx(next)
           }
           return
         }
+
+        if (!isDesktop) {
+          // Mobile — service nav with scene exit at boundaries
+          if (e.deltaY > 30) {
+            if (activeIdxRef.current === services.length - 1) goToScene(3)
+            else { const n = activeIdxRef.current + 1; activeIdxRef.current = n; setActiveIdx(n) }
+            return
+          } else if (e.deltaY < -30) {
+            if (activeIdxRef.current === 0) goToScene(1)
+            else { const n = activeIdxRef.current - 1; activeIdxRef.current = n; setActiveIdx(n) }
+            return
+          }
+        }
+
+        // Left panel on desktop — fall through to global scene navigation below
       }
 
       if (e.deltaY > 50)  goToScene(currentSceneRef.current + 1)
@@ -1723,8 +1735,8 @@ export default function PageExperience({
                   const slot = raw <= Math.floor(n / 2) ? raw : raw - n
 
                   // Spiral staircase path
-                  const translateY = slot * 92          // large vertical step
-                  const translateX = slot * 10          // minimal horizontal drift
+                  const translateY = slot * 115         // vertical staircase step
+                  const translateX = slot * 22          // slight horizontal spread
                   const translateZ = -Math.abs(slot) * 150  // depth pullback
 
                   // Each card rotates around its own Y-axis — the tornado spin
@@ -1754,7 +1766,7 @@ export default function PageExperience({
                         backfaceVisibility: "hidden",
                         overflow: "hidden",
                         cursor: "pointer",
-                        transition: "all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                        transition: "transform 0.75s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease, filter 0.6s ease",
                         filter: slot === 0
                           ? "none"
                           : `grayscale(${absSlot * 22}%) brightness(${Math.max(0.5, 1 - absSlot * 0.12)})`,
