@@ -1729,23 +1729,23 @@ export default function PageExperience({
                 }}
               >
                 {services.map((svc, i) => {
-                  const n = services.length
-                  const raw  = ((i - activeIdx) + n) % n
-                  const slot = raw <= Math.floor(n / 2) ? raw : raw - n
-
-                  // Cylinder path — each card on the outer surface of a vertical cylinder.
-                  // No overlaps: sin/cos distribute cards cleanly around the arc.
-                  const ANGLE_DEG = 42                             // degrees per slot
-                  const R         = 580                            // cylinder radius px
-                  const theta     = slot * ANGLE_DEG * (Math.PI / 180)
-                  const translateX = R * Math.sin(theta)           // arc X position
-                  const translateZ = R * (Math.cos(theta) - 1)    // 0 at front, -R at ±90°
-                  const translateY = slot * 140                    // vertical staircase
-                  const rotateY    = -slot * ANGLE_DEG            // card faces outward
-
+                  // LINEAR slot — no wrapping. Card 0 always above, card n-1 always below.
+                  const slot    = i - activeIdx
                   const absSlot = Math.abs(slot)
-                  const scale   = Math.max(0.55, 1 - absSlot * 0.10)
-                  const opacity = slot === 0 ? 1 : Math.max(0.25, 1 - absSlot * 0.18)
+
+                  // Cylinder geometry clamped to visible range (sin/cos would cycle for |slot|>3)
+                  const ANGLE_DEG = 42
+                  const R         = 580
+                  const eff       = Math.max(-2.5, Math.min(2.5, slot))
+                  const theta     = eff * ANGLE_DEG * (Math.PI / 180)
+                  const translateX = R * Math.sin(theta)
+                  const translateZ = R * (Math.cos(theta) - 1)
+                  // Vertical: large step so all visible cards fill the panel height
+                  const translateY = slot * 195
+                  const rotateY    = -eff * ANGLE_DEG
+
+                  const scale   = absSlot > 2 ? 0.3 : Math.max(0.55, 1 - absSlot * 0.10)
+                  const opacity = slot === 0 ? 1 : absSlot > 2 ? 0 : Math.max(0.25, 1 - absSlot * 0.18)
                   const meta    = SERVICE_META[i] ?? SERVICE_META[0]
                   const imgSrc  = svc.featuredImageUrl ?? svc.images?.[0] ?? null
 
