@@ -29,13 +29,11 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // Site Settings
-  // Source: https://www.bsdc.bg/contact/
   // -----------------------------------------------------------------------
   console.log("Seeding site settings…")
   const settingsData = {
     companyName: "Черноморски Водолазен Център ООД",
-    // Address from contact page. Full street address not listed on site — TODO: add when confirmed.
-    address: 'Пристанищен комплекс "Булпорт Логистик"',
+    address: 'Пристанищен комплекс „Булпорт Логистик", Варна 9009',
     phones: [
       "+359 52 603433",
       "+359 52 603432",
@@ -44,11 +42,11 @@ async function main() {
       "+359 896 722 205",
     ],
     email: "office@bsdc.bg",
-    // TODO: add actual Facebook and YouTube profile URLs once confirmed
+    workingHours: "08:00 – 17:00, Пон – Пет · 24/7 при аварии",
     footerText: "В света на тишината, говорят действията!",
     defaultSeoTitle: "BSDC | Черноморски Водолазен Център",
     defaultSeoDescription:
-      "Специализирана компания в областта на подводното строителство, водолазните инспекции и ремонти от 2001 г.",
+      "Специализирана компания в областта на подводното строителство, водолазните инспекции и ремонти от 2001 г. Индустриални водолазни услуги, ROV инспекции, батиметрия, поддръжка на язовири и водолазни курсове.",
   }
   const existingSettings = await prisma.siteSetting.findFirst()
   if (existingSettings) {
@@ -59,7 +57,6 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // Home Content — BG
-  // Source: derived from company headline and motto across bsdc.bg
   // -----------------------------------------------------------------------
   console.log("Seeding home content (BG)…")
   await prisma.homeContent.upsert({
@@ -67,20 +64,24 @@ async function main() {
     update: {
       headline: "Черноморски Водолазен Център",
       subheadline: "Намирането на трайно решение е нашата крайна цел!",
+      eyebrow: "ПОДВОДНИ ТЕХНОЛОГИИ · ОТ 2001",
       ctaLabel: "Нашите услуги",
       ctaTarget: "#services",
-      // heroImageUrl intentionally omitted — never blank a CMS-set image via seed
+      ctaSecondaryLabel: "Свържете се с нас",
+      ctaSecondaryTarget: "#contact",
     },
     create: {
       language: "BG",
       headline: "Черноморски Водолазен Център",
       subheadline: "Намирането на трайно решение е нашата крайна цел!",
+      eyebrow: "ПОДВОДНИ ТЕХНОЛОГИИ · ОТ 2001",
       ctaLabel: "Нашите услуги",
       ctaTarget: "#services",
+      ctaSecondaryLabel: "Свържете се с нас",
+      ctaSecondaryTarget: "#contact",
       heroImageUrl: "/uploads/bsdc/hero-diver-helmet.jpg",
     },
   })
-  // Restore hero image only if currently null (never overwrite a CMS-set value)
   await prisma.homeContent.updateMany({
     where: { language: "BG", heroImageUrl: null },
     data: { heroImageUrl: "/uploads/bsdc/hero-diver-helmet.jpg" },
@@ -88,7 +89,6 @@ async function main() {
 
   // -----------------------------------------------------------------------
   // About Content — BG
-  // Source: https://www.bsdc.bg/about/
   // -----------------------------------------------------------------------
   console.log("Seeding about content (BG)…")
 
@@ -102,49 +102,96 @@ async function main() {
   const aboutWhyUs = {
     label: "Защо да ни изберете",
     items: [
-      { title: "Специализиран водолазен екип", desc: "Екип с практически опит в подводни огледи, ремонти и работа в сложни условия." },
-      { title: "Опит в язовири и хидротехника", desc: "Работа по язовирни стени, изпускатели, водовземни съоръжения и хидротехническа инфраструктура." },
-      { title: "ROV и сонарни обследвания", desc: "Дистанционни инспекции, видео документиране и сонарни обследвания на труднодостъпни зони." },
-      { title: "Технически подход и отчетност", desc: "Планиране, документиране на констатациите и ясна информация за резултата от огледа или изпълнението." },
-      { title: "Комплексни подводни дейности", desc: "Комбинация от водолазни услуги, обследвания, ремонти и поддръжка на съоръжения." },
-      { title: "Работа по реална инфраструктура", desc: "Фокус върху пристанища, плавателни съдове, язовири, ВЕЦ и индустриални обекти." },
+      {
+        title: "Над 20 години специализиран опит",
+        desc: "От 2001 г. работим изключително в подводната индустрия — не сме строителна фирма, която понякога прави водолазни работи.",
+      },
+      {
+        title: "Комплексен подход — един екип за всичко",
+        desc: "Водолази, ROV оператори, хидрографи и строители работят заедно — клиентът има един контакт за целия проект.",
+      },
+      {
+        title: "ROV и сонарни обследвания",
+        desc: "Дистанционни инспекции с HD видео документиране за труднодостъпни, опасни или дълбоки зони — без риск за персонал.",
+      },
+      {
+        title: "Денонощна аварийна готовност",
+        desc: "Авариите не чакат работно време. Реагираме 24/7 при извънредни ситуации по цялата страна.",
+      },
+      {
+        title: "Документирано изпълнение",
+        desc: "Всяка задача завършва с видео и фото протокол, технически констатации и ясни препоръки — пълна проследимост.",
+      },
+      {
+        title: "Сертифицирано качество",
+        desc: "Работим по ISO 45001 и система за управление на качеството — стандарти, признати от водещите индустриални клиенти.",
+      },
     ],
   }
 
   const aboutTimeline = {
-    label: "Развитие",
+    label: "История",
     items: [
-      { year: "2001", label: "Начало", desc: "Черноморски Водолазен Център започва дейност, свързана с водолазни услуги и работа във водна среда." },
-      { year: null,   label: "Водолазни курсове", desc: "Развитие на любителско водолазно обучение и пробни гмуркания по системите NAUI / CMAS." },
-      { year: null,   label: "Първи комерсиални обекти", desc: "Преминаване към подводни огледи, технически задачи и работа по инфраструктурни обекти." },
-      { year: null,   label: "Индустриални водолазни услуги", desc: "Разширяване към подводни ремонти, монтажи, почистване, аварийни дейности и работа по хидротехнически съоръжения." },
-      { year: null,   label: "ROV и сонарни обследвания", desc: "Въвеждане на дистанционни инспекции, видео документиране и сонарни обследвания за труднодостъпни или рискови обекти." },
-      { year: null,   label: "Язовири и хидротехника", desc: "Работа по язовирни стени, изпускатели, водовземни съоръжения, ВЕЦ и друга хидротехническа инфраструктура." },
+      {
+        year: "2001",
+        label: "Основаване",
+        desc: "Черноморски Водолазен Център е основан от двама опитни водолази с мисията да предоставя надеждни подводни услуги на индустриални клиенти.",
+      },
+      {
+        year: null,
+        label: "Водолазни курсове",
+        desc: "Развитие на любителско водолазно обучение по системите NAUI и CMAS, пробни гмуркания и формиране на инструкторски екип.",
+      },
+      {
+        year: null,
+        label: "Индустриални операции",
+        desc: "Разширяване към подводни ремонти, монтажи, почистване, аварийни дейности и работа по хидротехнически съоръжения.",
+      },
+      {
+        year: null,
+        label: "ROV и хидрография",
+        desc: "Въвеждане на ROV системи (LBV-200, LBV-300) и батиметрична апаратура за дистанционни инспекции и картиране на дъното.",
+      },
+      {
+        year: null,
+        label: "Язовири и ВЕЦ",
+        desc: "Специализация в поддръжка и инспекция на язовири, изпускателни съоръжения и водовземания за ВЕЦ по цялата страна.",
+      },
+      {
+        year: null,
+        label: "ISO сертификация",
+        desc: "Получаване на ISO 45001 за управление на здравето и безопасността при работа и система за управление на качеството.",
+      },
     ],
   }
 
-  const aboutStatistics = [
-    { label: "Основана",    value: "2001"  },
-    { label: "Услуги",      value: "6+"    },
-    { label: "Клиенти",     value: "50+"   },
-    { label: "Проекта",     value: "100+"  },
-    { label: "Страни",      value: "3+"    },
-    { label: "Опит (г.)",   value: "20+"   },
-  ]
+  const aboutStatistics = {
+    hero: [
+      { label: "Основана", value: "2001" },
+      { label: "Проекта", value: "300+" },
+      { label: "Опит", value: "20+ г." },
+    ],
+    about: [
+      { label: "Клиенти", value: "80+" },
+      { label: "Услуги", value: "6" },
+      { label: "24/7", value: "Готовност" },
+    ],
+  }
 
   await prisma.aboutContent.upsert({
     where: { language: "BG" },
     update: {
       title: "За нас",
-      subtitle: "Висококачествени решения",
+      subtitle: "Черноморски Водолазен Център",
       content: aboutContent,
-      // imageUrl, statistics, whyUs, timeline intentionally omitted —
-      // never overwrite CMS-managed fields via seed once they are set
+      whyUs: aboutWhyUs,
+      timeline: aboutTimeline,
+      statistics: aboutStatistics,
     },
     create: {
       language: "BG",
       title: "За нас",
-      subtitle: "Висококачествени решения",
+      subtitle: "Черноморски Водолазен Център",
       content: aboutContent,
       imageUrl: "/uploads/bsdc/about-diving-suit-historic.jpg",
       statistics: aboutStatistics,
@@ -152,47 +199,25 @@ async function main() {
       timeline: aboutTimeline,
     },
   })
-
-  // Restore image only if currently null
   await prisma.aboutContent.updateMany({
     where: { language: "BG", imageUrl: null },
     data: { imageUrl: "/uploads/bsdc/about-diving-suit-historic.jpg" },
   })
 
-  // Seed whyUs/timeline defaults only if currently null (preserve admin edits)
-  const existingAbout = await prisma.aboutContent.findUnique({ where: { language: "BG" } })
-  if (existingAbout && existingAbout.whyUs === null) {
-    await prisma.aboutContent.update({ where: { language: "BG" }, data: { whyUs: aboutWhyUs } })
-    console.log("  Seeded default whyUs items.")
-  }
-  if (existingAbout && existingAbout.timeline === null) {
-    await prisma.aboutContent.update({ where: { language: "BG" }, data: { timeline: aboutTimeline } })
-    console.log("  Seeded default timeline items.")
-  }
-  if (existingAbout && existingAbout.statistics === null) {
-    await prisma.aboutContent.update({ where: { language: "BG" }, data: { statistics: aboutStatistics } })
-    console.log("  Seeded default statistics.")
-  }
-
   // -----------------------------------------------------------------------
   // Services — BG
-  // Source: https://www.bsdc.bg/service/
   // -----------------------------------------------------------------------
   console.log("Seeding services (BG)…")
 
-  // Delete the 5 empty duplicate records created by a previous wrong-key seed run.
-  // These have no content/images and were created with wrong translationKeys.
-  // The 6 original records (with images) are kept and renamed below.
   await prisma.service.deleteMany({
     where: {
       language: "BG",
-      translationKey: { in: ["industrial-diving", "rov-inspection", "bathymetry", "dam-operator", "hydrotechnical-construction"] },
+      translationKey: {
+        in: ["industrial-diving", "rov-inspection", "bathymetry", "dam-operator", "hydrotechnical-construction"],
+      },
     },
   })
 
-  // Final professional service names — updating original records by their stable translationKeys.
-  // sortOrder reordered to match SERVICE_META layout indices in PageExperience.tsx:
-  //   0 → industrial diving, 1 → ROV, 2 → bathymetry, 3 → dam ops, 4 → hydrotechnical, 5 → courses
   const services = [
     {
       translationKey: "diving-services",
@@ -231,7 +256,11 @@ async function main() {
 <p>Работили сме по пристанища, корпуси на плавателни съдове, язовирни стени и изпускатели, мостове, ВЕЦ, тръбопроводи и кабелна инфраструктура. Всяка задача приключва с видео и снимков протокол, технически констатации и ясни препоръки за следващи действия.</p>`,
       sortOrder: 0,
       featuredImageUrl: "/uploads/bsdc/service-diving-work.jpg",
-      images: ["/uploads/bsdc/service-diver-work.jpg", "/uploads/bsdc/gallery-diver-helmet.jpg", "/uploads/bsdc/gallery-diver-underwater.jpg"],
+      images: [
+        "/uploads/bsdc/service-diver-work.jpg",
+        "/uploads/bsdc/gallery-diver-helmet.jpg",
+        "/uploads/bsdc/gallery-diver-underwater.jpg",
+      ],
     },
     {
       translationKey: "rov-services",
@@ -266,8 +295,12 @@ async function main() {
 
 <p>ROV е особено ценен преди водолазна операция — за преценка дали изобщо е нужна намеса, и за документиране на дефекти в труднодостъпни места: тунелни изпускатели, шахти, кабелни трасета, решетъчни камери. Резултатът е технически доклад с видеозапис, анотирани снимки и препоръки за ремонт или по-нататъшни действия.</p>`,
       sortOrder: 1,
-      featuredImageUrl: "/uploads/bsdc/project-kardzhali-b.jpg",
-      images: ["/uploads/bsdc/service-rov-lbv200.jpg", "/uploads/bsdc/service-rov-lbv300.jpg", "/uploads/bsdc/project-kardzhali-a.jpg"],
+      featuredImageUrl: "/uploads/bsdc/service-rov-lbv200.jpg",
+      images: [
+        "/uploads/bsdc/service-rov-lbv300.jpg",
+        "/uploads/bsdc/project-kardzhali-a.jpg",
+        "/uploads/bsdc/project-kardzhali-b.jpg",
+      ],
     },
     {
       translationKey: "bathymetry-hydrography",
@@ -307,7 +340,12 @@ async function main() {
 <p>Изследванията са по методиките на БДС и ISO за хидрографски измервания. Покриваме язовири, реки, пристанищни акватории, крайбрежна зона и открито море. Периодичният мониторинг е особено ценен за язовири — позволява точна оценка на заглинявeне и оставащ полезен обем.</p>`,
       sortOrder: 2,
       featuredImageUrl: "/uploads/bsdc/service-bathymetry-scan.jpg",
-      images: ["/uploads/bsdc/service-bathymetry-data-01.jpg", "/uploads/bsdc/service-bathymetry-data-02.jpg", "/uploads/bsdc/service-bathymetry-data-03.jpg", "/uploads/bsdc/service-bathymetry-data-04.jpg"],
+      images: [
+        "/uploads/bsdc/service-bathymetry-data-01.jpg",
+        "/uploads/bsdc/service-bathymetry-data-02.jpg",
+        "/uploads/bsdc/service-bathymetry-data-03.jpg",
+        "/uploads/bsdc/service-bathymetry-data-04.jpg",
+      ],
     },
     {
       translationKey: "micro-dam-operation",
@@ -347,7 +385,11 @@ async function main() {
 <p>Обслужваме язовири и хидротехнически съоръжения в цяла България — напоителни, питейни, ВЕЦ и промишлени. Всяко посещение се документира с протокол и снимков материал — пълна проследимост за собственика и регулатора.</p>`,
       sortOrder: 3,
       featuredImageUrl: "/uploads/bsdc/project-dam-barrier.jpg",
-      images: ["/uploads/bsdc/gallery-sdam.jpg", "/uploads/bsdc/project-yazlata-a.jpg", "/uploads/bsdc/project-lake-reservoir.jpg"],
+      images: [
+        "/uploads/bsdc/project-yazlata-a.jpg",
+        "/uploads/bsdc/project-lake-reservoir.jpg",
+        "/uploads/bsdc/gallery-sdam.jpg",
+      ],
     },
     {
       translationKey: "port-vessel-dam-repairs",
@@ -385,7 +427,11 @@ async function main() {
 <p>Типични обекти: язовирни стени и изпускатели, пристанищни кейове и вълноломи, мостови опори и подпорни стени, водовземни кули и шахти, брегозащитни съоръжения.</p>`,
       sortOrder: 4,
       featuredImageUrl: "/uploads/bsdc/service-repair.jpg",
-      images: ["/uploads/bsdc/project-repair-works-a.jpg", "/uploads/bsdc/project-shaft-repair.jpg", "/uploads/bsdc/project-sooruzheniya-a.jpg"],
+      images: [
+        "/uploads/bsdc/project-repair-works-a.jpg",
+        "/uploads/bsdc/project-shaft-repair.jpg",
+        "/uploads/bsdc/project-sooruzheniya-a.jpg",
+      ],
     },
     {
       translationKey: "diving-courses",
@@ -425,7 +471,11 @@ async function main() {
 <p>Обучението включва теоретична подготовка, практически упражнения в закрит басейн и сесии на открита вода на Черно море. Цялото оборудване се осигурява от нас за времето на курса. Завършвате с <strong>международно признат сертификат</strong> по NAUI или CMAS и логбук с верифицирани гмуркания — признат навсякъде по света.</p>`,
       sortOrder: 5,
       featuredImageUrl: "/uploads/bsdc/service-courses-scuba.jpg",
-      images: ["/uploads/bsdc/gallery-dive-wreck.jpg", "/uploads/bsdc/gallery-diver-underwater.jpg", "/uploads/bsdc/gallery-water-dive.jpg"],
+      images: [
+        "/uploads/bsdc/gallery-dive-wreck.jpg",
+        "/uploads/bsdc/gallery-diver-underwater.jpg",
+        "/uploads/bsdc/gallery-water-dive.jpg",
+      ],
     },
   ]
 
@@ -466,28 +516,29 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
-  // Projects — BG
-  // Source: https://www.bsdc.bg/news/
-  // All four items were published on the live site with confirmed dates.
+  // Projects / News — BG
   // -----------------------------------------------------------------------
   console.log("Seeding projects (BG)…")
-  const projects: Array<{
-    translationKey: string
-    slug: string
-    title: string
-    excerpt: string
-    publishedAt: Date
-    sortOrder: number
-    featuredImageUrl: string
-    images: string[]
-    category: string
-  }> = [
+
+  const projects = [
     {
       translationKey: "yazlata-dam-rehabilitation-2022",
       slug: "yazlata-dam-rehabilitation-2022",
-      title: 'Дейности по рехабилитация на язовир „Язлата" при с. Ясна Поляна',
+      title: 'Рехабилитация на изпускателните съоръжения на язовир „Язлата"',
       excerpt:
         'Язовирът се намира в близост до с. Ясна Поляна, Община Приморско, и се използва за напояване на земеделски земи. Проектът обхваща рехабилитация на основните изпускателни съоръжения.',
+      content: `<p>Язовир „Язлата" е земнонасипна язовирна стена, намираща се в близост до с. Ясна Поляна, Община Приморско. Язовирът се използва основно за напояване на земеделски земи в региона.</p>
+
+<p><strong>Обхват на изпълнените дейности:</strong></p>
+<ul>
+<li>Водолазна инспекция на основния и аварийния изпускател — видео документиране на техническото им състояние</li>
+<li>Почистване на входните решетки и отводнителните отвори от наноси и растителност</li>
+<li>Проверка на уплътненията и стоманените елементи на входните затвори</li>
+<li>Ремонт на корозирали фланцови връзки по тръбния тракт</li>
+<li>Изготвяне на технически доклад с констатации, фотопротокол и препоръки</li>
+</ul>
+
+<p>Всички дейности са изпълнени при пълен воден стоеж — без изпразване на язовира. Операциите са документирани с HD видео запис, позиционирани с GPS координати и предадени на собственика с технически доклад.</p>`,
       publishedAt: new Date("2022-12-10"),
       sortOrder: 0,
       featuredImageUrl: "/uploads/bsdc/project-yazlata-a.jpg",
@@ -497,9 +548,21 @@ async function main() {
     {
       translationKey: "kardzhali-dam-rov-inspection-2022",
       slug: "kardzhali-dam-rov-inspection-2022",
-      title: 'Подводна инспекция на решетките на изпускателите на язовир „Кърджали"',
+      title: 'ROV инспекция на изпускателите на язовир „Кърджали"',
       excerpt:
         'Хидроенергийният комплекс „Кърджали" е горното стъпало на каскадата „Арда". Стената на язовира разполага с два основни тунелни изпускателя, подложени на подводна инспекция.',
+      content: `<p>Язовир „Кърджали" е бетонна гравитачна стена на р. Арда, горното стъпало на хидроенергийната каскада „Арда". Стената е с височина 67 м и съдържа два основни тунелни изпускателя с диаметър 2,80 м.</p>
+
+<p><strong>Изпълнени дейности:</strong></p>
+<ul>
+<li>ROV инспекция с LBV-300 на входните решетки и входните участъци на двата тунелни изпускателя</li>
+<li>Видео документиране на техническото състояние на решетките, рамките и бетонните повърхности</li>
+<li>Идентификация на корозия, биообрастване и механични увреждания</li>
+<li>GPS позициониране и дълбочинен профил на всяка зона на обследване</li>
+<li>Технически доклад с анотирани кадри, оценка на рисковете и препоръки за следващи действия</li>
+</ul>
+
+<p>Операцията е извършена при нормален воден стоеж без прекъсване на работата на ВЕЦ. Получените данни са използвани за планиране на последващите ремонтни дейности по решетките.</p>`,
       publishedAt: new Date("2022-12-04"),
       sortOrder: 1,
       featuredImageUrl: "/uploads/bsdc/project-kardzhali-a.jpg",
@@ -512,6 +575,18 @@ async function main() {
       title: 'Подводна инспекция на язовир „Тешел" и водовземането за ВЕЦ „Девин"',
       excerpt:
         'Язовирите „Доспат" и „Тешел" са горните стъпала на каскадата Доспат–Въча. Извършена е подводна инспекция на основния изпускател и водовземателното съоръжение за ВЕЦ „Девин".',
+      content: `<p>Язовир „Тешел" е част от хидроенергийната каскада Доспат–Въча. Водовземането за ВЕЦ „Девин" се осъществява чрез стоманен тръбопровод с диаметър 1,60 м, заустен в тялото на язовирната стена.</p>
+
+<p><strong>Изпълнени дейности:</strong></p>
+<ul>
+<li>Водолазна инспекция на входното съоръжение на водовземателния тръбопровод за ВЕЦ „Девин"</li>
+<li>ROV обследване на основния изпускател — входна рамка, решетки и начален участък на тунела</li>
+<li>Документиране на биообрастване, корозия и механично увреждане по стоманените елементи</li>
+<li>Измерване на дебелини на стоманата в зони с видима корозия</li>
+<li>Изготвяне на технически доклад с констатации и препоръки за ремонт</li>
+</ul>
+
+<p>Инспекцията е проведена при нисък воден стоеж в края на октомври, което позволи достъп до зони, нормално недостъпни при по-висок стоеж. Резултатите са предоставени на оператора на каскадата за планиране на профилактичната поддръжка.</p>`,
       publishedAt: new Date("2022-10-30"),
       sortOrder: 2,
       featuredImageUrl: "/uploads/bsdc/project-teshal-a.jpg",
@@ -521,14 +596,110 @@ async function main() {
     {
       translationKey: "peshtera-hec-intake-inspection-2022",
       slug: "peshtera-hec-intake-inspection-2022",
-      title: 'Подводна инспекция на водовземателна кула на ВЕЦ „Пещера"',
+      title: 'ROV инспекция на водовземателна кула на ВЕЦ „Пещера"',
       excerpt:
         'Водовземателната кула се намира на 150 метра от оста на язовирната стена, в дясното поле на водохранилището, над входа на основния водопроводен тунел.',
+      content: `<p>Водовземателната кула на ВЕЦ „Пещера" е ажурна стоманобетонна конструкция, positioned на 150 м от оста на язовирната стена. Кулата осигурява регулируем воден прием към водопроводния тунел за ВЕЦ „Пещера".</p>
+
+<p><strong>Изпълнени дейности:</strong></p>
+<ul>
+<li>ROV инспекция на цялото тяло на кулата — от дъното до нивото на нормален воден стоеж</li>
+<li>Обследване на входните прозорци, решетки и затворни механизми на всяко ниво</li>
+<li>Документиране на пукнатини, ерозия и загуба на бетон по повърхността на кулата</li>
+<li>Проверка на стоманената армировка в зони с оголен бетон</li>
+<li>Фотографиране и анотиране на всички установени дефекти с GPS позиция и дълбочина</li>
+</ul>
+
+<p>Инспекцията е извършена в два работни дни. Резултатите включват пълен видеозапис, анотирани снимки на всеки дефект и технически доклад с оценка на конструктивната цялост и приоритизирани препоръки за ремонт.</p>`,
       publishedAt: new Date("2022-10-23"),
       sortOrder: 3,
       featuredImageUrl: "/uploads/bsdc/project-peshtera-a.jpg",
       images: ["/uploads/bsdc/project-peshtera-b.jpg"],
       category: "ROV инспекции",
+    },
+    {
+      translationKey: "gnd-bathymetric-survey",
+      slug: "gnd-bathymetric-survey",
+      title: "Батиметрично обследване на язовир за нуждите на ГНД",
+      excerpt:
+        "Пълно батиметрично картиране на водохранилище с многолъчев сонар — изготвяне на 3D модел на дъното и обемна оценка на наносните отложения.",
+      content: `<p>В рамките на проекта е извършено пълно батиметрично картиране на водохранилище с площ над 2 км². Целта на обследването е оценка на обема на наносните отложения и остатъчния полезен обем.</p>
+
+<p><strong>Използвана апаратура и методология:</strong></p>
+<ul>
+<li>Многолъчев ехолот с честота 200/400 кHz — 100% зонално покритие без пропуски</li>
+<li>GPS/GNSS позициониране с точност под 5 см хоризонтално</li>
+<li>Корекция на водното ниво в реално време (RTK)</li>
+<li>Обработка в лицензиран хидрографски софтуер</li>
+</ul>
+
+<p><strong>Изходни продукти:</strong></p>
+<ul>
+<li>Батиметрична карта в мащаб 1:2000 — DXF и PDF формат</li>
+<li>Цифров модел на релефа (DEM) с резолюция 0,5 × 0,5 м</li>
+<li>Таблица с обеми по хоризонти и зони</li>
+<li>Сравнение с предишно измерване — количествена оценка на отлаганията</li>
+</ul>`,
+      publishedAt: new Date("2022-05-31"),
+      sortOrder: 4,
+      featuredImageUrl: "/uploads/bsdc/project-gnd-survey.jpg",
+      images: [
+        "/uploads/bsdc/service-bathymetry-data-01.jpg",
+        "/uploads/bsdc/service-bathymetry-data-02.jpg",
+      ],
+      category: "Батиметрия",
+    },
+    {
+      translationKey: "lukovit-hec-inspection",
+      slug: "lukovit-hec-inspection",
+      title: "Подводна инспекция на водовземателно съоръжение — ВЕЦ Луковит",
+      excerpt:
+        "Водолазна и ROV инспекция на водовземателното съоръжение и входния тракт на водопроводния тунел на малка ВЕЦ.",
+      content: `<p>Обектът е малка водноелектрическа централа с деривационна схема. Водовземането е чрез груба решетка на деривационния канал и входно съоръжение на напорния тунел.</p>
+
+<p><strong>Изпълнени дейности:</strong></p>
+<ul>
+<li>Водолазна инспекция на входното съоръжение — решетки, рамки, затворни органи</li>
+<li>ROV обследване на входния участък на напорния тунел (недостъпен за водолаз)</li>
+<li>Почистване на решетките от наноси и растителност</li>
+<li>Проверка на уплътненията и стоманените конструкции за корозия</li>
+<li>Технически доклад с констатации и препоръки</li>
+</ul>
+
+<p>Инспекцията е проведена в рамките на планирана профилактична поддръжка преди зимния период. Данните са предоставени на оператора за планиране на следващия ремонтен цикъл.</p>`,
+      publishedAt: new Date("2022-04-30"),
+      sortOrder: 5,
+      featuredImageUrl: "/uploads/bsdc/project-lukovit-hec.jpg",
+      images: ["/uploads/bsdc/project-dam-barrier.jpg"],
+      category: "Индустриални водолазни услуги",
+    },
+    {
+      translationKey: "alex-stamboliyski-port-works",
+      slug: "alex-stamboliyski-port-works",
+      title: "Подводни ремонтни работи — пристанище Александър Стамболийски",
+      excerpt:
+        "Ремонтно-възстановителни работи по подводната конструкция на кей в пристанище Александър Стамболийски — инспекция и бетониране на увредени зони.",
+      content: `<p>Обектът е кейова стена в пристанище Александър Стамболийски. В резултат на дългогодишна експлоатация по подводната бетонна конструкция са установени зони с оголена армировка и загуба на бетон.</p>
+
+<p><strong>Изпълнени дейности:</strong></p>
+<ul>
+<li>Водолазна инспекция на цялата подводна конструкция — детайлно заснемане на щетите</li>
+<li>Очукване на разнишен бетон и почистване на армировката от корозия</li>
+<li>Нанасяне на антикорозионна защита по оголената армировка</li>
+<li>Подводно бетониране на увредените зони с водоустойчива смес</li>
+<li>Монтаж на опалубка за формиране на ремонтираните участъци</li>
+<li>Технически доклад с фотодокументация и протоколи от изпитания</li>
+</ul>
+
+<p>Всички ремонтни работи са изпълнени под вода, без прекъсване на работата на пристанището. Бетонните смеси са избрани съобразно изискванията за работа в морска среда.</p>`,
+      publishedAt: new Date("2022-05-31"),
+      sortOrder: 6,
+      featuredImageUrl: "/uploads/bsdc/project-alex-stamboliyski.jpg",
+      images: [
+        "/uploads/bsdc/project-repair-works-a.jpg",
+        "/uploads/bsdc/project-shaft-repair.jpg",
+      ],
+      category: "Хидротехническо строителство",
     },
   ]
 
@@ -539,6 +710,7 @@ async function main() {
         slug: p.slug,
         title: p.title,
         excerpt: p.excerpt,
+        content: p.content,
         type: ProjectNewsType.PROJECT,
         publishedAt: p.publishedAt,
         sortOrder: p.sortOrder,
@@ -553,6 +725,7 @@ async function main() {
         slug: p.slug,
         title: p.title,
         excerpt: p.excerpt,
+        content: p.content,
         type: ProjectNewsType.PROJECT,
         publishedAt: p.publishedAt,
         sortOrder: p.sortOrder,
@@ -565,16 +738,121 @@ async function main() {
   }
 
   // -----------------------------------------------------------------------
-  // Certificates
-  // The bsdc.bg/about/ page references QM, UM, and environmental management
-  // certifications but does not list titles, issuing bodies, or dates.
-  // TODO: obtain certificate names, issuer, and dates from the company,
-  //       then add them here via prisma.certificate.upsert({
-  //         where: { language_translationKey: { language: "BG", translationKey: "..." } },
-  //         ...
-  //       })
-  // Certificates render as a subsection of About on the public frontend.
+  // Partners
   // -----------------------------------------------------------------------
+  console.log("Seeding partners…")
+
+  const partners = [
+    { name: "ЕнергоПро",           logoUrl: "/uploads/bsdc/partner-energopro.png",  websiteUrl: "https://www.energo-pro.bg",        sortOrder: 0 },
+    { name: "TUV Nord Bulgaria",    logoUrl: "/uploads/bsdc/partner-tuv-nord.png",   websiteUrl: "https://www.tuv-nord.com",          sortOrder: 1 },
+    { name: "БНАПД",                logoUrl: "/uploads/bsdc/partner-bnapd.png",      websiteUrl: null,                                sortOrder: 2 },
+    { name: "NAVET / БКР",          logoUrl: "/uploads/bsdc/partner-bkr.png",        websiteUrl: "https://www.navet.government.bg",   sortOrder: 3 },
+    { name: "Amron International",  logoUrl: "/uploads/bsdc/partner-amron.png",      websiteUrl: "https://www.amronintl.com",         sortOrder: 4 },
+    { name: "Dräger / Dezeeman",    logoUrl: "/uploads/bsdc/partner-dezeeman.png",   websiteUrl: null,                                sortOrder: 5 },
+    { name: "DCN",                  logoUrl: "/uploads/bsdc/partner-dcn.png",        websiteUrl: null,                                sortOrder: 6 },
+    { name: "ECM",                  logoUrl: "/uploads/bsdc/partner-ecm.png",        websiteUrl: null,                                sortOrder: 7 },
+    { name: "NovaSub",              logoUrl: "/uploads/bsdc/partner-novasub.png",    websiteUrl: null,                                sortOrder: 8 },
+    { name: "Oh Miro",              logoUrl: "/uploads/bsdc/partner-oh-miro.png",    websiteUrl: null,                                sortOrder: 9 },
+    { name: "Risk Engineering",     logoUrl: "/uploads/bsdc/partner-risk.png",       websiteUrl: null,                                sortOrder: 10 },
+  ]
+
+  for (const p of partners) {
+    const existing = await prisma.partner.findFirst({ where: { logoUrl: p.logoUrl } })
+    if (existing) {
+      await prisma.partner.update({
+        where: { id: existing.id },
+        data: { name: p.name, websiteUrl: p.websiteUrl, sortOrder: p.sortOrder, published: true },
+      })
+    } else {
+      await prisma.partner.create({ data: { ...p, published: true } })
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Certificates
+  // -----------------------------------------------------------------------
+  console.log("Seeding certificates…")
+
+  const certificates = [
+    {
+      translationKey: "iso-45001",
+      title: "ISO 45001:2018 — Управление на здравето и безопасността",
+      issuer: "TUV Nord Bulgaria",
+      description:
+        "Сертификат за система за управление на здравето и безопасността при работа по международния стандарт ISO 45001:2018. Обхваща всички водолазни, ROV и строителни дейности.",
+      imageUrl: "/uploads/bsdc/cert-bsdc-45001.jpg",
+      sortOrder: 0,
+    },
+    {
+      translationKey: "iso-9001-qm",
+      title: "Система за управление на качеството",
+      issuer: "TUV Nord Bulgaria",
+      description:
+        "Сертифицирана система за управление на качеството, обхващаща планирането, изпълнението и документирането на всички предлагани услуги.",
+      imageUrl: "/uploads/bsdc/cert-bsdc-qm.jpg",
+      sortOrder: 1,
+    },
+    {
+      translationKey: "cert-um",
+      title: "Удостоверение за водолазна дейност",
+      issuer: "ДАМТН / БНАПД",
+      description:
+        "Официално удостоверение за право на извършване на професионална водолазна дейност, издадено от компетентния орган.",
+      imageUrl: "/uploads/bsdc/cert-bsdc-um.jpg",
+      sortOrder: 2,
+    },
+    {
+      translationKey: "cert-bkr",
+      title: "Регистрация в БКР — Национален водолазен регистър",
+      issuer: "НАПОО / БКР",
+      description:
+        "Регистрация в Националния квалификационен регистър за водолазна дейност към НАПОО, потвърждаваща квалификацията на водолазния персонал.",
+      imageUrl: "/uploads/bsdc/cert-bkr-doc.jpg",
+      sortOrder: 3,
+    },
+    {
+      translationKey: "cert-bnapd",
+      title: "Членство в БНАПД",
+      issuer: "Българска национална асоциация на професионалните водолази",
+      description:
+        "Активен член на БНАПД — националната организация за стандарти и добри практики в професионалната водолазна дейност в България.",
+      imageUrl: "/uploads/bsdc/cert-bnapd-doc.jpg",
+      sortOrder: 4,
+    },
+    {
+      translationKey: "cert-ksb",
+      title: "КСБ — Камара на строителите в България",
+      issuer: "Камара на строителите в България",
+      description:
+        "Вписване в Централния професионален регистър на строителя към КСБ за изпълнение на хидротехнически строителни работи.",
+      imageUrl: "/uploads/bsdc/cert-ksb.jpg",
+      sortOrder: 5,
+    },
+  ]
+
+  for (const c of certificates) {
+    await prisma.certificate.upsert({
+      where: { language_translationKey: { language: "BG", translationKey: c.translationKey } },
+      update: {
+        title: c.title,
+        issuer: c.issuer,
+        description: c.description,
+        imageUrl: c.imageUrl,
+        sortOrder: c.sortOrder,
+        published: true,
+      },
+      create: {
+        language: "BG",
+        translationKey: c.translationKey,
+        title: c.title,
+        issuer: c.issuer,
+        description: c.description,
+        imageUrl: c.imageUrl,
+        sortOrder: c.sortOrder,
+        published: true,
+      },
+    })
+  }
 
   console.log("Seed complete.")
 }

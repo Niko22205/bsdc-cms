@@ -10,17 +10,13 @@ const VALID_LANGS = ["bg", "en"] as const
 export type Lang = (typeof VALID_LANGS)[number]
 
 async function fetchData(dbLang: Language) {
-  const [home, about, services, projects, certificates, partners, settings] =
+  const [home, about, services, certificates, partners, settings, projects] =
     await Promise.all([
       prisma.homeContent.findUnique({ where: { language: dbLang } }),
       prisma.aboutContent.findUnique({ where: { language: dbLang } }),
       prisma.service.findMany({
         where: { language: dbLang, published: true },
         orderBy: { sortOrder: "asc" },
-      }),
-      prisma.projectNewsItem.findMany({
-        where: { language: dbLang, published: true },
-        orderBy: [{ publishedAt: "desc" }, { sortOrder: "asc" }],
       }),
       prisma.certificate.findMany({
         where: { language: dbLang, published: true },
@@ -31,8 +27,12 @@ async function fetchData(dbLang: Language) {
         orderBy: { sortOrder: "asc" },
       }),
       prisma.siteSetting.findFirst(),
+      prisma.projectNewsItem.findMany({
+        where: { language: dbLang, published: true },
+        orderBy: { sortOrder: "asc" },
+      }),
     ])
-  return { home, about, services, projects, certificates, partners, settings }
+  return { home, about, services, certificates, partners, settings, projects }
 }
 
 type PageData = Awaited<ReturnType<typeof fetchData>>
@@ -56,16 +56,16 @@ export default async function LangPage({
       home: en.home ?? bg.home,
       about: en.about ?? bg.about,
       services: en.services.length > 0 ? en.services : bg.services,
-      projects: en.projects.length > 0 ? en.projects : bg.projects,
       certificates: en.certificates.length > 0 ? en.certificates : bg.certificates,
       partners: bg.partners,
       settings: bg.settings,
+      projects: en.projects.length > 0 ? en.projects : bg.projects,
     }
   } else {
     pageData = await fetchData(Language.BG)
   }
 
-  const { home, about, services, projects, certificates, partners, settings } = pageData
+  const { home, about, services, certificates, partners, settings, projects } = pageData
 
   return (
     <>
@@ -74,11 +74,11 @@ export default async function LangPage({
         home={home}
         about={about}
         services={services}
-        projects={projects}
         certificates={certificates}
         partners={partners}
         settings={settings}
         lang={lang as Lang}
+        projects={projects}
       />
     </>
   )

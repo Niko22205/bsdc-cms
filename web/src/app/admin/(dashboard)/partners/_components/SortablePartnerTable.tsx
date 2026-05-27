@@ -65,6 +65,7 @@ function SortableRow({ partner }: { partner: PartnerRow }) {
           type="button"
           {...attributes}
           {...listeners}
+          suppressHydrationWarning
           className="cursor-grab touch-none text-slate-700 transition hover:text-slate-400 focus:outline-none active:cursor-grabbing"
           aria-label="Drag to reorder"
         >

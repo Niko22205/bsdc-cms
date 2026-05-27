@@ -8,15 +8,16 @@ import {
 import Image from "next/image"
 import dynamic from "next/dynamic"
 import gsap from "gsap"
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion"
 import { MapPin, Phone, Mail, Clock, Shield, Waves, Scan, ClipboardCheck, Layers, Building2, Award } from "lucide-react"
 import type {
   HomeContent,
   AboutContent,
   Service,
-  ProjectNewsItem,
   Certificate,
   Partner,
   SiteSetting,
+  ProjectNewsItem,
 } from "@/generated/prisma/client"
 
 import TreasureMap from "./about/TreasureMap"
@@ -52,7 +53,7 @@ function resolveServiceMeta(svc: Service, svcIdx: number): ServiceMeta {
   return {
     accent:     svc.accentColor ?? fallback.accent,
     bg:         svc.bgColor     ?? fallback.bg,
-    activities: svc.activities.length > 0 ? svc.activities : fallback.activities,
+    activities: (svc.activities?.length ?? 0) > 0 ? svc.activities : fallback.activities,
     cards,
   }
 }
@@ -70,11 +71,11 @@ interface Props {
   home: HomeContent | null
   about: AboutContent | null
   services: Service[]
-  projects: ProjectNewsItem[]
   certificates: Certificate[]
   partners: Partner[]
   settings: SiteSetting | null
   lang: string
+  projects: ProjectNewsItem[]
 }
 
 const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
@@ -83,17 +84,119 @@ const SCENE_LABELS = ["Hero", "About", "Services", "Projects", "Contact"]
 const WHY_US_ICONS = [Shield, Waves, Scan, ClipboardCheck, Layers, Building2]
 
 
+// ── 3D Cylindrical card ───────────────────────────────────────────────────────
+
+interface ProjectCard3DProps {
+  project:        ProjectNewsItem
+  index:          number
+  totalItems:     number
+  activeProgress: MotionValue<number>
+  onCardClick:    (index: number) => void
+}
+
+function ProjectCard3D({ project, index, totalItems, activeProgress, onCardClick }: ProjectCard3DProps) {
+  const DEGREES_PER_CARD = 20.5
+  const RADIUS           = -1100
+
+  function wrappedDistance(latest: number): number {
+    if (totalItems === 0) return 0
+    let d = index - latest
+    const half = totalItems / 2
+    while (d >  half) d -= totalItems
+    while (d <= -half) d += totalItems
+    return d
+  }
+
+  const transformStr = useTransform(activeProgress, (latest) => {
+    if (totalItems === 0) return `rotateY(0deg) translateZ(${RADIUS}px)`
+    const d = wrappedDistance(latest)
+    return `rotateY(${d * DEGREES_PER_CARD}deg) translateZ(${RADIUS}px)`
+  })
+
+  const zIndexVal = useTransform(activeProgress, (latest) =>
+    Math.round(1000 - Math.abs(wrappedDistance(latest)) * 100)
+  )
+
+  const opacityVal = useTransform(activeProgress, (latest) => {
+    const absDist = Math.abs(wrappedDistance(latest))
+    if (absDist > 4.6) return 0
+    if (absDist > 3.8) return 1 - (absDist - 3.8)
+    return 1
+  })
+
+  const overlayOpacity = useTransform(activeProgress, (latest) => {
+    if (totalItems === 0) return 0
+    let d = index - latest
+    const half = totalItems / 2
+    while (d >  half) d -= totalItems
+    while (d <= -half) d += totalItems
+    return Math.min(0.35, Math.abs(d) * 0.08)
+  })
+
+  return (
+    <motion.div
+      onClick={() => onCardClick(index)}
+      style={{
+        position:           "absolute",
+        left:               "50%",
+        top:                "54%",
+        width:              "360px",
+        height:             "510px",
+        marginLeft:         "-180px",
+        marginTop:          "-255px",
+        transformStyle:     "preserve-3d",
+        transform:          transformStr,
+        zIndex:             zIndexVal,
+        opacity:            opacityVal,
+        backfaceVisibility: "hidden",
+        borderRadius:       "20px",
+        overflow:           "hidden",
+        border:             "1px solid rgba(255,255,255,0.05)",
+        boxShadow:          "0 25px 60px -15px rgba(0,0,0,0.9)",
+        cursor:             "pointer",
+        userSelect:         "none",
+      }}
+    >
+      {/* Ambient depth overlay — centre card: 0% dark, edges: up to 35% */}
+      <motion.div
+        style={{
+          position:       "absolute",
+          inset:          0,
+          zIndex:         10,
+          pointerEvents:  "none",
+          background:     "black",
+          opacity:        overlayOpacity,
+        }}
+      />
+      {project.featuredImageUrl ? (
+        <img
+          src={project.featuredImageUrl}
+          alt={project.title}
+          draggable={false}
+          style={{ display: "block", width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
+        />
+      ) : (
+        <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg,#0f172a,#1e3a5f)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontFamily: "monospace", letterSpacing: "0.1em" }}>
+            {project.title}
+          </span>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PageExperience({
   home,
   about,
   services,
-  projects,
   certificates,
   partners,
   settings,
   lang,
+  projects,
 }: Props) {
   function parseCmsJson<T>(raw: unknown): T[] {
     if (!raw) return []
@@ -144,28 +247,27 @@ export default function PageExperience({
   const [scrollPos, setScrollPos]          = useState(0)
   const [activeService, setActiveService]           = useState<Service | null>(null)
   const [expandedAct, setExpandedAct]              = useState<number | null>(null)
-  const [projectPage, setProjectPage]               = useState(0)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
   const [showContactModal, setShowContactModal]     = useState(false)
-  const [selectedProject, setSelectedProject]       = useState<ProjectNewsItem | null>(null)
-  const [projectFilter, setProjectFilter]           = useState<'ALL' | 'PROJECT' | 'NEWS'>('ALL')
-  const [categoryFilter, setCategoryFilter]         = useState<string>('ALL')
   const [lightboxSrc, setLightboxSrc]               = useState<string | null>(null)
+  const [selectedProject, setSelectedProject]       = useState<ProjectNewsItem | null>(null)
+  const [projectFilter, setProjectFilter]           = useState<"ALL" | "PROJECT" | "NEWS">("ALL")
+  const [categoryFilter, setCategoryFilter]         = useState<string>("ALL")
+  const [projActiveIndex, setProjActiveIndex]       = useState(0)
+  const dragProgress    = useMotionValue(0)
+  const activeProgress  = useSpring(dragProgress, { stiffness: 80, damping: 20 })
 
-  const currentSceneRef      = useRef(0)
-  const selectedProjectRef   = useRef<ProjectNewsItem | null>(null)
-  const activeServiceRef     = useRef<Service | null>(null)
-  const activeIdxRef        = useRef(0)
-  const isAnimating            = useRef(false)
-  const touchStartY            = useRef(0)
-  const projectGridRef         = useRef<HTMLDivElement>(null)
-  const innerGroupRef          = useRef<HTMLDivElement>(null)
-  const scrollPosRef           = useRef(0)
-  const scrollVelRef           = useRef(0)
-  const rafIdRef               = useRef<number | null>(null)
-  const aboutEntranceFired     = useRef(false)
-  const servicesEntranceFired  = useRef(false)
-
+  const currentSceneRef          = useRef(0)
+  const activeServiceRef         = useRef<Service | null>(null)
+  const activeIdxRef             = useRef(0)
+  const isAnimating              = useRef(false)
+  const touchStartY              = useRef(0)
+  const innerGroupRef            = useRef<HTMLDivElement>(null)
+  const scrollPosRef             = useRef(0)
+  const scrollVelRef             = useRef(0)
+  const rafIdRef                 = useRef<number | null>(null)
+  const aboutEntranceFired       = useRef(false)
+  const servicesEntranceFired    = useRef(false)
   const rootRef          = useRef<HTMLDivElement>(null)
   const heroRef          = useRef<HTMLDivElement>(null)
   const aboutRef         = useRef<HTMLDivElement>(null)
@@ -173,46 +275,77 @@ export default function PageExperience({
   const servicesRef      = useRef<HTMLDivElement>(null)
   const projectsRef      = useRef<HTMLDivElement>(null)
   const contactRef       = useRef<HTMLDivElement>(null)
+  const selectedProjectRef     = useRef<ProjectNewsItem | null>(null)
+  const carouselContainerRef   = useRef<HTMLDivElement>(null)
+  const carouselDragging       = useRef(false)
+  const carouselStartX         = useRef(0)
+  const carouselStartProgress  = useRef(0)
+  const carouselLastX          = useRef(0)
+  const carouselLastTime       = useRef(0)
+  const carouselVelocity       = useRef(0)   // px/ms, updated on every move
 
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
 
-  const projectsPerPage = 2
-  const filteredProjects = projects.filter(p => {
-    const typeOk = projectFilter === 'ALL' || p.type === projectFilter
-    const catOk  = categoryFilter === 'ALL' || p.category === categoryFilter
-    return typeOk && catOk
-  })
-  const totalPages    = Math.ceil(Math.max(filteredProjects.length, 1) / projectsPerPage)
-  const pagedProjects = filteredProjects.slice(projectPage * projectsPerPage, (projectPage + 1) * projectsPerPage)
-  const TYPE_LEVEL_VALUES = new Set(["PROJECT", "NEWS", "Проекти", "Новини", "project", "news"])
-  const uniqueCategories = Array.from(
-    new Set(projects.map(p => p.category).filter((c): c is string => c !== null && !TYPE_LEVEL_VALUES.has(c)))
-  )
   const tickerPartners  = [...partners, ...partners]
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  const filteredProjects = projects.filter(p => {
+    const typeOk = projectFilter === "ALL" || p.type === projectFilter
+    const catOk  = categoryFilter === "ALL" || p.category === categoryFilter
+    return typeOk && catOk
+  })
+  const TYPE_LEVEL_VALUES = new Set(["PROJECT", "NEWS", "Проекти", "Новини", "project", "news"])
+  const uniqueCategories  = Array.from(
+    new Set(projects.map(p => p.category).filter((c): c is string => c !== null && !TYPE_LEVEL_VALUES.has(c)))
+  )
 
-  function flipPage(nextPage: number) {
-    if (nextPage < 0 || nextPage >= totalPages || nextPage === projectPage) return
-    const direction = nextPage > projectPage ? 1 : -1
-    const grid = projectGridRef.current
-    if (grid) {
-      gsap.to(grid, {
-        x: (-80 * direction) + "px", opacity: 0, duration: 0.3, ease: "power2.in",
-        onComplete: () => {
-          setProjectPage(nextPage)
-          gsap.fromTo(
-            grid,
-            { x: (80 * direction) + "px", opacity: 0 },
-            { x: "0px", opacity: 1, duration: 0.3, ease: "power2.out" },
-          )
-        },
-      })
-    } else {
-      setProjectPage(nextPage)
-    }
+  // ── Carousel pointer handlers ─────────────────────────────────────────────
+
+  function handleCarouselPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if ((e.target as HTMLElement).closest(".proj-filter-btn,.proj-modal-btn")) return
+    carouselDragging.current      = true
+    carouselStartX.current        = e.clientX
+    carouselLastX.current         = e.clientX
+    carouselLastTime.current      = Date.now()
+    carouselVelocity.current      = 0
+    carouselStartProgress.current = dragProgress.get()
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }
+
+  function handleCarouselPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (!carouselDragging.current) return
+    const now = Date.now()
+    const dt  = now - carouselLastTime.current
+    if (dt > 0) {
+      carouselVelocity.current = (e.clientX - carouselLastX.current) / dt
+    }
+    carouselLastX.current    = e.clientX
+    carouselLastTime.current = now
+    const delta = (e.clientX - carouselStartX.current) / 160
+    dragProgress.set(carouselStartProgress.current - delta)
+  }
+
+  function releaseCarousel(el?: HTMLElement, pointerId?: number) {
+    carouselDragging.current = false
+    if (el && pointerId !== undefined) el.releasePointerCapture(pointerId)
+    // Project forward using last measured velocity — 240ms coast window at 160px/card
+    const coast  = (carouselVelocity.current * 240) / 160
+    const target = dragProgress.get() - coast
+    carouselVelocity.current = 0
+    dragProgress.set(target)   // spring eases freely to float destination
+  }
+
+  function handleCarouselPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    if (!carouselDragging.current) return
+    releaseCarousel(e.currentTarget as HTMLElement, e.pointerId)
+  }
+
+  function handleCarouselPointerLeave() {
+    if (!carouselDragging.current) return
+    releaseCarousel()
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   async function submitContact(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -244,11 +377,34 @@ export default function PageExperience({
   }
 
   // keep refs in sync so wheel/key handlers (stale closures) can read them
-  useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
   useEffect(() => { activeIdxRef.current = activeIdx }, [activeIdx])
-  useEffect(() => { setProjectPage(0) }, [projectFilter, categoryFilter])
+  useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
 
+  // Reset carousel position when filters change
+  useEffect(() => {
+    dragProgress.set(0)
+    setProjActiveIndex(0)
+  }, [projectFilter, categoryFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Subscribe to spring — find whichever card is geometrically closest to center right now
+  useEffect(() => {
+    const unsub = activeProgress.on("change", (latest) => {
+      const count = filteredProjects.length
+      if (count === 0) return
+      const half = count / 2
+      let minDist = Infinity
+      let closest = 0
+      for (let i = 0; i < count; i++) {
+        let d = i - latest
+        while (d >  half) d -= count
+        while (d <= -half) d += count
+        if (Math.abs(d) < minDist) { minDist = Math.abs(d); closest = i }
+      }
+      if (closest !== projActiveIndex) setProjActiveIndex(closest)
+    })
+    return unsub
+  }, [activeProgress, projActiveIndex, filteredProjects.length]) // eslint-disable-line react-hooks/exhaustive-deps
   // Left panel text fades gently when service changes — no abrupt flash
   useEffect(() => {
     if (currentSceneRef.current !== 2) return
@@ -373,9 +529,8 @@ export default function PageExperience({
     }
 
     if (sceneIndex === 3) {
-      gsap.fromTo(".project-card", { y: 60, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.08, duration: 0.6, delay: delay + 0.3 })
+      gsap.fromTo(".arc-header", { y: 22, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.07, duration: 0.65, delay: delay + 0.1, ease: "power3.out" })
     }
-
     if (sceneIndex === 4) {
       gsap.fromTo(".contact-info", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay })
       gsap.fromTo(".contact-form", { x: 40,  opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, delay: delay + 0.1 })
@@ -403,7 +558,6 @@ export default function PageExperience({
       setScrollPos(0)
       if (rafIdRef.current) { cancelAnimationFrame(rafIdRef.current); rafIdRef.current = null }
     }
-
     isAnimating.current = true
     window.dispatchEvent(new CustomEvent("bsdc:scene-transition"))
 
@@ -436,7 +590,7 @@ export default function PageExperience({
     if (next === 2) {
       gsap.set('.services-menu', { opacity: 0, x: -100 })
     }
-    if (next === 3) gsap.set('.project-card', { opacity: 0, y: 60 })
+    if (next === 3) gsap.set('.arc-header', { opacity: 0, y: 22 })
     if (next === 4) gsap.set('.contact-info,.contact-form', { opacity: 0, x: 0 })
 
     const tl = gsap.timeline({
@@ -503,7 +657,7 @@ export default function PageExperience({
     gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats', { opacity: 0, y: 20 })
     gsap.set('.about-depth-card', { opacity: 0 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
-    gsap.set('.project-card', { opacity: 0, y: 60 })
+    gsap.set('.arc-header', { opacity: 0, y: 22 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
     gsap.set('.contact-form', { opacity: 0, x: 40 })
 
@@ -540,7 +694,7 @@ export default function PageExperience({
 
   useEffect(() => {
     function handleWheel(e: WheelEvent) {
-      if (selectedProjectRef.current || activeServiceRef.current) return
+      if (activeServiceRef.current) return
       e.preventDefault()
       if (isAnimating.current) return
 
@@ -620,7 +774,8 @@ export default function PageExperience({
     }
     function handleTouchStart(e: TouchEvent) { touchStartY.current = e.touches[0].clientY }
     function handleTouchEnd(e: TouchEvent) {
-      if (selectedProjectRef.current || activeServiceRef.current) return
+      if (activeServiceRef.current) return
+      if (selectedProjectRef.current) { setSelectedProject(null); return }
       const delta = touchStartY.current - e.changedTouches[0].clientY
       if (currentSceneRef.current === 2) {
         if (delta > 50) {
@@ -640,7 +795,10 @@ export default function PageExperience({
         if (activeServiceRef.current) {
           setActiveService(null)
         }
-        setSelectedProject(null)
+        if (selectedProjectRef.current) {
+          setSelectedProject(null)
+          return
+        }
         setShowContactModal(false)
         setContactStatus("idle")
         return
@@ -1923,176 +2081,140 @@ export default function PageExperience({
         {/* ── PROJECTS ─────────────────────────────────────────────────────── */}
         <div
           ref={projectsRef}
-          className="journal-grain absolute inset-0 overflow-hidden"
-          style={{ willChange: "opacity, transform", background: "#0f0a05" }}
+          className="absolute inset-0 overflow-hidden select-none flex flex-col"
+          style={{ willChange: "opacity, transform", background: "#000000" }}
         >
-          <div className="absolute inset-0 flex flex-col px-8 py-8 md:px-16">
+          {/* Header */}
+          <div className="arc-header shrink-0 pointer-events-none pt-24 pb-6 px-8 text-center z-10">
+            <p className="mb-2 font-mono text-[10px] uppercase tracking-[0.35em] text-[#B87333]">
+              {lang === "bg" ? "ПОРТФОЛИО" : "PORTFOLIO"}
+            </p>
+            <h2 className="mb-3 text-4xl font-black leading-none tracking-tight text-white md:text-5xl">
+              {lang === "bg" ? "Проекти & Новини" : "Projects & News"}
+            </h2>
+            <p className="mx-auto max-w-lg text-sm leading-relaxed text-white/40">
+              {lang === "bg"
+                ? "Реализирани обекти, инспекции и технически интервенции в подводни съоръжения"
+                : "Completed structures, inspections, and technical interventions in underwater facilities"}
+            </p>
+          </div>
 
-            {/* Header */}
-            <div className="mb-4 flex flex-shrink-0 items-end justify-between">
-              <div>
-                <div className="mb-1.5 flex items-center gap-3">
-                  <div className="h-px w-6 bg-[#B87333]" />
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
-                    {lang === "bg" ? "Проекти" : "Projects"}
-                  </span>
-                </div>
-                <h2 className="text-2xl font-black leading-tight text-[#f0e6cc] md:text-3xl">
-                  {lang === "bg" ? "Нашата работа" : "Our Work"}
-                </h2>
+          {/* Filter buttons */}
+          <div className="arc-header shrink-0 flex flex-wrap items-center justify-center gap-2 pb-4 px-4 z-10 pointer-events-auto">
+            {(["ALL", "PROJECT", "NEWS"] as const).map(f => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setProjectFilter(f)}
+                className="proj-filter-btn px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-all duration-200 border"
+                style={{
+                  borderColor: projectFilter === f ? "#B87333" : "rgba(255,255,255,0.15)",
+                  color: projectFilter === f ? "#B87333" : "rgba(255,255,255,0.45)",
+                  background: projectFilter === f ? "rgba(184,115,51,0.1)" : "transparent",
+                }}
+              >
+                {f === "ALL" ? (lang === "bg" ? "Всички" : "All") : f === "PROJECT" ? (lang === "bg" ? "Проекти" : "Projects") : (lang === "bg" ? "Новини" : "News")}
+              </button>
+            ))}
+            {uniqueCategories.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setCategoryFilter(categoryFilter === cat ? "ALL" : cat)}
+                className="proj-filter-btn px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] transition-all duration-200 border"
+                style={{
+                  borderColor: categoryFilter === cat ? "#38bdf8" : "rgba(255,255,255,0.1)",
+                  color: categoryFilter === cat ? "#38bdf8" : "rgba(255,255,255,0.35)",
+                  background: categoryFilter === cat ? "rgba(56,189,248,0.08)" : "transparent",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-                {/* Type + category filters */}
-                <div className="mb-3 flex flex-shrink-0 flex-wrap gap-2">
-                  {(['ALL', 'PROJECT', 'NEWS'] as const).map(f => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setProjectFilter(f)}
-                      className={`border px-3 py-1 text-[10px] uppercase tracking-[0.15em] transition-colors ${
-                        projectFilter === f
-                          ? 'border-[#B87333] text-[#B87333]'
-                          : 'border-[#f0e6cc]/20 text-[#f0e6cc]/40 hover:border-[#f0e6cc]/40 hover:text-[#f0e6cc]/70'
-                      }`}
-                    >
-                      {f === 'ALL' ? (lang === 'bg' ? 'Всички' : 'All')
-                       : f === 'PROJECT' ? (lang === 'bg' ? 'Проекти' : 'Projects')
-                       : (lang === 'bg' ? 'Новини' : 'News')}
-                    </button>
-                  ))}
-                  {uniqueCategories.map(cat => (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => setCategoryFilter(categoryFilter === cat ? 'ALL' : cat)}
-                      className={`border px-3 py-1 text-[10px] uppercase tracking-[0.15em] transition-colors ${
-                        categoryFilter === cat
-                          ? 'border-[#B87333]/60 text-[#B87333]/80'
-                          : 'border-[#f0e6cc]/10 text-[#f0e6cc]/30 hover:border-[#f0e6cc]/30 hover:text-[#f0e6cc]/60'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => flipPage(projectPage - 1)}
-                    disabled={projectPage === 0}
-                    className="flex h-9 w-9 items-center justify-center border border-[#f0e6cc]/20 text-[#f0e6cc]/60 transition-colors hover:border-[#B87333] hover:text-[#B87333] disabled:opacity-30"
-                  >
-                    ←
-                  </button>
-                  <span className="text-xs text-[#f0e6cc]/40">{projectPage + 1} / {totalPages}</span>
-                  <button
-                    type="button"
-                    onClick={() => flipPage(projectPage + 1)}
-                    disabled={projectPage >= totalPages - 1}
-                    className="flex h-9 w-9 items-center justify-center border border-[#f0e6cc]/20 text-[#f0e6cc]/60 transition-colors hover:border-[#B87333] hover:text-[#B87333] disabled:opacity-30"
-                  >
-                    →
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Project grid — fills remaining height */}
-            <div ref={projectGridRef} className="grid min-h-0 flex-1 grid-cols-2">
-              {pagedProjects.map((project) => (
-                <div
-                  key={project.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelectedProject(project)}
-                  onKeyDown={(e) => e.key === "Enter" && setSelectedProject(project)}
-                  className="project-card group relative flex h-full cursor-pointer flex-col overflow-hidden border border-[#f0e6cc]/[0.08] bg-[#1a1108]/60 transition-colors hover:border-[#B87333]/30"
-                  style={{
-                    clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
-                  }}
+          {/* Active card typography — static, never moves */}
+          <div className="arc-header shrink-0 h-36 flex flex-col items-center justify-center text-center px-4 z-30 pointer-events-none">
+            <AnimatePresence mode="wait">
+              {filteredProjects[projActiveIndex] && (
+                <motion.div
+                  key={filteredProjects[projActiveIndex].id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.28, ease: "easeOut" }}
+                  className="flex flex-col items-center"
                 >
-                  {/* Large image filling most of the card */}
-                  {project.featuredImageUrl ? (
-                    <div className="relative min-h-0 flex-1 overflow-hidden">
-                      <img
-                        src={project.featuredImageUrl}
-                        alt={project.title}
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        style={{ filter: "sepia(30%) contrast(0.9)" }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#1a1108] via-[#1a1108]/20 to-transparent" />
-                    </div>
-                  ) : (
-                    <div className="relative min-h-0 flex-1 overflow-hidden bg-gradient-to-br from-[#1a1208] to-[#0f0a05]">
-                      <div
-                        className="absolute inset-0 opacity-10"
-                        style={{ backgroundImage: "repeating-linear-gradient(45deg, #B87333 0, #B87333 1px, transparent 0, transparent 50%)", backgroundSize: "14px 14px" }}
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center p-6">
-                        <span className="text-center text-4xl font-black uppercase leading-tight text-[#f0e6cc]" style={{ opacity: 0.04 }}>
-                          {project.title}
-                        </span>
-                      </div>
-                    </div>
+                  {filteredProjects[projActiveIndex].category && (
+                    <span className="mb-1.5 inline-block px-2.5 py-0.5 text-[9px] font-bold tracking-widest uppercase text-[#B87333] border border-[#B87333]/30 bg-[#B87333]/8">
+                      {filteredProjects[projActiveIndex].category}
+                    </span>
                   )}
-                  {/* Text — fixed height at bottom */}
-                  <div className="flex-shrink-0 border-t border-[#f0e6cc]/[0.06] p-4">
-                    <div className="mb-1 flex items-center gap-2">
-                      <span className="text-[9px] uppercase tracking-[0.25em] text-[#B87333]">
-                        {project.type === "NEWS"
-                          ? (lang === "bg" ? "Новина" : "News")
-                          : (lang === "bg" ? "Проект" : "Project")}
-                      </span>
-                      {project.publishedAt && (
-                        <span className="text-[9px] text-[#f0e6cc]/30">
-                          {new Date(project.publishedAt).getFullYear()}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-sm font-bold leading-tight text-[#f0e6cc]">{project.title}</h3>
-                    {project.excerpt && (
-                      <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#f0e6cc]/50">
-                        {project.excerpt}
-                      </p>
-                    )}
-                    <div className="mt-2">
-                      <span className="text-[10px] uppercase tracking-[0.15em] text-[#B87333]/60 transition-colors group-hover:text-[#B87333]">
-                        {lang === "bg" ? "Прочети повече" : "Read more"} →
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {Array.from({ length: Math.max(0, 2 - pagedProjects.length) }).map((_, i) => (
-                <div
-                  key={`empty-${i}`}
-                  className="border border-[#f0e6cc]/[0.04] bg-[#1a1108]/20"
-                  style={{
-                    clipPath: "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+                  <h2 className="text-xl font-black tracking-tight text-white leading-tight max-w-3xl text-center md:text-2xl">
+                    {filteredProjects[projActiveIndex].title}
+                  </h2>
+                  {filteredProjects[projActiveIndex].excerpt && (
+                    <p className="mt-1 text-xs text-white/40 max-w-md line-clamp-2 leading-relaxed">
+                      {filteredProjects[projActiveIndex].excerpt}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProject(filteredProjects[projActiveIndex])}
+                    className="proj-modal-btn pointer-events-auto mt-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#B87333] hover:text-[#d4a060] border-b border-[#B87333]/25 hover:border-[#B87333]/60 transition-all pb-0.5"
+                  >
+                    {lang === "bg" ? "Прочети повече →" : "Read more →"}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Cylindrical IMAX carousel — pointer events on this container */}
+          <div
+            ref={carouselContainerRef}
+            onPointerDown={handleCarouselPointerDown}
+            onPointerMove={handleCarouselPointerMove}
+            onPointerUp={handleCarouselPointerUp}
+            onPointerLeave={handleCarouselPointerLeave}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              position: "relative",
+              perspective: "750px",
+              transformStyle: "preserve-3d",
+              cursor: "grab",
+              overflow: "hidden",
+              background: "#050505",
+            }}
+          >
+            {filteredProjects.length === 0 ? (
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <p style={{ color: "rgba(255,255,255,0.18)", fontSize: "0.8rem", letterSpacing: "0.2em", textTransform: "uppercase" }}>
+                  {lang === "bg" ? "Няма резултати" : "No results"}
+                </p>
+              </div>
+            ) : (
+              filteredProjects.map((project, index) => (
+                <ProjectCard3D
+                  key={`${project.id}-${index}`}
+                  project={project}
+                  index={index}
+                  totalItems={filteredProjects.length}
+                  activeProgress={activeProgress}
+                  onCardClick={(targetIndex) => {
+                    const current = dragProgress.get()
+                    const count   = filteredProjects.length
+                    const wrapped = ((Math.round(current) % count) + count) % count
+                    if (wrapped === targetIndex) {
+                      setSelectedProject(project)
+                    } else {
+                      dragProgress.set(targetIndex)
+                    }
                   }}
                 />
-              ))}
-            </div>
-
-            {totalPages > 1 && (
-              <div className="mt-3 flex flex-shrink-0 justify-center gap-2">
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => flipPage(i)}
-                    className="h-1.5 rounded-full transition-all duration-300"
-                    style={{
-                      width: i === projectPage ? 24 : 6,
-                      backgroundColor: i === projectPage ? "#B87333" : "rgba(240,230,204,0.2)",
-                    }}
-                  />
-                ))}
-              </div>
+              ))
             )}
-
           </div>
         </div>
 
@@ -2395,6 +2517,72 @@ export default function PageExperience({
       {/* ── SERVICE DETAIL — outside rootRef so fixed positioning works ─────── */}
       {activeService && renderServiceDetail(activeService, activeIdx)}
 
+      {/* ── PROJECT MODAL ──────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {selectedProject && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[550] flex items-end justify-center pointer-events-auto md:items-center"
+            onClick={() => setSelectedProject(null)}
+          >
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-t-3xl md:rounded-3xl bg-[#0a0f1a] border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]"
+              onClick={e => e.stopPropagation()}
+              style={{ scrollbarWidth: "none" }}
+            >
+              {selectedProject.featuredImageUrl && (
+                <div className="relative h-56 overflow-hidden rounded-t-3xl md:h-64">
+                  <img
+                    src={selectedProject.featuredImageUrl}
+                    alt={selectedProject.title}
+                    className="w-full h-full object-cover"
+                    style={{ filter: "brightness(0.7)" }}
+                  />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #0a0f1a 0%, transparent 60%)" }} />
+                </div>
+              )}
+              <div className="px-7 pb-8 pt-5">
+                <div className="mb-2 flex items-center gap-3">
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
+                    {selectedProject.type === "PROJECT" ? (lang === "bg" ? "Проект" : "Project") : (lang === "bg" ? "Новина" : "News")}
+                  </span>
+                  {selectedProject.category && (
+                    <>
+                      <span className="text-white/20">·</span>
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">{selectedProject.category}</span>
+                    </>
+                  )}
+                </div>
+                <h3 className="mb-3 text-2xl font-black leading-tight text-white">{selectedProject.title}</h3>
+                {selectedProject.excerpt && (
+                  <p className="mb-4 text-sm leading-relaxed text-white/60">{selectedProject.excerpt}</p>
+                )}
+                {selectedProject.content && (
+                  <p className="text-sm leading-relaxed text-white/45 whitespace-pre-line">{selectedProject.content}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/60 hover:text-white transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M11 3L3 11M3 3l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── LIGHTBOX — image zoom overlay ─────────────────────────────────── */}
       {lightboxSrc && (
         <div
@@ -2422,113 +2610,6 @@ export default function PageExperience({
           </div>
         </div>
       )}
-
-      {/* ── PROJECT DETAIL MODAL — outside rootRef ───────────────────────── */}
-      {selectedProject && (() => {
-        const idx  = projects.findIndex((p) => p.id === selectedProject.id)
-        const prev = idx > 0 ? projects[idx - 1] : null
-        const next = idx < projects.length - 1 ? projects[idx + 1] : null
-        return (
-          <div className="fixed inset-0 z-[500] flex items-center justify-center px-4 py-8 pointer-events-auto">
-            <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setSelectedProject(null)}
-            />
-            <div
-              className="journal-grain relative z-10 flex h-full w-full max-w-2xl flex-col border border-[#f0e6cc]/[0.08]"
-              style={{ background: "#100d08" }}
-            >
-              {/* Header with working close button */}
-              <div className="flex flex-shrink-0 items-start justify-between border-b border-[#f0e6cc]/[0.06] px-6 py-4">
-                <div>
-                  <div className="mb-1 flex items-center gap-2">
-                    <span className="text-[9px] uppercase tracking-[0.25em] text-[#B87333]">
-                      {selectedProject.category ?? (lang === "bg" ? "Проект" : "Project")}
-                    </span>
-                    {selectedProject.publishedAt && (
-                      <span className="text-[9px] text-[#f0e6cc]/30">
-                        {new Date(selectedProject.publishedAt).toLocaleDateString(lang === "bg" ? "bg-BG" : "en-GB")}
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="text-base font-black leading-tight text-[#f0e6cc] md:text-lg">
-                    {selectedProject.title}
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedProject(null)}
-                  className="ml-4 flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center border border-[#f0e6cc]/20 text-slate-400 transition-colors hover:border-[#f0e6cc]/40 hover:text-white"
-                  style={{ pointerEvents: "auto" }}
-                  aria-label={lang === "bg" ? "Затвори" : "Close"}
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-                {selectedProject.featuredImageUrl && (
-                  <img
-                    src={selectedProject.featuredImageUrl}
-                    alt={selectedProject.title}
-                    className="mb-5 h-48 w-full object-cover"
-                    style={{ filter: "sepia(25%) contrast(0.9)" }}
-                  />
-                )}
-                {/* Gallery — uses CMS images if available, else fallback placeholders */}
-                {(() => {
-                  const galleryItems = selectedProject.images.length > 0
-                    ? selectedProject.images.slice(0, 4)
-                    : ["/uploads/bsdc/project-pic-01.jpg", "/uploads/bsdc/project-pic-03.jpg", "/uploads/bsdc/gallery-pic-05.jpg", "/uploads/bsdc/gallery-pic-06.jpg"]
-                  return (
-                    <div className="mb-5 flex gap-2">
-                      {galleryItems.map((src, i) => (
-                        <div key={i} className="relative h-16 flex-1 overflow-hidden border border-[#f0e6cc]/[0.06]">
-                          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" style={{ filter: "sepia(20%)" }} />
-                        </div>
-                      ))}
-                    </div>
-                  )
-                })()}
-                {selectedProject.content ? (
-                  <div
-                    className="text-sm leading-relaxed text-[#f0e6cc]/70 [&_li]:mt-1.5 [&_p]:mb-4 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5"
-                    dangerouslySetInnerHTML={{ __html: selectedProject.content }}
-                  />
-                ) : selectedProject.excerpt ? (
-                  <p className="text-sm leading-relaxed text-[#f0e6cc]/70">{selectedProject.excerpt}</p>
-                ) : null}
-              </div>
-
-              {/* Footer nav */}
-              <div className="flex flex-shrink-0 items-center justify-between border-t border-[#f0e6cc]/[0.06] px-6 py-3">
-                <button
-                  type="button"
-                  onClick={() => prev && setSelectedProject(prev)}
-                  disabled={!prev}
-                  className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-[#f0e6cc]/40 transition-colors hover:text-[#f0e6cc] disabled:opacity-20"
-                >
-                  ← {lang === "bg" ? "Предишен" : "Previous"}
-                </button>
-                <span className="text-[9px] text-[#f0e6cc]/20">
-                  {idx + 1} / {projects.length}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => next && setSelectedProject(next)}
-                  disabled={!next}
-                  className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] text-[#f0e6cc]/40 transition-colors hover:text-[#f0e6cc] disabled:opacity-20"
-                >
-                  {lang === "bg" ? "Следващ" : "Next"} →
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
 
       {/* ── CONTACT MODAL — outside rootRef ──────────────────────────────── */}
       {showContactModal && (
