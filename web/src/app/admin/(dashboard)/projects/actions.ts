@@ -9,6 +9,10 @@ export type ProjectFormState = {
   errors?: Record<string, string>
 }
 
+function parseJsonArray(raw: FormDataEntryValue | null): string[] {
+  try { return JSON.parse(String(raw ?? "[]")) } catch { return [] }
+}
+
 function parseForm(formData: FormData) {
   const pubAt = String(formData.get("publishedAt") ?? "").trim()
   return {
@@ -24,10 +28,15 @@ function parseForm(formData: FormData) {
       .split("\n")
       .map((s) => s.trim())
       .filter(Boolean),
+    equipmentUsed: parseJsonArray(formData.get("equipmentUsed")),
+    activitiesDone: parseJsonArray(formData.get("activitiesDone")),
     category: String(formData.get("category") ?? "").trim() || null,
+    location: String(formData.get("location") ?? "").trim() || null,
+    client: String(formData.get("client") ?? "").trim() || null,
     publishedAt: pubAt ? new Date(pubAt) : null,
     seoTitle: String(formData.get("seoTitle") ?? "").trim() || null,
     seoDescription: String(formData.get("seoDescription") ?? "").trim() || null,
+    modalLayout: String(formData.get("modalLayout") ?? "").trim() || null,
     sortOrder: Number(formData.get("sortOrder")) || 0,
     published: formData.get("published") === "on",
   }

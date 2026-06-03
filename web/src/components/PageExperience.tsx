@@ -8,6 +8,7 @@ import {
 import Image from "next/image"
 import dynamic from "next/dynamic"
 import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, type MotionValue } from "framer-motion"
 import { MapPin, Phone, Mail, Clock, Shield, Waves, Scan, ClipboardCheck, Layers, Building2, Award } from "lucide-react"
 import type {
@@ -254,6 +255,9 @@ export default function PageExperience({
   const [projectFilter, setProjectFilter]           = useState<"ALL" | "PROJECT" | "NEWS">("ALL")
   const [categoryFilter, setCategoryFilter]         = useState<string>("ALL")
   const [projActiveIndex, setProjActiveIndex]       = useState(0)
+  const [galleryIndex, setGalleryIndex]             = useState(0)
+  const [displayedGalleryImg, setDisplayedGalleryImg] = useState<string | null>(null)
+  const [relatedPage, setRelatedPage]               = useState(0)
   const dragProgress    = useMotionValue(0)
   const activeProgress  = useSpring(dragProgress, { stiffness: 80, damping: 20 })
 
@@ -283,6 +287,13 @@ export default function PageExperience({
   const carouselLastX          = useRef(0)
   const carouselLastTime       = useRef(0)
   const carouselVelocity       = useRef(0)   // px/ms, updated on every move
+  const modalRef          = useRef<HTMLDivElement>(null)
+  const modalScrollRef    = useRef<HTMLDivElement>(null)
+  const heroImgRef        = useRef<HTMLImageElement>(null)
+  const galleryWrapperRef = useRef<HTMLDivElement>(null)
+  const gsapCtxRef        = useRef<gsap.Context | null>(null)
+  const isModalExiting    = useRef(false)
+  const additionalScrollRef = useRef(0)
 
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
@@ -375,6 +386,156 @@ export default function PageExperience({
       setContactStatus("error")
     }
   }
+
+  function closeModal() {
+    if (isModalExiting.current) return
+    isModalExiting.current = true
+    if (gsapCtxRef.current) { gsapCtxRef.current.revert(); gsapCtxRef.current = null }
+    document.body.style.overflow = ''
+    gsap.to(modalRef.current, {
+      y: '100vh',
+      duration: 0.9,
+      ease: 'power2.inOut',
+      onComplete: () => {
+        setSelectedProject(null)
+        document.body.style.overflow = ''
+        isModalExiting.current = false
+      },
+    })
+  }
+
+  useEffect(() => {
+    if (!selectedProject) return
+    gsap.registerPlugin(ScrollTrigger)
+    document.body.style.overflow = 'hidden'
+    if (modalScrollRef.current) modalScrollRef.current.scrollTop = 0
+    setGalleryIndex(0)
+    setRelatedPage(0)
+    const imgs = selectedProject.images ?? []
+    if (imgs.length > 0) setDisplayedGalleryImg(imgs[0])
+
+    if (gsapCtxRef.current) gsapCtxRef.current.revert()
+    isModalExiting.current = false
+    additionalScrollRef.current = 0
+
+    gsapCtxRef.current = gsap.context(() => {
+      const scroller = modalScrollRef.current
+
+      // Modal slide in
+      gsap.fromTo(modalRef.current,
+        { y: '100vh' },
+        { y: 0, duration: 0.6, ease: 'power2.out' }
+      )
+
+      // Hero image parallax (scale + drift as hero scrolls away)
+      if (heroImgRef.current) {
+        gsap.to(heroImgRef.current, {
+          y: 60, scale: 1.06, ease: 'none',
+          scrollTrigger: {
+            trigger: '.modal-hero',
+            scroller,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: 1,
+            invalidateOnRefresh: true,
+          }
+        })
+      }
+
+      // Scene 2: cream bg fades to dark #040507 at 50% scroll
+      gsap.to('.modal-scene-2-bg', {
+        opacity: 1, ease: 'none',
+        scrollTrigger: {
+          trigger: '.modal-scene-2',
+          scroller,
+          start: 'top bottom',
+          end: 'top center',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+
+      // Scene 2: right column fades in at 60% visibility
+      gsap.to('.modal-scene-2-text', {
+        opacity: 1, ease: 'none',
+        scrollTrigger: {
+          trigger: '.modal-scene-2',
+          scroller,
+          start: 'top 40%',
+          end: 'top 10%',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+
+      // Gallery: featured image darkens as wrapper scrolls in
+      gsap.to('.modal-gallery-bg', {
+        opacity: 0.88, ease: 'none',
+        scrollTrigger: {
+          trigger: galleryWrapperRef.current,
+          scroller,
+          start: 'top top',
+          end: '40% top',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+
+      // Gallery image slides up from below
+      gsap.set('.modal-gallery-img', { y: '100%' })
+      gsap.to('.modal-gallery-img', {
+        y: '0%',
+        ease: 'none',
+        scrollTrigger: {
+          trigger: galleryWrapperRef.current,
+          scroller,
+          start: 'top 10%',
+          end: 'top -30%',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+
+      // Controls appear last
+      gsap.to('.modal-gallery-content', {
+        opacity: 1, ease: 'none',
+        scrollTrigger: {
+          trigger: galleryWrapperRef.current,
+          scroller,
+          start: '40% top',
+          end: '65% top',
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+
+      // Scene 4 fade + slide up
+      gsap.fromTo('.modal-scene-4',
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1, y: 0,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: '.modal-scene-4',
+            scroller,
+            start: 'top 80%',
+            end: 'top 40%',
+            scrub: 1,
+            invalidateOnRefresh: true,
+          }
+        }
+      )
+
+    }, modalRef)
+
+    // Recalculate ScrollTrigger positions after DOM settles
+    const rafId = requestAnimationFrame(() => ScrollTrigger.refresh())
+
+    return () => {
+      cancelAnimationFrame(rafId)
+      document.body.style.overflow = ''
+    }
+  }, [selectedProject?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
@@ -2518,70 +2679,288 @@ export default function PageExperience({
       {activeService && renderServiceDetail(activeService, activeIdx)}
 
       {/* ── PROJECT MODAL ──────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {selectedProject && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[550] flex items-end justify-center pointer-events-auto md:items-center"
-            onClick={() => setSelectedProject(null)}
+      {selectedProject && (
+        <>
+          {/* Close button — fixed, outside modal div so it's always on top */}
+          <button
+            type="button"
+            onClick={closeModal}
+            aria-label="Затвори"
+            className="fixed top-6 right-8 z-[1001] flex items-center gap-2 cursor-pointer transition-colors duration-200"
+            style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.6)', background: 'rgba(184,115,51,0.1)', border: '1px solid rgba(184,115,51,0.3)', padding: '10px 18px' }}
           >
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="relative z-10 w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-t-3xl md:rounded-3xl bg-[#0a0f1a] border border-white/10 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.9)]"
-              onClick={e => e.stopPropagation()}
-              style={{ scrollbarWidth: "none" }}
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+              <path d="M10 1L1 10M1 1l9 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+            <span>ЗАТВОРИ</span>
+          </button>
+
+          {/* Modal panel — slides up from bottom via GSAP */}
+          <div
+            ref={modalRef}
+            className="fixed inset-0 z-[1000] bg-[#040507]"
+            style={{ transform: 'translateY(100vh)' }}
+          >
+            <div
+              ref={modalScrollRef}
+              className="w-full h-full overflow-y-auto overflow-x-hidden"
+              style={{ overscrollBehavior: 'contain' }}
+              onWheel={(e) => {
+                e.stopPropagation()
+                const el = modalScrollRef.current
+                if (!el || isModalExiting.current) return
+                const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4
+                if (atBottom && e.deltaY > 0) {
+                  additionalScrollRef.current = (additionalScrollRef.current || 0) + e.deltaY
+                  if (additionalScrollRef.current > 600) {
+                    closeModal()
+                  } else {
+                    const progress = additionalScrollRef.current / 600
+                    gsap.set(modalRef.current, { y: progress * 120 })
+                  }
+                } else if (!atBottom) {
+                  additionalScrollRef.current = 0
+                  gsap.set(modalRef.current, { y: 0 })
+                }
+              }}
             >
-              {selectedProject.featuredImageUrl && (
-                <div className="relative h-56 overflow-hidden rounded-t-3xl md:h-64">
+
+              {/* ── SCENE 1: HERO ── */}
+              <div className="modal-hero" style={{ position: 'relative', height: '140vh' }}>
+                <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
                   <img
-                    src={selectedProject.featuredImageUrl}
-                    alt={selectedProject.title}
-                    className="w-full h-full object-cover"
-                    style={{ filter: "brightness(0.7)" }}
+                    ref={heroImgRef}
+                    src={selectedProject.featuredImageUrl ?? ''}
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transformOrigin: 'center center' }}
                   />
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #0a0f1a 0%, transparent 60%)" }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #040507 0%, rgba(4,5,7,0.3) 50%, transparent 100%)' }} />
+                  <div
+                    className="modal-hero-content"
+                    style={{ position: 'absolute', bottom: '48px', left: '64px', right: '64px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none' }}
+                  >
+                    <h1 style={{ fontSize: 'clamp(2.2rem, 4vw, 4.5rem)', fontWeight: 700, color: 'white', lineHeight: 1.05, letterSpacing: '-0.02em', margin: 0, maxWidth: '55%' }}>
+                      {selectedProject.location || selectedProject.title}
+                    </h1>
+                    <div style={{ display: 'flex', flexDirection: 'row', gap: '48px', alignItems: 'flex-end', paddingBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>
+                        {selectedProject.category || selectedProject.type}
+                      </span>
+                      <span style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.32)', maxWidth: '320px', lineHeight: 1.6 }}>
+                        {selectedProject.location ? selectedProject.title : selectedProject.excerpt}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="px-7 pb-8 pt-5">
-                <div className="mb-2 flex items-center gap-3">
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-[#B87333]">
-                    {selectedProject.type === "PROJECT" ? (lang === "bg" ? "Проект" : "Project") : (lang === "bg" ? "Новина" : "News")}
-                  </span>
-                  {selectedProject.category && (
-                    <>
-                      <span className="text-white/20">·</span>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">{selectedProject.category}</span>
-                    </>
-                  )}
-                </div>
-                <h3 className="mb-3 text-2xl font-black leading-tight text-white">{selectedProject.title}</h3>
-                {selectedProject.excerpt && (
-                  <p className="mb-4 text-sm leading-relaxed text-white/60">{selectedProject.excerpt}</p>
-                )}
-                {selectedProject.content && (
-                  <p className="text-sm leading-relaxed text-white/45 whitespace-pre-line">{selectedProject.content}</p>
-                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/60 hover:text-white transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M11 3L3 11M3 3l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+              {/* ── SCENE 2: CONTENT — cream bg transitions to dark ── */}
+              <div className="modal-scene-2 relative" style={{ paddingTop: '100px', paddingBottom: '120px', background: '#E8E0D5' }}>
+                {/* Dark overlay — GSAP fades this in as you scroll */}
+                <div className="modal-scene-2-bg absolute inset-0" style={{ background: '#040507', opacity: 0 }} />
+                <div className="relative max-w-7xl mx-auto" style={{ zIndex: 1, padding: '0 64px', display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '80px', alignItems: 'start' }}>
+
+                  {/* LEFT: featured image, always visible */}
+                  <div>
+                    {selectedProject.featuredImageUrl && (
+                      <img
+                        src={selectedProject.featuredImageUrl}
+                        alt=""
+                        style={{ width: '100%', height: '600px', objectFit: 'cover', display: 'block' }}
+                      />
+                    )}
+                  </div>
+
+                  {/* RIGHT: article + specs — fades in at 60% */}
+                  <div className="modal-scene-2-text" style={{ opacity: 0, display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                    <div
+                      className="modal-article"
+                      style={{ fontSize: '16px', color: 'rgba(255,255,255,0.72)', lineHeight: '1.8', letterSpacing: '0.01em' }}
+                      dangerouslySetInnerHTML={{ __html: selectedProject.content ?? '' }}
+                    />
+
+                    {/* Equipment + Activities 2-col grid */}
+                    {((selectedProject.equipmentUsed ?? []).length > 0 || (selectedProject.activitiesDone ?? []).length > 0) && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 48px' }}>
+                        {(selectedProject.equipmentUsed ?? []).length > 0 && (
+                          <div>
+                            <p style={{ color: '#B87333', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', margin: '0 0 16px 0', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>ОБОРУДВАНЕ</p>
+                            {(selectedProject.equipmentUsed ?? []).map((item: string, i: number) => (
+                              <div key={i} style={{ display: 'flex', gap: '16px', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontFamily: 'monospace', minWidth: '24px', flexShrink: 0 }}>{String(i+1).padStart(2,'0')}</span>
+                                <span style={{ color: 'rgba(255,255,255,0.82)', fontSize: '13px', lineHeight: 1.5 }}>{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {(selectedProject.activitiesDone ?? []).length > 0 && (
+                          <div>
+                            <p style={{ color: '#B87333', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', margin: '0 0 16px 0', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>ДЕЙНОСТИ</p>
+                            {(selectedProject.activitiesDone ?? []).map((item: string, i: number) => (
+                              <div key={i} style={{ display: 'flex', gap: '16px', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontFamily: 'monospace', minWidth: '24px', flexShrink: 0 }}>{String(i+1).padStart(2,'0')}</span>
+                                <span style={{ color: 'rgba(255,255,255,0.82)', fontSize: '13px', lineHeight: 1.5 }}>{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Location + Client rows */}
+                    {(selectedProject.location || selectedProject.client) && (
+                      <div>
+                        {selectedProject.location && (
+                          <div style={{ display: 'flex', gap: '48px', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                            <span style={{ color: '#B87333', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', minWidth: '130px', flexShrink: 0 }}>ЛОКАЦИЯ</span>
+                            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px' }}>{selectedProject.location}</span>
+                          </div>
+                        )}
+                        {selectedProject.client && (
+                          <div style={{ display: 'flex', gap: '48px', padding: '14px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                            <span style={{ color: '#B87333', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', minWidth: '130px', flexShrink: 0 }}>ВЪЗЛОЖИТЕЛ</span>
+                            <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px' }}>{selectedProject.client}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── SCENE 3: GALLERY — featured image darkens, gallery image reveals ── */}
+              <div ref={galleryWrapperRef} className="relative" style={{ height: '250vh' }}>
+                <div className="sticky top-0 h-screen overflow-hidden">
+                  {/* Layer 1: featured image (always visible as base) */}
+                  <img
+                    src={selectedProject.featuredImageUrl ?? ''}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  {/* Layer 2: dark overlay — fades in to 0.88 as you scroll */}
+                  <div className="modal-gallery-bg absolute inset-0" style={{ background: '#000', opacity: 0 }} />
+                  {/* Layer 3: gallery image — slides up from below */}
+                  <div
+                    className="modal-gallery-img"
+                    style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px', transform: 'translateY(100%)' }}
+                  >
+                    {displayedGalleryImg && (
+                      <img
+                        src={displayedGalleryImg}
+                        alt=""
+                        style={{ maxWidth: '70%', maxHeight: '70vh', objectFit: 'contain', boxShadow: '0 24px 64px rgba(0,0,0,0.7)' }}
+                      />
+                    )}
+                  </div>
+                  {/* Layer 4: controls overlay */}
+                  <div className="modal-gallery-content absolute inset-0 flex flex-col justify-between" style={{ padding: '64px', opacity: 0 }}>
+                    <div />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)', fontSize: '11px', letterSpacing: '0.25em' }}>
+                        {String((galleryIndex ?? 0) + 1).padStart(2,'0')} / {String((selectedProject.images ?? []).length || 1).padStart(2,'0')}
+                      </span>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                          type="button"
+                          aria-label="Предишна снимка"
+                          onClick={() => {
+                            const imgs = selectedProject.images ?? []
+                            const ni = ((galleryIndex ?? 0) - 1 + imgs.length) % imgs.length
+                            setGalleryIndex(ni)
+                            setDisplayedGalleryImg(imgs[ni] ?? null)
+                          }}
+                          style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Следваща снимка"
+                          onClick={() => {
+                            const imgs = selectedProject.images ?? []
+                            const ni = ((galleryIndex ?? 0) + 1) % imgs.length
+                            setGalleryIndex(ni)
+                            setDisplayedGalleryImg(imgs[ni] ?? null)
+                          }}
+                          style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+                        >
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── SCENE 4: RELATED PROJECTS ── */}
+              <div className="modal-scene-4" style={{ opacity: 0, background: '#040507', minHeight: '100vh', padding: '120px 64px' }}>
+                <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'grid', gridTemplateColumns: '200px 1fr', gap: '80px', alignItems: 'start' }}>
+
+                  {/* Sidebar: label + pagination */}
+                  <div>
+                    <p style={{ color: '#B87333', fontSize: '10px', letterSpacing: '0.4em', textTransform: 'uppercase', marginBottom: '32px' }}>СВЪРЗАНИ ПРОЕКТИ</p>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button
+                        type="button"
+                        aria-label="Предишна страница"
+                        onClick={() => setRelatedPage(p => Math.max(0, p - 1))}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.2s' }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Следваща страница"
+                        onClick={() => setRelatedPage(p => p + 1)}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'border-color 0.2s' }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 3-col project cards */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '32px' }}>
+                    {(projects ?? [])
+                      .filter((p: ProjectNewsItem) => p.id !== selectedProject.id)
+                      .slice((relatedPage ?? 0) * 3, (relatedPage ?? 0) * 3 + 3)
+                      .map((p: ProjectNewsItem) => (
+                        <div
+                          key={p.id}
+                          role="button"
+                          tabIndex={0}
+                          className="cursor-pointer group"
+                          onClick={() => { if (modalScrollRef.current) modalScrollRef.current.scrollTop = 0; setSelectedProject(p) }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (modalScrollRef.current) modalScrollRef.current.scrollTop = 0; setSelectedProject(p) } }}
+                        >
+                          {p.featuredImageUrl && (
+                            <img
+                              src={p.featuredImageUrl}
+                              alt={p.title}
+                              style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', display: 'block', marginBottom: '20px' }}
+                            />
+                          )}
+                          <p style={{ fontSize: '10px', letterSpacing: '0.3em', color: '#B87333', textTransform: 'uppercase', marginBottom: '12px', fontFamily: 'monospace' }}>{p.location || p.category}</p>
+                          <p style={{ fontSize: '18px', fontWeight: 600, color: 'white', lineHeight: 1.3, margin: 0 }}>{p.title}</p>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── LIGHTBOX — image zoom overlay ─────────────────────────────────── */}
       {lightboxSrc && (

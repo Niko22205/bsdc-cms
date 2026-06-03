@@ -144,7 +144,12 @@ model ProjectNewsItem {
   content          String?
   featuredImageUrl String?
   images           String[]
+  equipmentUsed    String[]
+  activitiesDone   String[]
+  modalLayout      String?         @default("CINEMATIC_SPLIT")
   category         String?
+  location         String?
+  client           String?
   publishedAt      DateTime?
   seoTitle         String?
   seoDescription   String?

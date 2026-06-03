@@ -1,283 +1,658 @@
-TASK: Public website correction pass 2 after previous revision
+# BSDC PUBLIC WEBSITE — EMERGENCY STABILIZATION & REPAIR
 
-CONTEXT:
-This is a follow-up correction pass after the previous public website repair task.
+## IMPORTANT CONTEXT
 
-Do not rebuild from scratch.
-Do not change Prisma schema.
-Do not create migrations.
-Do not touch admin CMS logic.
-Do not start SEO.
-Do not deploy.
-Do not invent fake content.
-Keep BG/EN routing working.
-Use existing CMS data.
-Use only local media paths: /uploads/bsdc/*
+This is a serious stabilization task.
 
-IMPORTANT:
-Several issues from the previous task are still not fixed.
-This pass must focus on actual functionality, stable transitions, better service detail presentation, correct project/news loading, and contact/footer fixes.
+Do NOT treat this as a visual polish pass.
+Do NOT start from scratch.
+Do NOT blindly run seed.
+Do NOT create new services.
+Do NOT duplicate existing CMS records.
+Do NOT delete or blank CMS media fields.
+Do NOT change Prisma schema.
+Do NOT create migrations.
+Do NOT start SEO.
+Do NOT deploy.
+Do NOT use external images directly.
+Use only local media paths: `/uploads/bsdc/*`.
 
-==================================================
-1. HERO SECTION — BROKEN CTA
-==================================================
+The project is a custom CMS + public one-page BSDC website.
+Current problem: recent code/seed changes caused media loss risk, duplicated service risk, broken service data assumptions, repeated project filters, messy contact layout, and missing/removed section images.
 
-Problem:
-One CTA in the Hero section still does not work.
-The broken CTA is the one that should lead to “За нас”.
+Before changing anything, inspect current code and explain what is wrong.
 
-Requirements:
-- Fix the Hero CTA that links/scrolls to the About section.
-- Make sure it works on desktop and mobile.
-- Make sure the target anchor is correct.
-- Make sure the CTA is not blocked by overlay, z-index, animation wrapper, pointer-events, or disabled state.
-- Test both Hero buttons after the fix.
+---
 
-Expected result:
-Both Hero CTA buttons work correctly, including the one that scrolls to “За нас”.
+# PHASE 1 — READ CURRENT STATE BEFORE CODING
 
-==================================================
-2. ABOUT SECTION — DOUBLE TRANSITION / FLICKER
-==================================================
+Inspect these files first:
 
-Problem:
-The About section still has a double transition:
-- it loads
-- disappears
-- loads again
+- `prisma/schema.prisma`
+- `prisma/seed.ts`
+- `src/app/[lang]/page.tsx`
+- `src/components/PageExperience.tsx`
+- `src/components/3d/ServicesCube.tsx`
+- admin Home/About/Settings form save logic if it exists
+- any CMS update actions/API routes for Home/About/Settings/Services/Projects
+- `src/app/globals.css` only if animation/media classes are relevant
 
-Requirements:
-- Fix the double animation/flicker in the About section.
-- Audit the animation wrapper, scroll reveal component, Framer Motion initial/animate states, and IntersectionObserver logic.
-- Remove repeated reveal triggers.
-- Do not allow the section to render visible, then hide, then animate again.
-- Use one clean reveal only.
-- Respect reduced-motion preference.
+Do NOT run seed yet.
 
-Expected result:
-About section appears once, smoothly, without disappearing and reappearing.
+Report internally before modifying:
+1. Which fields store Hero image/background in CMS.
+2. Which fields store About image/media in CMS.
+3. Which fields store Service main image and gallery.
+4. Which fields store Project/News type and category.
+5. Whether current seed would create duplicate services.
+6. Whether current seed would overwrite Hero/About media with empty/null.
+7. Whether current service fetch includes image fields.
+8. Whether current project filters mix type/category values.
 
-==================================================
-3. SERVICES SECTION — FUNCTIONALITY AND PRESENTATION ISSUES
-==================================================
+---
 
-Problems:
-- Services section still has double transition:
-  - loads
-  - disappears
-  - loads again
-- Cube does not disappear or transition away properly when a service is selected.
-- After selecting a service, there is no clear working way to return back to the cube.
-- “X” close button does not work / cannot be clicked.
-- Service detail pages/panels have no meaningful transition.
-- Service details have no depth or 3D feeling.
-- Details are too standard: image + text only.
-- All services look too similar.
-- Cube is still transparent.
-- Services inside the cube are difficult to select.
+# PHASE 2 — RESTORE HERO / ABOUT MEDIA SAFELY
 
-Requirements:
-- Fix the Services section double transition/flicker.
-- Cube must be fully opaque.
-- Cube faces must not be transparent.
-- Service labels/items inside the cube must be easy to click/select.
-- Make sure pointer events, z-index, overlays and transforms do not block service selection.
-- When a service is selected:
-  - cube should transition away or move into background intentionally
-  - selected service detail should appear with a premium transition
-  - user must clearly understand they entered service detail mode
-- Add a working “X” close button:
-  - must be clickable
-  - must return user back to the cube/service overview
-  - must work on desktop and mobile
-- Add another clear “Back to services” control if needed.
-- Do not leave the user trapped inside a service detail view.
+## Problem
 
-Service detail presentation requirements:
-Each service detail must feel richer and less generic.
+Hero and About images were removed from CMS section data / content logic.
+This must be fixed in CMS data/content source, not only hidden with frontend fallback.
+
+## Requirements
+
+Find where Hero/About media fields were removed or overwritten.
+
+Check:
+- `prisma/seed.ts`
+- Home Section seed
+- About Section seed
+- Settings seed
+- admin save logic
+- page data mapping in `src/app/[lang]/page.tsx`
+- rendering in `PageExperience.tsx`
+
+## Fix
+
+Restore valid local media paths for:
+- Hero image/background
+- About image/media
+
+Use only existing local files under:
+
+```txt
+/uploads/bsdc/*
+
+Do not use external URLs.
+Do not invent broken paths.
+Do not leave empty image fields if suitable local media exists.
+
+Protect media from future deletion
+
+When seed or admin update logic touches Home/About/Settings:
+
+do not overwrite existing image fields with null
+do not overwrite existing image fields with ""
+do not overwrite existing image arrays with []
+preserve existing media when new value is undefined
+only remove image if user explicitly removes it in admin
+Frontend fallback
+
+Hero/About rendering should be:
+
+Use CMS image if present.
+Else use safe local fallback from /uploads/bsdc/*.
+Else render styled placeholder, not broken image.
+Acceptance
+Hero image/background is visible again.
+About image is visible again.
+CMS media fields are restored.
+No broken image icons.
+No external image URLs.
+Future seed/admin save cannot accidentally blank images.
+PHASE 3 — FIX SERVICES WITHOUT DUPLICATION
+Problem
+
+The final professional service names are correct.
+The problem is that previous seed logic may create new services instead of updating existing ones.
+
+Final service names
+
+Keep exactly these 6 services:
+
+Индустриални водолазни услуги
+ROV инспекции и роботизирано обследване
+Батиметрия, хидрография и сонарни обследвания
+Оператор на язовири и съоръженията към тях
+Хидротехническо строителство и сухи СМР
+Водолазни курсове NAUI / CMAS
+
+Do NOT revert to old names.
+
+Mapping from old records
+
+Update existing service records only:
+
+Old Водолазни Услуги / diving-services
+→ Индустриални водолазни услуги
+Old ROV Услуги / rov-services
+→ ROV инспекции и роботизирано обследване
+Old Батиметрия и Хидрография
+→ Батиметрия, хидрография и сонарни обследвания
+Old Оператор на Микроязовири
+→ Оператор на язовири и съоръженията към тях
+Old Ремонти на Пристанища, Съдове и Язовири
+→ Хидротехническо строителство и сухи СМР
+Old Водолазни Курсове / diving-courses
+→ Водолазни курсове NAUI / CMAS
+Seed rule
+
+Fix prisma/seed.ts so it updates existing records using stable existing unique keys/slugs.
+
+Do NOT use newly invented slugs as where keys if that creates duplicate rows.
+
+The seed must:
+
+update title
+update description/content
+update featuredImageUrl if field exists
+update images[] if field exists
+update sort order 0–5
+preserve media if no new media is provided
+not create duplicate service rows
+Service count rule
+
+After cleanup/fix, expected public/CMS service count:
+
+Exactly 6 BG live services
+
+No 11 services.
+No old + new duplicates.
+No duplicate order pairs.
+
+If duplicates already exist
+
+If duplicate records already exist in local DB, do NOT blindly delete without reporting.
+
+First report:
+
+duplicate IDs/titles/slugs/keys
+which original record should remain
+which duplicate should be deleted/archived
+
+Then provide safe cleanup action.
+
+Acceptance
+CMS Services list shows exactly 6 services.
+Public Services menu shows exactly 6 services.
+Footer Services list shows exactly 6 services.
+Cube receives exactly 6 services.
+Final titles are the professional titles listed above.
+PHASE 4 — SERVICE IMAGES FROM CMS
+Problem
+
+Service galleries were moved to svc.images, but main/featured images may still be hardcoded, missing, or unsafe.
+
+Requirements
+
+Read Service model in prisma/schema.prisma.
+
+Identify actual available fields:
+
+featuredImageUrl
+images
+any other service image field
+
+In src/app/[lang]/page.tsx, make sure services fetch includes:
+
+title
+slug/key
+description/content
+featuredImageUrl if it exists
+images
+
+In PageExperience.tsx, service main image should use:
+
+svc.featuredImageUrl if present
+else svc.images?.[0] if present
+else styled placeholder
+
+Gallery strip should use only:
+
+svc.images
+
+If svc.images is empty, gallery should render nothing or styled empty state.
+No broken images.
+No hardcoded service image paths.
+
+Service image content
+
+Use existing local BSDC images only:
+
+/uploads/bsdc/*
+
+Assign suitable media per service if available:
+
+Индустриални водолазни услуги
+underwater diver / industrial underwater work / hydrotechnical work
+ROV инспекции и роботизирано обследване
+ROV / underwater robot / inspection equipment
+Батиметрия, хидрография и сонарни обследвания
+sonar / survey / bathymetry / boat / map style
+Оператор на язовири и съоръженията към тях
+dam / reservoir / wall / control structure
+Хидротехническо строителство и сухи СМР
+pier / metal structures / concrete / dry hydrotechnical work
+Водолазни курсове NAUI / CMAS
+recreational scuba / training / Black Sea diving
+
+If suitable local images do not exist, do not add fake paths.
+Report missing image needs.
+
+Acceptance
+Service main image works.
+Service gallery works from CMS.
+No service has broken image.
+No external images.
+No hardcoded service media remains except safe placeholder styling.
+PHASE 5 — SERVICES CUBE STABILIZATION
+Current problems
+Cube is confusing.
+Faces appear too dark/transparent or visually hard to understand.
+Service selection can feel unreliable.
+Removing text made the cube hard to navigate.
+Hover effect must feel like a flashlight, not full-face recolor.
+Requirements
+
+The cube must:
+
+receive exactly 6 services
+have solid opaque faces
+show service name clearly
+use service image as face texture/background if available
+fallback to solid dark technical face if no image exists
+keep copper borders/edges
+not use Html from @react-three/drei if it causes pointer-events or transparency issues
+Text on cube faces
+
+If rendering text on cube faces:
+
+use canvas texture or material texture
+do not use DOM Html overlay if it causes z-index/pointer conflicts
+text must be readable
+add dark overlay/vignette inside texture if needed
+Hover flashlight effect
+
+Do NOT recolor the whole face uniformly.
+
+Implement a localized effect:
+
+radial light spot
+subtle copper/white glow
+fades outward
+face image remains visible
+feels like inspection flashlight passing over the surface
+
+If true pointer tracking is too complex, use localized radial gradient around face center on hover.
+
+Click mapping
+
+Clicking must be deterministic:
+
+face 1 opens service 1
+face 2 opens service 2
+no random service
+no invisible overlapping face captures click
+
+Check:
+
+raycast order
+face index mapping
+event bubbling
+pointer-events
+duplicate services array
+Acceptance
+Cube is opaque.
+Cube has readable service names.
+Cube uses service images when available.
+Hover looks like localized light, not full face recolor.
+Clicking a face opens the correct service.
+Cube only has 6 services.
+PHASE 6 — SERVICE DETAIL OVERLAY
+Current problems
+X button may be blocked.
+User can get trapped in service detail.
+Navigation may not work while inside service detail.
+Detail views are too generic.
+Full overlay scroll is not wanted.
+Requirements
+
+Service detail overlay:
+
+should not scroll as a whole
+outer overlay: overflow-hidden
+layout: flex flex-col h-screen
+
+Structure:
+
+fixed header/title area: flex-shrink-0
+middle content area: flex-1 overflow-y-auto
+bottom gallery/actions: flex-shrink-0
+
+Only inner text/list area can scroll if needed.
+
+Buttons
+
+Move X and “Назад към услугите” away from navbar area.
+
+Use bottom controls:
+
+X or close button: bottom right
+“Назад към услугите”: bottom left
+
+They must:
+
+have high z-index
+have pointer-events-auto
+call setActiveService(null)
+work on desktop and mobile
+
+Main navigation while service detail is open:
+
+nav click should close activeService
+then navigate to selected scene
+service overlay must not trap navigation
+Detail content
 
 Each service detail should include:
-- service title
-- short intro
-- main image
-- gallery strip or gallery grid with several images if available
-- key activities as ordered or unordered list
-- at least one visual card group / capability cards / technical highlights
-- better spatial layout, not just image + paragraph
-- premium motion/depth transition
-- mobile-friendly layout
 
-Important:
-Do not make all six service detail layouts identical.
-They can share a base component, but visual arrangement should vary enough to feel custom.
+title
+intro
+main image
+gallery if available
+unordered/ordered list of key activities
+capability/process/technical cards
+richer composition than image + paragraph
 
-Suggested variation:
-- Industrial diving: strong technical image, dark panel, capability cards, list of operations
-- ROV: more technical/robotic layout, equipment cards, inspection use cases
-- Bathymetry: map/survey feeling, data cards, sonar/gallery presentation
-- Dam operator: documentation/control layout, process cards, compliance/technical blocks
-- Dry hydrotechnical works: construction/metalwork layout, before/after/gallery feeling
-- NAUI/CMAS courses: lighter training layout, course levels, experience cards, gallery
+Layouts should not all feel identical.
 
-Expected result:
-Services section becomes usable and visually premium:
-cube works, service selection works, close/back works, details have galleries, cards, lists, transitions, depth and variation.
+Acceptance
+X works.
+Back button works.
+User can return to cube.
+Main nav works while service detail is open.
+Overlay itself does not scroll.
+Detail views have image, gallery, cards and list.
+PHASE 7 — PROJECTS / NEWS FILTERS
+Current problem
 
-==================================================
-4. PROJECTS / NEWS SECTION — NOT FIXED
-==================================================
+Filters repeat:
 
-Problems:
-- Projects section still has double transition/flicker.
-- It still shows only 6 projects.
-- Requirement was to show projects in groups of 2, not only 6 total.
-- There is no proper horizontal scroll/book effect.
-- There is no contents/index page with projects.
-- Correct projects from the old site were not properly imported/populated.
-- Suitable images from the old project links were not added.
-- The section still does not feel like a diary/book/archive.
-- Project modal “X” close button does not work.
-- The only way to exit the modal is clicking outside it.
+“Проекти”
+“Новини”
 
-Requirements:
-- Fix the Projects/News section double transition/flicker.
-- Load all available project/news items from CMS, not only the first 6.
-- If there is a query limit, pagination limit, slice(0, 6), hardcoded cap, or frontend filtering cap, remove/fix it.
-- Display projects in groups/pages of 2 items.
-- Add horizontal navigation with book/page-turn feeling.
-- Add old technical diary/archive book visual direction.
-- Add a contents/index view or contents-style navigation listing available projects.
-- Add category filters if categories exist in CMS.
-- Each project card must have:
-  - title
-  - short summary
-  - image if available
-  - category/date if available
-  - “Прочети повече”
-- Project detail modal must include:
-  - working “X” close button
-  - title
-  - full text
-  - gallery/images if available
-  - previous/next project controls if possible
-- “X” close button must be clickable and must not be blocked by z-index, overlay, transform, or pointer-events.
-- Clicking outside can remain as secondary close behavior, but must not be the only way to close.
+because type values and category values are mixed visually.
 
-Content requirements:
-- Populate only real projects/news from the old BSDC website sources already provided in the previous task.
-- Use suitable images from the imported local media where available.
-- Do not use unrelated images.
-- Do not use external stock images.
-- Do not invent missing project facts.
+Required filter structure
 
-Expected result:
-Projects/News becomes a real archive section:
-all imported items are reachable, shown two per page, with book-style navigation, contents/index, correct images and working modals.
+Row 1 — Type filter:
 
-==================================================
-5. CONTACT SECTION AND FOOTER
-==================================================
+Всички
+Проекти
+Новини
 
-Problems:
-- Contact section still has double transition/flicker.
-- Footer text is too small and almost unreadable.
-- Google Maps is still not visible on the public site.
-- A Google Maps link has already been added in the CMS and must be rendered publicly.
+Row 2 — Service/category filter:
 
-Requirements:
-- Fix Contact section double transition/flicker.
-- Render the Google Maps link/embed from CMS settings on the public Contact section.
-- Do not hardcode a fake address.
-- Use the CMS-provided Google Maps link.
-- If the CMS value is a Google Maps embed URL, render it as an iframe.
-- If the CMS value is a normal Google Maps share link, either:
-  - convert/render it correctly if current code supports it, or
-  - show a clear “Вижте в Google Maps” button/link and document why iframe is not possible.
-- Footer font size must be increased.
-- Footer text must be readable on desktop and mobile.
-- Legal links must remain visible and usable.
-- Footer should stay premium and clean, not tiny and hidden.
+only real service/category values
 
-Expected result:
-Contact section renders the CMS Google Maps link, footer text is readable, and contact/footer transitions are stable.
+Exclude these from category row:
 
-==================================================
-6. GLOBAL TRANSITION FIX — STILL NOT SOLVED
-==================================================
+PROJECT
+NEWS
+Проекти
+Новини
+project
+news
 
-Problem:
-Multiple sections still have the same bad behavior:
-- section loads
-- disappears
-- loads again
+Do not invent categories.
 
-Affected sections:
-- About
-- Services
-- Projects/News
-- Contact
-- possibly other animated sections
+If CMS categories are empty:
 
-Requirements:
-- Treat this as a global animation bug, not isolated visual polish.
-- Audit shared reveal components.
-- Check ScrollReveal / motion wrappers / initial opacity classes / hydration behavior.
-- Remove conflicting CSS transitions and Framer Motion animations.
-- Make reveal animation run once only.
-- Prevent animation from resetting when state changes, language changes, selected service changes, modal opens, or section re-renders.
-- Ensure initial server/client render does not cause visible flicker.
-- On mobile, reduce or disable heavy transitions if they cause instability.
+hide category row
+report that Project/News category fields must be filled
 
-Expected result:
-No public section should appear, disappear, and appear again.
+If categories exist:
 
-==================================================
+render them dynamically from CMS project data
+filtering must recalculate pagination
+Future service category values
+
+Projects should eventually use categories like:
+
+Индустриални водолазни услуги
+ROV инспекции и роботизирано обследване
+Батиметрия, хидрография и сонарни обследвания
+Оператор на язовири и съоръженията към тях
+Хидротехническо строителство и сухи СМР
+Водолазни курсове NAUI / CMAS
+
+But do not hardcode fake categories if CMS data does not contain them.
+
+Acceptance
+“Проекти” and “Новини” appear only once as type filters.
+Category filters do not duplicate type filters.
+Pagination works after filtering.
+No fake categories.
+PHASE 8 — PROJECTS / NEWS LAYOUT AND MODAL
+Current problems
+Two projects appear but do not use the full section properly.
+Modal X button may not work.
+Modal content is too basic.
+Images may be missing.
+Requirements
+
+Section:
+
+keep 2 projects per view/page
+use full section width and height
+left project and right project should feel like archive/book spread
+no empty bottom half
+clear prev/next navigation
+“Прочети повече” visible
+
+Project card:
+
+title
+summary
+category/date if available
+image if available
+fallback styled placeholder if no image
+
+Modal:
+
+X button must work
+high z-index
+pointer-events-auto
+outside click can remain but cannot be the only close method
+
+Modal content:
+
+main image
+gallery if available
+if no gallery: styled placeholder gallery cards
+title
+article/body text
+unordered/ordered list with key facts/scope if data exists
+previous/next project if possible
+
+Images:
+
+use local /uploads/bsdc/*
+no external images
+no unrelated images
+Acceptance
+Two projects fill the visual area properly.
+Modal X works.
+Project details are richer.
+No broken images.
+PHASE 9 — CONTACT SECTION REPAIR
+Current problem
+
+Contact section became messy:
+
+company info too large / overlaps
+form and contact info fight for space
+map visible but layout not controlled
+section does not fit cleanly
+Requirements
+
+Rebuild Contact section cleanly.
+
+Desktop:
+
+2-column layout
+left column: company info
+right column: inquiry form
+Google Map visible as background
+content in semi-transparent dark panels or clean readable overlay
+form must fit
+company title must not overlap navbar/logo
+
+Left column:
+
+company name
+address
+phones
+email
+
+Right column:
+
+form title
+name
+email
+phone
+inquiry type
+message
+submit button
+
+Inputs:
+
+premium underline style is OK
+must be readable
+not too tall
+
+Map:
+
+visible but not destructive
+dark/night navigation feel
+do not cover it completely with opaque panels
+
+Mobile:
+
+stack columns
+no horizontal overflow
+Acceptance
+Contact section is readable.
+Form fits.
+Map remains visible.
+No overlap with navbar/logo.
+No layout mashup.
+PHASE 10 — FOOTER CLEANUP
+Requirements
+
+Footer:
+
+logo centered in first column
+logo bigger but not absurd
+text readable
+normal text at least text-sm
+headings text-base
+legal links text-sm
+copyright at least text-xs, preferably text-sm
+services column shows only the final 6 services
+footer does not become too tall or cluttered
+Acceptance
+Footer readable on desktop and mobile.
+Footer services not duplicated.
+Legal links visible/clickable.
+PHASE 11 — DO NOT RUN SEED UNTIL SAFE
+
+Before running seed, verify:
+
+It updates existing services only.
+It does not create new service rows.
+It does not blank Hero media.
+It does not blank About media.
+It does not overwrite CMS media with null/empty values.
+It does not create duplicate Project categories.
+It does not change schema.
+
+If seed is unsafe:
+
+fix seed first
+do not run it
+report exactly what would have gone wrong
+
+If seed is safe:
+
+say it is safe
+then run only if needed
 FINAL ACCEPTANCE CHECKLIST
-==================================================
+Media
+Hero image visible.
+About image visible.
+CMS media fields restored.
+No broken images.
+No external image URLs.
+Services
+Exactly 6 services.
+Final professional names preserved.
+No old/new duplicates.
+Services order 0–5.
+Service main images work.
+Service gallery uses CMS images.
+Cube receives exactly 6 services.
+Cube readable and opaque.
+Cube click mapping deterministic.
+Service detail X/back works.
+Nav works while service detail is open.
+Projects / News
+Type filters only: Всички / Проекти / Новини.
+Category filters do not repeat Проекти/Новини.
+Two-project layout uses full section.
+Modal X works.
+Images are local or placeholders.
+Contact / Footer
+Contact layout clean.
+Form fits.
+Map visible as dark background.
+Footer readable.
+Footer services show only 6 final services.
+Rules
+No schema changes.
+No migrations.
+No SEO.
+No deployment.
+No fake content.
+No external hotlinked images.
+No unsafe seed.
+FINAL REPORT REQUIRED
 
-Before finishing, verify:
+After completing, report:
 
-Hero:
-- CTA to “За нас” works.
-- Both hero buttons are clickable.
+Files changed.
+Whether seed was run or not.
+Why Hero/About images disappeared.
+Which CMS fields were restored.
+Which media paths were restored.
+How seed was made safe against media deletion.
+How seed was made safe against duplicate services.
+Final expected service count.
+Final service names.
+Project filter structure.
+Contact layout changes.
+Footer changes.
+TypeScript status.
+Any remaining manual CMS actions required.
 
-About:
-- No double transition.
-- No flicker.
-
-Services:
-- No double transition.
-- Cube is opaque.
-- Cube services are easy to select.
-- Cube transitions properly when service opens.
-- Service detail opens with premium motion.
-- “X” close button works.
-- User can return to cube.
-- Service pages/panels have galleries, cards, lists and visual variation.
-- Service layouts are not all identical.
-
-Projects/News:
-- No double transition.
-- More than 6 items can be reached.
-- Items are shown in groups/pages of 2.
-- Book/page-turn navigation exists.
-- Contents/index view exists.
-- Correct old BSDC projects/news are populated.
-- Relevant local images are used.
-- “Прочети повече” exists.
-- Modal “X” close button works.
-- Clicking outside is not the only close method.
-
-Contact/Footer:
-- No double transition.
-- CMS Google Maps link is rendered publicly.
-- Footer font size is readable.
-- Legal links remain visible.
-
-Global:
-- No schema changes.
-- No migrations.
-- No SEO work.
-- No fake content.
-- No external stock images.
-- BG/EN routing still works.
+### Очакван резултат
+Claude първо ще стабилизира данните и media полетата, после ще оправи услугите, филтрите, контакт секцията и footer-а без да създава нови дубликати или да трие снимки.

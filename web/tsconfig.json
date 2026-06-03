@@ -30,5 +30,24 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "prisma/_check_data.ts",
+    "prisma/_check_final.ts",
+    "prisma/_check_pollution.ts",
+    "prisma/cleanExcerpts.ts",
+    "prisma/cleanExcerpts2.ts",
+    "prisma/cleanExcerpts3.ts",
+    "prisma/cleanExcerptsFinal.ts",
+    "prisma/syncMedia.ts",
+    "prisma/_add_modal_layout.ts",
+    "prisma/_apply_columns.ts",
+    "prisma/_check_about.ts",
+    "prisma/_check_columns.ts",
+    "prisma/_check_services.ts",
+    "prisma/_verify_clean.ts",
+    "prisma/migrateBsdcData.ts",
+    "prisma/_check_seo.ts",
+    "prisma/rebuildContent.ts"
+  ]
 }

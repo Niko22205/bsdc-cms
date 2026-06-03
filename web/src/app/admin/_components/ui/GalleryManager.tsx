@@ -58,6 +58,7 @@ function SortableThumb({
         type="button"
         {...attributes}
         {...listeners}
+        suppressHydrationWarning
         className="absolute left-1 top-1 flex h-5 w-5 cursor-grab items-center justify-center rounded bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing"
         tabIndex={-1}
       >

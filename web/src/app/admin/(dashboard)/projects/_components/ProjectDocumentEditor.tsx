@@ -20,10 +20,15 @@ type ProjectFormInitial = {
   content?: string | null
   featuredImageUrl?: string | null
   images?: string[]
+  equipmentUsed?: string[]
+  activitiesDone?: string[]
   category?: string | null
+  location?: string | null
+  client?: string | null
   publishedAt?: string | null
   seoTitle?: string | null
   seoDescription?: string | null
+  modalLayout?: string | null
   sortOrder?: number
   published?: boolean
 }
@@ -52,9 +57,21 @@ const labelCls = "flex flex-col gap-1.5 text-sm font-medium text-slate-300"
 
 const cardCls = "rounded-xl border border-white/[0.07] bg-white/[0.04] p-5"
 
+const SERVICE_CATEGORIES = [
+  "Индустриални водолазни услуги",
+  "ROV инспекции и роботизирано обследване",
+  "Батиметрия, хидрография и сонарни обследвания",
+  "Оператор на язовири и съоръженията към тях",
+  "Хидротехническо строителство и сухи СМР",
+  "Водолазни курсове NAUI / CMAS",
+]
+
 export function ProjectDocumentEditor({ action, initial = {}, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState(action, {})
   const [previewData, setPreviewData] = useState<PreviewData | null>(null)
+  const [equipment, setEquipment] = useState<string[]>(initial.equipmentUsed ?? [])
+  const [activities, setActivities] = useState<string[]>(initial.activitiesDone ?? [])
+  const [formCategory, setFormCategory] = useState<string>(initial.category ?? "")
   const formRef = useRef<HTMLFormElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
 
@@ -154,6 +171,67 @@ export function ProjectDocumentEditor({ action, initial = {}, submitLabel }: Pro
                   name="images"
                   defaultValue={initial.images ?? []}
                 />
+              </div>
+            </div>
+
+            {/* ── Equipment & Activities cards ── */}
+            <div className={`${cardCls} space-y-5`}>
+              {/* Equipment */}
+              <div>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Equipment Used</p>
+                <input type="hidden" name="equipmentUsed" value={JSON.stringify(equipment)} />
+                <div className="flex flex-col gap-2">
+                  {equipment.map((item, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={e => setEquipment(eq => eq.map((v, j) => j === i ? e.target.value : v))}
+                        className={inputCls}
+                        placeholder="e.g. Diving equipment ROV"
+                      />
+                      <button type="button"
+                        onClick={() => setEquipment(eq => eq.filter((_, j) => j !== i))}
+                        className="shrink-0 rounded border border-white/[0.10] bg-white/[0.04] px-2.5 text-slate-500 transition hover:border-red-500/40 hover:text-red-400">
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button"
+                    onClick={() => setEquipment(eq => [...eq, ""])}
+                    className="self-start rounded border border-dashed border-white/[0.12] px-3 py-1.5 text-xs text-slate-500 transition hover:border-[#B87333]/50 hover:text-[#B87333]">
+                    + Add Equipment
+                  </button>
+                </div>
+              </div>
+
+              {/* Activities */}
+              <div>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">Activities Done</p>
+                <input type="hidden" name="activitiesDone" value={JSON.stringify(activities)} />
+                <div className="flex flex-col gap-2">
+                  {activities.map((item, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={e => setActivities(ac => ac.map((v, j) => j === i ? e.target.value : v))}
+                        className={inputCls}
+                        placeholder="e.g. Underwater inspection of dam wall"
+                      />
+                      <button type="button"
+                        onClick={() => setActivities(ac => ac.filter((_, j) => j !== i))}
+                        className="shrink-0 rounded border border-white/[0.10] bg-white/[0.04] px-2.5 text-slate-500 transition hover:border-red-500/40 hover:text-red-400">
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button"
+                    onClick={() => setActivities(ac => [...ac, ""])}
+                    className="self-start rounded border border-dashed border-white/[0.12] px-3 py-1.5 text-xs text-slate-500 transition hover:border-[#B87333]/50 hover:text-[#B87333]">
+                    + Add Activity
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -272,13 +350,42 @@ export function ProjectDocumentEditor({ action, initial = {}, submitLabel }: Pro
                 )}
               </label>
 
-              <label className={labelCls}>
+              <div className={labelCls}>
                 Category
+                <input type="hidden" name="category" value={formCategory} />
+                <div className="mt-1 space-y-1.5">
+                  {SERVICE_CATEGORIES.map(cat => (
+                    <label key={cat} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-300 transition hover:bg-white/[0.04]">
+                      <input
+                        type="checkbox"
+                        checked={formCategory === cat}
+                        onChange={e => setFormCategory(e.target.checked ? cat : "")}
+                        className="h-4 w-4 rounded border-white/[0.20] bg-white/[0.08] accent-[#B87333]"
+                      />
+                      {cat}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <label className={labelCls}>
+                Location
                 <input
-                  name="category"
+                  name="location"
                   type="text"
-                  defaultValue={initial.category ?? ""}
-                  placeholder="e.g. Commercial"
+                  defaultValue={initial.location ?? ""}
+                  placeholder="e.g. Sofia, Bulgaria"
+                  className={inputCls}
+                />
+              </label>
+
+              <label className={labelCls}>
+                Client
+                <input
+                  name="client"
+                  type="text"
+                  defaultValue={initial.client ?? ""}
+                  placeholder="e.g. Municipality of Sofia"
                   className={inputCls}
                 />
               </label>
@@ -301,6 +408,19 @@ export function ProjectDocumentEditor({ action, initial = {}, submitLabel }: Pro
                   defaultValue={initial.sortOrder ?? 0}
                   className={inputCls}
                 />
+              </label>
+
+              <label className={labelCls}>
+                Modal Layout
+                <select
+                  name="modalLayout"
+                  defaultValue={initial.modalLayout ?? "CINEMATIC_SPLIT"}
+                  className={inputCls}
+                >
+                  <option value="CINEMATIC_SPLIT">Cinematic Split</option>
+                  <option value="EDITORIAL_STORY">Editorial Story</option>
+                  <option value="MINIMAL_OVERLAY">Minimal Overlay</option>
+                </select>
               </label>
             </div>
 

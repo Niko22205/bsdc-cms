@@ -1,6 +1,6 @@
 "use client"
 
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 import Link from "next/link"
 import { RichTextEditor } from "../../../_components/ui/RichTextEditor"
 import type { ProjectFormState } from "../actions"
@@ -15,10 +15,15 @@ type ProjectFormInitial = {
   content?: string | null
   featuredImageUrl?: string | null
   images?: string[]
+  equipmentUsed?: string[]
+  activitiesDone?: string[]
   category?: string | null
+  location?: string | null
+  client?: string | null
   publishedAt?: string | null
   seoTitle?: string | null
   seoDescription?: string | null
+  modalLayout?: string | null
   sortOrder?: number
   published?: boolean
 }
@@ -36,6 +41,8 @@ const labelCls = "flex flex-col gap-1.5 text-sm font-medium text-zinc-700"
 
 export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
   const [state, formAction, pending] = useActionState(action, {})
+  const [equipment, setEquipment] = useState<string[]>(initial.equipmentUsed ?? [])
+  const [activities, setActivities] = useState<string[]>(initial.activitiesDone ?? [])
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -119,6 +126,30 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
         </label>
 
         <label className={`${labelCls} flex-1`}>
+          Location
+          <input
+            name="location"
+            type="text"
+            defaultValue={initial.location ?? ""}
+            placeholder="e.g. Sofia, Bulgaria"
+            className={inputCls}
+          />
+        </label>
+
+        <label className={`${labelCls} flex-1`}>
+          Client
+          <input
+            name="client"
+            type="text"
+            defaultValue={initial.client ?? ""}
+            placeholder="e.g. Municipality of Sofia"
+            className={inputCls}
+          />
+        </label>
+      </div>
+
+      <div className="flex gap-4">
+        <label className={`${labelCls} flex-1`}>
           Published At
           <input
             name="publishedAt"
@@ -169,6 +200,56 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
         />
       </label>
 
+      {/* ── Equipment used ── */}
+      <div className={labelCls}>
+        Equipment Used
+        <input type="hidden" name="equipmentUsed" value={JSON.stringify(equipment)} />
+        <div className="flex flex-col gap-1.5">
+          {equipment.map((item, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text"
+                value={item}
+                onChange={e => setEquipment(eq => eq.map((v, j) => j === i ? e.target.value : v))}
+                className={inputCls}
+                placeholder="Equipment item…"
+              />
+              <button type="button" onClick={() => setEquipment(eq => eq.filter((_, j) => j !== i))}
+                className="shrink-0 rounded border border-zinc-200 px-2 text-zinc-400 hover:text-red-500">✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setEquipment(eq => [...eq, ""])}
+            className="self-start rounded border border-dashed border-zinc-300 px-3 py-1.5 text-xs text-zinc-500 hover:border-indigo-400 hover:text-indigo-600">
+            + Add Equipment
+          </button>
+        </div>
+      </div>
+
+      {/* ── Activities done ── */}
+      <div className={labelCls}>
+        Activities Done
+        <input type="hidden" name="activitiesDone" value={JSON.stringify(activities)} />
+        <div className="flex flex-col gap-1.5">
+          {activities.map((item, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                type="text"
+                value={item}
+                onChange={e => setActivities(ac => ac.map((v, j) => j === i ? e.target.value : v))}
+                className={inputCls}
+                placeholder="Activity…"
+              />
+              <button type="button" onClick={() => setActivities(ac => ac.filter((_, j) => j !== i))}
+                className="shrink-0 rounded border border-zinc-200 px-2 text-zinc-400 hover:text-red-500">✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setActivities(ac => [...ac, ""])}
+            className="self-start rounded border border-dashed border-zinc-300 px-3 py-1.5 text-xs text-zinc-500 hover:border-indigo-400 hover:text-indigo-600">
+            + Add Activity
+          </button>
+        </div>
+      </div>
+
       <div className="flex gap-4">
         <label className={`${labelCls} flex-1`}>
           SEO Title
@@ -195,6 +276,15 @@ export function ProjectForm({ action, initial = {}, submitLabel }: Props) {
             defaultValue={initial.sortOrder ?? 0}
             className={inputCls}
           />
+        </label>
+
+        <label className={`${labelCls} w-52`}>
+          Modal Layout
+          <select name="modalLayout" defaultValue={initial.modalLayout ?? "CINEMATIC_SPLIT"} className={inputCls}>
+            <option value="CINEMATIC_SPLIT">Cinematic Split</option>
+            <option value="EDITORIAL_STORY">Editorial Story</option>
+            <option value="MINIMAL_OVERLAY">Minimal Overlay</option>
+          </select>
         </label>
 
         <label className="flex items-center gap-2 pb-2 text-sm font-medium text-zinc-700">
