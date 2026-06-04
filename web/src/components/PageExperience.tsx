@@ -250,6 +250,7 @@ export default function PageExperience({
   const [expandedAct, setExpandedAct]              = useState<number | null>(null)
   const [contactStatus, setContactStatus]           = useState<"idle" | "loading" | "success" | "error">("idle")
   const [showContactModal, setShowContactModal]     = useState(false)
+  const [isClosing, setIsClosing]                   = useState(false)
   const [lightboxSrc, setLightboxSrc]               = useState<string | null>(null)
   const [selectedProject, setSelectedProject]       = useState<ProjectNewsItem | null>(null)
   const [projectFilter, setProjectFilter]           = useState<"ALL" | "PROJECT" | "NEWS">("ALL")
@@ -292,8 +293,12 @@ export default function PageExperience({
   const heroImgRef        = useRef<HTMLImageElement>(null)
   const galleryWrapperRef = useRef<HTMLDivElement>(null)
   const gsapCtxRef        = useRef<gsap.Context | null>(null)
-  const isModalExiting    = useRef(false)
   const additionalScrollRef = useRef(0)
+  const handleWheelRef    = useRef<((e: WheelEvent) => void) | null>(null)
+  const scrollPointerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const closeModalRef     = useRef(closeModal)
+  const isClosingRef      = useRef(false)
+  const exitDeltaRef      = useRef(0)
 
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
@@ -388,123 +393,118 @@ export default function PageExperience({
   }
 
   function closeModal() {
-    if (isModalExiting.current) return
-    isModalExiting.current = true
-    if (gsapCtxRef.current) { gsapCtxRef.current.revert(); gsapCtxRef.current = null }
-    document.body.style.overflow = ''
-    gsap.to(modalRef.current, {
-      y: '100vh',
-      duration: 0.9,
-      ease: 'power2.inOut',
-      onComplete: () => {
-        setSelectedProject(null)
-        document.body.style.overflow = ''
-        isModalExiting.current = false
-      },
-    })
+    if (isClosingRef.current) return
+    exitDeltaRef.current = 0
+    // Clear any inline transform/opacity set by interactive drag so CSS transition takes over
+    if (modalRef.current) {
+      modalRef.current.style.transition = ''
+      modalRef.current.style.transform = ''
+      modalRef.current.style.opacity = ''
+    }
+    setIsClosing(true)
+
+    if (gsapCtxRef.current) {
+      gsapCtxRef.current.revert()
+      gsapCtxRef.current = null
+    }
+    if (modalRef.current) gsap.killTweensOf(modalRef.current)
+
+    setTimeout(() => {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+      document.body.style.pointerEvents = ''
+      additionalScrollRef.current = 0
+      setSelectedProject(null)
+      setLightboxSrc(null)
+      setIsClosing(false)
+    }, 800)
   }
 
   useEffect(() => {
     if (!selectedProject) return
+    if (!modalRef.current || !modalScrollRef.current) return
+
     gsap.registerPlugin(ScrollTrigger)
-    document.body.style.overflow = 'hidden'
-    if (modalScrollRef.current) modalScrollRef.current.scrollTop = 0
+    modalScrollRef.current.scrollTop = 0
     setGalleryIndex(0)
     setRelatedPage(0)
     const imgs = selectedProject.images ?? []
     if (imgs.length > 0) setDisplayedGalleryImg(imgs[0])
 
-    if (gsapCtxRef.current) gsapCtxRef.current.revert()
-    isModalExiting.current = false
+    setIsClosing(false)
+    if (gsapCtxRef.current) { gsapCtxRef.current.revert(); gsapCtxRef.current = null }
     additionalScrollRef.current = 0
+
+    gsap.set(modalRef.current, { y: '100vh' })
+    gsap.to(modalRef.current, { y: 0, duration: 0.6, ease: 'power2.out' })
 
     gsapCtxRef.current = gsap.context(() => {
       const scroller = modalScrollRef.current
 
-      // Modal slide in
-      gsap.fromTo(modalRef.current,
-        { y: '100vh' },
-        { y: 0, duration: 0.6, ease: 'power2.out' }
-      )
-
-      // Hero image parallax (scale + drift as hero scrolls away)
-      if (heroImgRef.current) {
-        gsap.to(heroImgRef.current, {
-          y: 60, scale: 1.06, ease: 'none',
-          scrollTrigger: {
-            trigger: '.modal-hero',
-            scroller,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: 1,
-            invalidateOnRefresh: true,
-          }
-        })
-      }
-
       // Scene 2: cream bg fades to dark #040507 at 50% scroll
       gsap.to('.modal-scene-2-bg', {
-        opacity: 1, ease: 'none',
+        opacity: 1, ease: 'none', force3D: true,
         scrollTrigger: {
           trigger: '.modal-scene-2',
           scroller,
           start: 'top bottom',
           end: 'top center',
-          scrub: 1,
+          scrub: 1.2,
           invalidateOnRefresh: true,
         }
       })
 
       // Scene 2: right column fades in at 60% visibility
       gsap.to('.modal-scene-2-text', {
-        opacity: 1, ease: 'none',
+        opacity: 1, ease: 'none', force3D: true,
         scrollTrigger: {
           trigger: '.modal-scene-2',
           scroller,
           start: 'top 40%',
           end: 'top 10%',
-          scrub: 1,
+          scrub: 1.2,
           invalidateOnRefresh: true,
         }
       })
 
-      // Gallery: featured image darkens as wrapper scrolls in
+      // Overlay darkens across full gallery scroll
       gsap.to('.modal-gallery-bg', {
-        opacity: 0.88, ease: 'none',
+        opacity: 0.95,
+        ease: 'none', force3D: true,
         scrollTrigger: {
           trigger: galleryWrapperRef.current,
           scroller,
           start: 'top top',
-          end: '40% top',
-          scrub: 1,
+          end: 'center top',
+          scrub: 1.2,
           invalidateOnRefresh: true,
         }
       })
 
-      // Gallery image slides up from below
-      gsap.set('.modal-gallery-img', { y: '100%' })
+      // Gallery image rises from bottom simultaneously, fully centered when overlay is dark
       gsap.to('.modal-gallery-img', {
         y: '0%',
-        ease: 'none',
+        ease: 'none', force3D: true,
         scrollTrigger: {
           trigger: galleryWrapperRef.current,
           scroller,
-          start: 'top 10%',
-          end: 'top -30%',
-          scrub: 1,
+          start: 'top top',
+          end: 'center top',
+          scrub: 1.2,
           invalidateOnRefresh: true,
         }
       })
 
-      // Controls appear last
+      // Controls fade in after image is centered
       gsap.to('.modal-gallery-content', {
-        opacity: 1, ease: 'none',
+        opacity: 1,
+        ease: 'none', force3D: true,
         scrollTrigger: {
           trigger: galleryWrapperRef.current,
           scroller,
-          start: '40% top',
+          start: 'center top',
           end: '65% top',
-          scrub: 1,
+          scrub: 1.2,
           invalidateOnRefresh: true,
         }
       })
@@ -514,12 +514,12 @@ export default function PageExperience({
         { opacity: 0, y: 24 },
         {
           opacity: 1, y: 0,
-          ease: 'none',
+          ease: 'none', force3D: true,
           scrollTrigger: {
             trigger: '.modal-scene-4',
             scroller,
-            start: 'top 80%',
-            end: 'top 40%',
+            start: 'top 40%',
+            end: 'top 10%',
             scrub: 1,
             invalidateOnRefresh: true,
           }
@@ -533,14 +533,146 @@ export default function PageExperience({
 
     return () => {
       cancelAnimationFrame(rafId)
-      document.body.style.overflow = ''
     }
   }, [selectedProject?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Body-scroll lock — prevents background page scroll while modal is open
+  useEffect(() => {
+    if (selectedProject) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+      document.body.style.overflow = 'hidden'
+      // Always reset pointer-events on modal open — clears any stuck state from failed closeModal
+      document.body.style.pointerEvents = ''
+      if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+      document.body.style.pointerEvents = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.paddingRight = ''
+      document.body.style.pointerEvents = ''
+    }
+  }, [selectedProject])
+
+
+
+  // Interactive pixel-perfect exit drag — wheel and touch both drive the modal transform directly
+  useEffect(() => {
+    if (!selectedProject) return
+    const scrollContainer = modalScrollRef.current
+    if (!scrollContainer) return
+
+    let touchStartYPos = 0
+    let isDraggingExit = false
+
+    const applyExitStyle = (delta: number) => {
+      const totalHeight = window.innerHeight
+      if (modalRef.current) {
+        modalRef.current.style.transition = 'none'
+        modalRef.current.style.transform = `translateY(-${delta}px)`
+        modalRef.current.style.opacity = String(Math.max(0, 1 - delta / totalHeight))
+      }
+    }
+
+    const snapBack = () => {
+      if (modalRef.current) {
+        modalRef.current.style.transition = 'transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.4s cubic-bezier(0.25,1,0.5,1)'
+        modalRef.current.style.transform = 'translateY(0)'
+        modalRef.current.style.opacity = '1'
+      }
+      exitDeltaRef.current = 0
+      isDraggingExit = false
+    }
+
+    const handleWheel = (e: WheelEvent) => {
+      if (isClosingRef.current) { e.preventDefault(); return }
+      const { scrollTop, clientHeight, scrollHeight } = scrollContainer
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30
+
+      // Reverse scroll while mid-drag — shrink the accumulated delta
+      if (exitDeltaRef.current > 0 && e.deltaY < 0) {
+        e.preventDefault()
+        exitDeltaRef.current = Math.max(0, exitDeltaRef.current + e.deltaY)
+        if (exitDeltaRef.current <= 0) { snapBack() } else { applyExitStyle(exitDeltaRef.current) }
+        return
+      }
+
+      if (!isAtBottom || e.deltaY <= 0) return
+      e.preventDefault()
+
+      exitDeltaRef.current += e.deltaY
+      const totalHeight = window.innerHeight
+
+      if (exitDeltaRef.current >= totalHeight) {
+        // Modal fully dragged off — direct unmount, no CSS transition needed
+        exitDeltaRef.current = 0
+        if (gsapCtxRef.current) { gsapCtxRef.current.revert(); gsapCtxRef.current = null }
+        additionalScrollRef.current = 0
+        setSelectedProject(null)
+        setLightboxSrc(null)
+        return
+      }
+
+      applyExitStyle(exitDeltaRef.current)
+    }
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartYPos = e.touches[0].clientY
+      isDraggingExit = false
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isClosingRef.current) { e.preventDefault(); return }
+      const { scrollTop, clientHeight, scrollHeight } = scrollContainer
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30
+      const swipeUp = touchStartYPos - e.touches[0].clientY
+
+      if (!isAtBottom && exitDeltaRef.current === 0) return
+
+      if (swipeUp > 0) {
+        e.preventDefault()
+        isDraggingExit = true
+        exitDeltaRef.current = Math.max(0, swipeUp)
+        applyExitStyle(exitDeltaRef.current)
+      } else if (isDraggingExit) {
+        e.preventDefault()
+        exitDeltaRef.current = Math.max(0, swipeUp)
+        if (exitDeltaRef.current <= 0) { snapBack() } else { applyExitStyle(exitDeltaRef.current) }
+      }
+    }
+
+    const handleTouchEnd = () => {
+      if (!isDraggingExit) return
+      const totalHeight = window.innerHeight
+      if (exitDeltaRef.current >= totalHeight * 0.5) {
+        exitDeltaRef.current = 0
+        closeModalRef.current()
+      } else {
+        snapBack()
+      }
+    }
+
+    scrollContainer.addEventListener('wheel', handleWheel, { passive: false })
+    scrollContainer.addEventListener('touchstart', handleTouchStart, { passive: true })
+    scrollContainer.addEventListener('touchmove', handleTouchMove, { passive: false })
+    scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      scrollContainer.removeEventListener('wheel', handleWheel)
+      scrollContainer.removeEventListener('touchstart', handleTouchStart)
+      scrollContainer.removeEventListener('touchmove', handleTouchMove)
+      scrollContainer.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [selectedProject]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // keep refs in sync so wheel/key handlers (stale closures) can read them
   useEffect(() => { activeServiceRef.current = activeService }, [activeService])
   useEffect(() => { activeIdxRef.current = activeIdx }, [activeIdx])
   useEffect(() => { selectedProjectRef.current = selectedProject }, [selectedProject])
+  useEffect(() => { closeModalRef.current = closeModal }, [closeModal])
+  useEffect(() => { isClosingRef.current = isClosing }, [isClosing])
 
   // Reset carousel position when filters change
   useEffect(() => {
@@ -745,7 +877,6 @@ export default function PageExperience({
     // Reset next scene's animated elements to hidden BEFORE dissolve starts
     if (next === 1) {
       gsap.set('.about-eyebrow,.about-title,.about-text,.about-image,.about-stats', { opacity: 0, y: 20, x: 0 })
-      gsap.set('.about-depth-card', { opacity: 0 })
       aboutScrollRef.current?.scrollTo({ top: 0 })
     }
     if (next === 2) {
@@ -816,7 +947,6 @@ export default function PageExperience({
 
     // GSAP owns initial hidden state for non-hero animated elements
     gsap.set('.about-eyebrow, .about-title, .about-text, .about-image, .about-stats', { opacity: 0, y: 20 })
-    gsap.set('.about-depth-card', { opacity: 0 })
     gsap.set('.services-menu', { opacity: 0, x: -100 })
     gsap.set('.arc-header', { opacity: 0, y: 22 })
     gsap.set('.contact-info', { opacity: 0, x: -40 })
@@ -855,6 +985,7 @@ export default function PageExperience({
 
   useEffect(() => {
     function handleWheel(e: WheelEvent) {
+      if (selectedProjectRef.current) return
       if (activeServiceRef.current) return
       e.preventDefault()
       if (isAnimating.current) return
@@ -975,6 +1106,7 @@ export default function PageExperience({
       setShowContactModal(true)
     }
 
+    handleWheelRef.current = handleWheel
     window.addEventListener("wheel", handleWheel, { passive: false })
     window.addEventListener("touchstart", handleTouchStart, { passive: true })
     window.addEventListener("touchend", handleTouchEnd, { passive: true })
@@ -2684,9 +2816,9 @@ export default function PageExperience({
           {/* Close button — fixed, outside modal div so it's always on top */}
           <button
             type="button"
-            onClick={closeModal}
+            onClick={(e) => { e.stopPropagation(); closeModal() }}
             aria-label="Затвори"
-            className="fixed top-6 right-8 z-[1001] flex items-center gap-2 cursor-pointer transition-colors duration-200"
+            className="fixed top-6 right-8 z-[1001] flex items-center gap-2 cursor-pointer transition-colors duration-200 pointer-events-auto"
             style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.2em', color: 'rgba(255,255,255,0.6)', background: 'rgba(184,115,51,0.1)', border: '1px solid rgba(184,115,51,0.3)', padding: '10px 18px' }}
           >
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
@@ -2695,61 +2827,56 @@ export default function PageExperience({
             <span>ЗАТВОРИ</span>
           </button>
 
+          {/* Blur overlay behind modal */}
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 999,
+              background: 'rgba(4,5,7,0.4)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              pointerEvents: 'none',
+            }}
+          />
+
           {/* Modal panel — slides up from bottom via GSAP */}
           <div
             ref={modalRef}
-            className="fixed inset-0 z-[1000] bg-[#040507]"
-            style={{ transform: 'translateY(100vh)' }}
+            className={`fixed inset-0 z-[1000] bg-[#040507] will-change-transform${isClosing ? ' transition-[opacity,transform] duration-[800ms] ease-[cubic-bezier(0.25,1,0.5,1)] opacity-0 -translate-y-full pointer-events-none' : ''}`}
+            style={{ transform: isClosing ? undefined : 'translateY(100vh)', width: '100vw', height: '100vh', top: 0, left: 0 }}
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
           >
             <div
               ref={modalScrollRef}
-              className="w-full h-full overflow-y-auto overflow-x-hidden"
-              style={{ overscrollBehavior: 'contain' }}
-              onWheel={(e) => {
-                e.stopPropagation()
-                const el = modalScrollRef.current
-                if (!el || isModalExiting.current) return
-                const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 4
-                if (atBottom && e.deltaY > 0) {
-                  additionalScrollRef.current = (additionalScrollRef.current || 0) + e.deltaY
-                  if (additionalScrollRef.current > 600) {
-                    closeModal()
-                  } else {
-                    const progress = additionalScrollRef.current / 600
-                    gsap.set(modalRef.current, { y: progress * 120 })
-                  }
-                } else if (!atBottom) {
-                  additionalScrollRef.current = 0
-                  gsap.set(modalRef.current, { y: 0 })
-                }
-              }}
+              className="w-full h-full overflow-y-auto overflow-x-hidden will-change-transform subpixel-antialiased"
+              style={{ overscrollBehavior: 'contain', touchAction: 'pan-y', pointerEvents: 'auto' }}
             >
 
               {/* ── SCENE 1: HERO ── */}
               <div className="modal-hero" style={{ position: 'relative', height: '140vh' }}>
-                <div style={{ position: 'sticky', top: 0, height: '100vh', overflow: 'hidden' }}>
-                  <img
-                    ref={heroImgRef}
-                    src={selectedProject.featuredImageUrl ?? ''}
-                    alt=""
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transformOrigin: 'center center' }}
-                  />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #040507 0%, rgba(4,5,7,0.3) 50%, transparent 100%)' }} />
-                  <div
-                    className="modal-hero-content"
-                    style={{ position: 'absolute', bottom: '48px', left: '64px', right: '64px', display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none' }}
-                  >
-                    <h1 style={{ fontSize: 'clamp(2.2rem, 4vw, 4.5rem)', fontWeight: 700, color: 'white', lineHeight: 1.05, letterSpacing: '-0.02em', margin: 0, maxWidth: '55%' }}>
-                      {selectedProject.location || selectedProject.title}
-                    </h1>
-                    <div style={{ display: 'flex', flexDirection: 'row', gap: '48px', alignItems: 'flex-end', paddingBottom: '6px' }}>
-                      <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>
-                        {selectedProject.category || selectedProject.type}
-                      </span>
-                      <span style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.32)', maxWidth: '320px', lineHeight: 1.6 }}>
-                        {selectedProject.location ? selectedProject.title : selectedProject.excerpt}
-                      </span>
-                    </div>
+                <img
+                  ref={heroImgRef}
+                  src={selectedProject.featuredImageUrl ?? ''}
+                  alt=""
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transformOrigin: 'center center' }}
+                />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #040507 0%, rgba(4,5,7,0.3) 50%, transparent 100%)' }} />
+                <div
+                  className="modal-hero-content"
+                  style={{ position: 'sticky', top: 'calc(100vh - 160px)', left: 0, right: 0, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none', padding: '0 64px 48px 64px', zIndex: 10 }}
+                >
+                  <h1 style={{ fontSize: 'clamp(2.2rem, 4vw, 4.5rem)', fontWeight: 700, color: 'white', lineHeight: 1.05, letterSpacing: '-0.02em', margin: 0, maxWidth: '55%' }}>
+                    {selectedProject.location || selectedProject.title}
+                  </h1>
+                  <div style={{ display: 'flex', flexDirection: 'row', gap: '48px', alignItems: 'flex-end', paddingBottom: '6px' }}>
+                    <span style={{ fontSize: '11px', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'monospace', color: 'rgba(255,255,255,0.5)', whiteSpace: 'nowrap' }}>
+                      {selectedProject.category || selectedProject.type}
+                    </span>
+                    <span style={{ fontSize: '10px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.32)', maxWidth: '320px', lineHeight: 1.6 }}>
+                      {selectedProject.location ? selectedProject.title : selectedProject.excerpt}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -2829,7 +2956,7 @@ export default function PageExperience({
               </div>
 
               {/* ── SCENE 3: GALLERY — featured image darkens, gallery image reveals ── */}
-              <div ref={galleryWrapperRef} className="relative" style={{ height: '250vh' }}>
+              <div ref={galleryWrapperRef} className="relative" style={{ height: '260vh' }}>
                 <div className="sticky top-0 h-screen overflow-hidden">
                   {/* Layer 1: featured image (always visible as base) */}
                   <img
@@ -2935,21 +3062,22 @@ export default function PageExperience({
                       .map((p: ProjectNewsItem) => (
                         <div
                           key={p.id}
-                          role="button"
-                          tabIndex={0}
-                          className="cursor-pointer group"
+                          className="cursor-pointer"
                           onClick={() => { if (modalScrollRef.current) modalScrollRef.current.scrollTop = 0; setSelectedProject(p) }}
-                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { if (modalScrollRef.current) modalScrollRef.current.scrollTop = 0; setSelectedProject(p) } }}
                         >
                           {p.featuredImageUrl && (
                             <img
                               src={p.featuredImageUrl}
                               alt={p.title}
-                              style={{ width: '100%', aspectRatio: '3/2', objectFit: 'cover', display: 'block', marginBottom: '20px' }}
+                              style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', display: 'block', marginBottom: '24px' }}
                             />
                           )}
-                          <p style={{ fontSize: '10px', letterSpacing: '0.3em', color: '#B87333', textTransform: 'uppercase', marginBottom: '12px', fontFamily: 'monospace' }}>{p.location || p.category}</p>
-                          <p style={{ fontSize: '18px', fontWeight: 600, color: 'white', lineHeight: 1.3, margin: 0 }}>{p.title}</p>
+                          <p style={{ color: '#B87333', fontSize: '10px', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '12px', fontFamily: 'monospace', margin: '0 0 12px 0' }}>
+                            {p.location || p.category}
+                          </p>
+                          <p style={{ color: 'white', fontSize: '22px', fontWeight: 500, lineHeight: 1.25, margin: 0 }}>
+                            {p.title}
+                          </p>
                         </div>
                       ))
                     }
