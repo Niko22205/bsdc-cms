@@ -290,6 +290,7 @@ export default function PageExperience({
   const carouselVelocity       = useRef(0)   // px/ms, updated on every move
   const modalRef          = useRef<HTMLDivElement>(null)
   const modalScrollRef    = useRef<HTMLDivElement>(null)
+  const modalContentRef   = useRef<HTMLDivElement>(null)
   const heroImgRef        = useRef<HTMLImageElement>(null)
   const galleryWrapperRef = useRef<HTMLDivElement>(null)
   const gsapCtxRef        = useRef<gsap.Context | null>(null)
@@ -299,6 +300,8 @@ export default function PageExperience({
   const closeModalRef     = useRef(closeModal)
   const isClosingRef      = useRef(false)
   const exitDeltaRef      = useRef(0)
+  const currentExitRef    = useRef(0)
+  const rafExitRef        = useRef<number | null>(null)
 
   const sceneRefs  = [heroRef, aboutRef, servicesRef, projectsRef, contactRef]
   const totalScenes = sceneRefs.length
@@ -394,12 +397,14 @@ export default function PageExperience({
 
   function closeModal() {
     if (isClosingRef.current) return
+    if (rafExitRef.current !== null) { cancelAnimationFrame(rafExitRef.current); rafExitRef.current = null }
     exitDeltaRef.current = 0
-    // Clear any inline transform/opacity set by interactive drag so CSS transition takes over
-    if (modalRef.current) {
-      modalRef.current.style.transition = ''
-      modalRef.current.style.transform = ''
-      modalRef.current.style.opacity = ''
+    currentExitRef.current = 0
+    // Clear any inline transform/opacity set by interactive drag so parent CSS transition takes over
+    if (modalContentRef.current) {
+      modalContentRef.current.style.transition = ''
+      modalContentRef.current.style.transform = ''
+      modalContentRef.current.style.opacity = ''
     }
     setIsClosing(true)
 
@@ -567,55 +572,80 @@ export default function PageExperience({
     let touchStartYPos = 0
     let isDraggingExit = false
 
+    currentExitRef.current = 0
+
     const applyExitStyle = (delta: number) => {
-      const totalHeight = window.innerHeight
-      if (modalRef.current) {
-        modalRef.current.style.transition = 'none'
-        modalRef.current.style.transform = `translateY(-${delta}px)`
-        modalRef.current.style.opacity = String(Math.max(0, 1 - delta / totalHeight))
+      const innerContent = modalContentRef.current
+      if (!innerContent) return
+      if (delta === 0) {
+        innerContent.style.transform = ''
+        innerContent.style.opacity = ''
+        innerContent.style.transition = ''
+      } else {
+        innerContent.style.transition = 'none'
+        innerContent.style.transform = `translateY(-${delta}px)`
       }
     }
 
     const snapBack = () => {
-      if (modalRef.current) {
-        modalRef.current.style.transition = 'transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.4s cubic-bezier(0.25,1,0.5,1)'
-        modalRef.current.style.transform = 'translateY(0)'
-        modalRef.current.style.opacity = '1'
+      if (rafExitRef.current !== null) { cancelAnimationFrame(rafExitRef.current); rafExitRef.current = null }
+      currentExitRef.current = 0
+      if (modalContentRef.current) {
+        modalContentRef.current.style.transition = 'transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.4s cubic-bezier(0.25,1,0.5,1)'
+        modalContentRef.current.style.transform = 'translateY(0)'
+        modalContentRef.current.style.opacity = '1'
       }
       exitDeltaRef.current = 0
       isDraggingExit = false
     }
 
+    const startExitRaf = () => {
+      if (rafExitRef.current !== null) return
+      const tick = () => {
+        const target = exitDeltaRef.current
+        currentExitRef.current += (target - currentExitRef.current) * 0.18
+        if (Math.abs(target - currentExitRef.current) < 0.5) currentExitRef.current = target
+
+        if (currentExitRef.current >= window.innerHeight) {
+          rafExitRef.current = null
+          exitDeltaRef.current = 0
+          currentExitRef.current = 0
+          if (gsapCtxRef.current) { gsapCtxRef.current.revert(); gsapCtxRef.current = null }
+          additionalScrollRef.current = 0
+          setSelectedProject(null)
+          setLightboxSrc(null)
+          return
+        }
+
+        applyExitStyle(currentExitRef.current)
+        rafExitRef.current = Math.abs(target - currentExitRef.current) > 0.1
+          ? requestAnimationFrame(tick)
+          : null
+      }
+      rafExitRef.current = requestAnimationFrame(tick)
+    }
+
     const handleWheel = (e: WheelEvent) => {
       if (isClosingRef.current) { e.preventDefault(); return }
       const { scrollTop, clientHeight, scrollHeight } = scrollContainer
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 30
 
       // Reverse scroll while mid-drag — shrink the accumulated delta
       if (exitDeltaRef.current > 0 && e.deltaY < 0) {
         e.preventDefault()
         exitDeltaRef.current = Math.max(0, exitDeltaRef.current + e.deltaY)
-        if (exitDeltaRef.current <= 0) { snapBack() } else { applyExitStyle(exitDeltaRef.current) }
+        if (exitDeltaRef.current <= 0) { snapBack() } else { startExitRaf() }
         return
       }
 
-      if (!isAtBottom || e.deltaY <= 0) return
+      // Scroll position is source of truth: only the portion of deltaY that exceeds maxScroll counts
+      const maxScroll = scrollHeight - clientHeight
+      const overscrollDelta = Math.max(0, e.deltaY - Math.max(0, maxScroll - scrollTop))
+
+      if (e.deltaY <= 0 || overscrollDelta === 0) return
       e.preventDefault()
 
-      exitDeltaRef.current += e.deltaY
-      const totalHeight = window.innerHeight
-
-      if (exitDeltaRef.current >= totalHeight) {
-        // Modal fully dragged off — direct unmount, no CSS transition needed
-        exitDeltaRef.current = 0
-        if (gsapCtxRef.current) { gsapCtxRef.current.revert(); gsapCtxRef.current = null }
-        additionalScrollRef.current = 0
-        setSelectedProject(null)
-        setLightboxSrc(null)
-        return
-      }
-
-      applyExitStyle(exitDeltaRef.current)
+      exitDeltaRef.current += overscrollDelta
+      startExitRaf()
     }
 
     const handleTouchStart = (e: TouchEvent) => {
@@ -635,11 +665,11 @@ export default function PageExperience({
         e.preventDefault()
         isDraggingExit = true
         exitDeltaRef.current = Math.max(0, swipeUp)
-        applyExitStyle(exitDeltaRef.current)
+        startExitRaf()
       } else if (isDraggingExit) {
         e.preventDefault()
         exitDeltaRef.current = Math.max(0, swipeUp)
-        if (exitDeltaRef.current <= 0) { snapBack() } else { applyExitStyle(exitDeltaRef.current) }
+        if (exitDeltaRef.current <= 0) { snapBack() } else { startExitRaf() }
       }
     }
 
@@ -660,6 +690,7 @@ export default function PageExperience({
     scrollContainer.addEventListener('touchend', handleTouchEnd, { passive: true })
 
     return () => {
+      if (rafExitRef.current !== null) { cancelAnimationFrame(rafExitRef.current); rafExitRef.current = null }
       scrollContainer.removeEventListener('wheel', handleWheel)
       scrollContainer.removeEventListener('touchstart', handleTouchStart)
       scrollContainer.removeEventListener('touchmove', handleTouchMove)
@@ -2827,15 +2858,13 @@ export default function PageExperience({
             <span>ЗАТВОРИ</span>
           </button>
 
-          {/* Blur overlay behind modal */}
+          {/* Cinematic dim overlay — no blur, projects stay sharp */}
           <div
             style={{
               position: 'fixed',
               inset: 0,
               zIndex: 999,
-              background: 'rgba(4,5,7,0.4)',
-              backdropFilter: 'blur(8px)',
-              WebkitBackdropFilter: 'blur(8px)',
+              background: 'rgba(4,5,7,0.22)',
               pointerEvents: 'none',
             }}
           />
@@ -2843,7 +2872,7 @@ export default function PageExperience({
           {/* Modal panel — slides up from bottom via GSAP */}
           <div
             ref={modalRef}
-            className={`fixed inset-0 z-[1000] bg-[#040507] will-change-transform${isClosing ? ' transition-[opacity,transform] duration-[800ms] ease-[cubic-bezier(0.25,1,0.5,1)] opacity-0 -translate-y-full pointer-events-none' : ''}`}
+            className={`fixed inset-0 z-[1000] will-change-transform${isClosing ? ' transition-[opacity,transform] duration-[800ms] ease-[cubic-bezier(0.25,1,0.5,1)] opacity-0 -translate-y-full pointer-events-none' : ''}`}
             style={{ transform: isClosing ? undefined : 'translateY(100vh)', width: '100vw', height: '100vh', top: 0, left: 0 }}
             onWheel={(e) => e.stopPropagation()}
             onTouchMove={(e) => e.stopPropagation()}
@@ -2853,6 +2882,7 @@ export default function PageExperience({
               className="w-full h-full overflow-y-auto overflow-x-hidden will-change-transform subpixel-antialiased"
               style={{ overscrollBehavior: 'contain', touchAction: 'pan-y', pointerEvents: 'auto' }}
             >
+              <div ref={modalContentRef} className="bg-[#040507]">
 
               {/* ── SCENE 1: HERO ── */}
               <div className="modal-hero" style={{ position: 'relative', height: '140vh' }}>
@@ -3084,6 +3114,8 @@ export default function PageExperience({
                   </div>
                 </div>
               </div>
+
+              </div>{/* end modalContentRef */}
 
             </div>
           </div>
