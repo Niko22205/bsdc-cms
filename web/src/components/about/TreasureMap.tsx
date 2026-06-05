@@ -63,7 +63,7 @@ export default function TreasureMap({ items }: { items: TimelineItem[] }) {
         className="about-map-path"
         d={pathD}
         fill="none"
-        stroke="#B87333"
+        stroke="#4A5343"
         strokeWidth="0.45"
         strokeLinecap="round"
         strokeDasharray="2 1.6"
@@ -89,7 +89,7 @@ export default function TreasureMap({ items }: { items: TimelineItem[] }) {
               cx={cx} cy={cy}
               r={isFirst ? 3.8 : 2.8}
               fill="none"
-              stroke="#B87333"
+              stroke="#4A5343"
               strokeWidth="0.25"
               opacity="0.35"
             />
@@ -97,15 +97,15 @@ export default function TreasureMap({ items }: { items: TimelineItem[] }) {
             {isFirst ? (
               // ✕ mark for founding year
               <g filter="url(#expedition-glow)">
-                <circle cx={cx} cy={cy} r="2.2" fill="none" stroke="#B87333" strokeWidth="0.5" />
-                <line x1={cx-1.6} y1={cy-1.6} x2={cx+1.6} y2={cy+1.6} stroke="#B87333" strokeWidth="0.65" strokeLinecap="round" />
-                <line x1={cx+1.6} y1={cy-1.6} x2={cx-1.6} y2={cy+1.6} stroke="#B87333" strokeWidth="0.65" strokeLinecap="round" />
+                <circle cx={cx} cy={cy} r="2.2" fill="none" stroke="#4A5343" strokeWidth="0.5" />
+                <line x1={cx-1.6} y1={cy-1.6} x2={cx+1.6} y2={cy+1.6} stroke="#4A5343" strokeWidth="0.65" strokeLinecap="round" />
+                <line x1={cx+1.6} y1={cy-1.6} x2={cx-1.6} y2={cy+1.6} stroke="#4A5343" strokeWidth="0.65" strokeLinecap="round" />
               </g>
             ) : (
               // Regular filled dot
               <g filter="url(#expedition-glow)">
-                <circle cx={cx} cy={cy} r="1.8" fill="#B87333" opacity="0.92" />
-                <circle cx={cx} cy={cy} r="0.75" fill="#07111f" />
+                <circle cx={cx} cy={cy} r="1.8" fill="#4A5343" opacity="0.92" />
+                <circle cx={cx} cy={cy} r="0.75" fill="#8A9A86" />
               </g>
             )}
 
@@ -115,8 +115,8 @@ export default function TreasureMap({ items }: { items: TimelineItem[] }) {
                 x={lx} y={cy - 2.2}
                 fontSize="1.75"
                 fontFamily="'Courier New', monospace"
-                fontWeight="700"
-                fill="#B87333"
+                fontWeight="300"
+                fill="#4A5343"
                 textAnchor={anchor}
                 letterSpacing="0.08"
               >
@@ -129,8 +129,8 @@ export default function TreasureMap({ items }: { items: TimelineItem[] }) {
               x={lx} y={cy + 2.4}
               fontSize="1.45"
               fontFamily="system-ui, -apple-system, sans-serif"
-              fontWeight="600"
-              fill="white"
+              fontWeight="300"
+              fill="#1A221E"
               textAnchor={anchor}
               opacity="0.88"
             >

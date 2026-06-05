@@ -75,18 +75,18 @@ function drawFaceCanvas(
 
   if (isHovered) {
     const grd = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, 200)
-    grd.addColorStop(0,    'rgba(220,150,50,0.50)')
-    grd.addColorStop(0.40, 'rgba(184,115,51,0.20)')
+    grd.addColorStop(0,    'rgba(138,154,134,0.50)')
+    grd.addColorStop(0.40, 'rgba(138,154,134,0.20)')
     grd.addColorStop(1,    'rgba(0,0,0,0)')
     ctx.fillStyle = grd
     ctx.fillRect(0, 0, W, H)
   }
 
   if (isActive) {
-    ctx.strokeStyle = '#B87333'
+    ctx.strokeStyle = '#8A9A86'
     ctx.lineWidth = 12
     ctx.strokeRect(10, 10, W - 20, H - 20)
-    ctx.strokeStyle = 'rgba(184,115,51,0.4)'
+    ctx.strokeStyle = 'rgba(138,154,134,0.4)'
     ctx.lineWidth = 6
     ctx.strokeRect(20, 20, W - 40, H - 40)
   }
@@ -97,7 +97,7 @@ function drawFaceCanvas(
   ctx.fillStyle = fadeGrd
   ctx.fillRect(0, 0, W, H)
 
-  ctx.font = 'bold 26px Arial, sans-serif'
+  ctx.font = '300 26px Arial, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'bottom'
   ctx.fillStyle = isHovered ? '#ffffff' : 'rgba(255,255,255,0.92)'
@@ -108,7 +108,7 @@ function drawFaceCanvas(
     ctx.fillText(line, W / 2, y)
   })
 
-  ctx.fillStyle = isHovered ? '#dda060' : '#B87333'
+  ctx.fillStyle = isHovered ? '#a8b8a4' : '#8A9A86'
   ctx.fillRect(28, H - 10, W - 56, 4)
 }
 
@@ -300,14 +300,14 @@ const CubeScene = forwardRef<CubeSceneHandle, CubeSceneProps>(function CubeScene
     <>
       <ambientLight intensity={0.5} />
       <spotLight position={[0, 5, 5]} intensity={1.5} color="#ffffff" penumbra={0.5} castShadow={false} />
-      <pointLight position={[-3, 2, 0]} intensity={0.6} color="#B87333" />
-      <pointLight ref={hoverLightRef} color="#B87333" intensity={0} distance={8} decay={2} />
+      <pointLight position={[-3, 2, 0]} intensity={0.6} color="#8A9A86" />
+      <pointLight ref={hoverLightRef} color="#8A9A86" intensity={0} distance={8} decay={2} />
 
       <group ref={cubeGroupRef}>
         {/* Wireframe outline — shown during entrance animation */}
         <lineSegments>
           <edgesGeometry args={[boxGeo]} />
-          <lineBasicMaterial ref={wireMatRef} color="#B87333" transparent opacity={0} />
+          <lineBasicMaterial ref={wireMatRef} color="#8A9A86" transparent opacity={0} />
         </lineSegments>
 
         {FACE_CONFIG.map((face, i) => (

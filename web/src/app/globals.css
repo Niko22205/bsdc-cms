@@ -3,13 +3,55 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* ─── Typography scale ──────────────────────────────────────────── */
+  --font-sans:    var(--font-public-sans);
+  --font-serif:   var(--font-libre-bodoni);
+  --font-mono:    var(--font-geist-mono);
+  /* ─── Legacy font aliases (backward compat) ─────────────────────── */
+  --font-display: var(--font-libre-bodoni);
+  --font-ui:      var(--font-public-sans);
+  --font-tech:    var(--font-geist-mono);
+  /* ─── Brand color tokens (verbose names) ────────────────────────── */
+  --color-brand-bg-primary:    var(--bg-primary);
+  --color-brand-bg-secondary:  var(--bg-secondary);
+  --color-brand-bg-dark:       var(--bg-dark);
+  --color-brand-text-primary:  var(--text-primary);
+  --color-brand-text-secondary: var(--text-secondary);
+  --color-brand-text-caption:  var(--text-caption);
+  --color-brand-copper:        var(--accent-copper);
+  --color-brand-separator:     var(--separator);
+  /* ─── Scene color tokens ────────────────────────────────────────── */
+  --color-scene-bg-primary:    var(--scene-bg-primary);
+  --color-scene-bg-secondary:  var(--scene-bg-secondary);
+  --color-scene-surface-light: var(--scene-surface-light);
+  --color-scene-accent:        var(--scene-accent);
+  /* ─── Legacy color aliases (backward compat) ────────────────────── */
+  --color-brand-bg:      var(--bg-primary);
+  --color-brand-surface: var(--bg-secondary);
+  --color-brand-dark:    var(--bg-dark);
+  --color-brand-text:    var(--text-primary);
+  --color-brand-muted:   var(--text-secondary);
+  --color-brand-caption: var(--text-caption);
 }
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* ─── Brand palette ─────────────────────────────────────────────── */
+  --bg-primary: #8A9A86;
+  --bg-secondary: #4A5343;
+  --bg-dark: #242F2A;
+  --text-primary: #1A221E;
+  --text-secondary: #4A5343;
+  --text-caption: #4A5343;
+  --accent-copper: #4A5343;
+  --separator: rgba(74,83,67,0.3);
+  --photo-overlay: rgba(36,47,42,0.2);
+  /* ─── Scene palette (Light Architectural) ───────────────────────── */
+  --scene-bg-primary:    #8A9A86;
+  --scene-bg-secondary:  #242F2A;
+  --scene-surface-light: #8A9A86;
+  --scene-accent:        #4A5343;
 }
 
 body {
@@ -104,8 +146,8 @@ body {
 }
 
 @keyframes bsdc-orbit-glow {
-  0%, 100% { box-shadow: 0 0 8px rgba(14,165,233,0.30), 0 0 16px rgba(14,165,233,0.08) }
-  50%      { box-shadow: 0 0 18px rgba(14,165,233,0.55), 0 0 36px rgba(14,165,233,0.18) }
+  0%, 100% { box-shadow: 0 0 8px rgba(138,154,134,0.30), 0 0 16px rgba(138,154,134,0.08) }
+  50%      { box-shadow: 0 0 18px rgba(138,154,134,0.55), 0 0 36px rgba(138,154,134,0.18) }
 }
 
 @keyframes bsdc-glow-breathe {
@@ -168,32 +210,6 @@ body {
   pointer-events: none;
 }
 
-/* ─── Service detail cinematic effects ─────────────────────────── */
-
-@keyframes sonar-ping {
-  0%   { opacity: 0.14; transform: scale(1);    }
-  60%  { opacity: 0.04; transform: scale(1.07); }
-  100% { opacity: 0;    transform: scale(1.14); }
-}
-
-@keyframes rov-scanline {
-  0%   { transform: translateY(-4px); opacity: 0; }
-  6%   { opacity: 0.75; }
-  92%  { opacity: 0.75; }
-  100% { transform: translateY(320px); opacity: 0; }
-}
-
-@keyframes cursor-blink {
-  0%, 49%  { opacity: 1; }
-  50%, 100% { opacity: 0; }
-}
-
-@keyframes dam-drift {
-  0%   { transform: scale(1.05) translate(0px, 0px); }
-  50%  { transform: scale(1.09) translate(-10px, -6px); }
-  100% { transform: scale(1.05) translate(0px, 0px); }
-}
-
 /* ─── Copper line pulse ─────────────────────────────────────────────── */
 
 @keyframes pulse {
@@ -205,13 +221,13 @@ body {
 
 .modal-article p {
   margin-bottom: 1.5rem;
-  color: rgba(255,255,255,0.88);
+  color: rgba(26,34,30,0.80);
   font-size: 16px;
   line-height: 1.8;
 }
 .modal-article h2, .modal-article h3 {
-  color: white;
-  font-weight: 700;
+  color: #1A221E;
+  font-weight: 300;
   font-size: 1.25rem;
   margin-bottom: 1rem;
   margin-top: 2rem;
@@ -222,11 +238,11 @@ body {
 }
 .modal-article li {
   margin-bottom: 0.5rem;
-  color: rgba(255,255,255,0.82);
+  color: rgba(26,34,30,0.70);
 }
 .modal-article strong {
-  color: white;
-  font-weight: 600;
+  color: #1A221E;
+  font-weight: 300;
 }
 
 /* ─── Modal scroll container ────────────────────────────────────────── */
@@ -240,7 +256,6 @@ body {
 .hero-word,
 .hero-eyebrow,
 .hero-sub,
-.hero-cta,
-.hero-stats {
+.hero-cta {
   opacity: 0;
 }

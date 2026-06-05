@@ -3,7 +3,6 @@
 import { useState, useRef } from 'react'
 import {
   motion,
-  AnimatePresence,
   useMotionValue,
   useTransform,
   animate,
@@ -39,7 +38,7 @@ function slotGeom(slot: number) {
   }
 }
 
-const BG_COLORS = ['#0a1628', '#0a1a14', '#1a0a28', '#1a140a', '#0a1818']
+const BG_FALLBACK = '#4A5343'
 
 // ─── per-slot card component ──────────────────────────────────────────────────
 
@@ -112,7 +111,7 @@ function ProjectCard({ slot, project, dragX, didDrag, onNav, onOpen, lang }: Car
       ) : (
         <div style={{
           position: 'absolute', inset: 0,
-          background: BG_COLORS[Math.abs(slot) % BG_COLORS.length],
+          background: BG_FALLBACK,
         }} />
       )}
 
@@ -133,7 +132,7 @@ function ProjectCard({ slot, project, dragX, didDrag, onNav, onOpen, lang }: Car
         }}>
           <div style={{
             fontSize:     isInner ? 10 : 8,
-            fontWeight:   700,
+            fontWeight:   300,
             color:        '#fff',
             lineHeight:   1.25,
             whiteSpace:   'nowrap',
@@ -145,7 +144,7 @@ function ProjectCard({ slot, project, dragX, didDrag, onNav, onOpen, lang }: Car
           {isInner && (
             <div style={{
               fontSize:      7,
-              color:         '#c8914a',
+              color:         '#4A5343',
               marginTop:     3,
               letterSpacing: '0.04em',
             }}>
@@ -280,21 +279,14 @@ export default function ProjectsCarousel({ projects, onSelect, lang = 'bg' }: Pr
                    flex flex-col items-center text-center"
         style={{ transform: 'translateY(-50%)' }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeIdx}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.26, ease: 'easeOut' }}
+          <div
             className="pointer-events-auto flex flex-col items-center"
             style={{ padding: '0 12px', maxWidth: 260 }}
           >
-            {/* Project title */}
             <div style={{
               fontSize:      'clamp(0.78rem, 1.9vw, 1.15rem)',
-              fontWeight:    800,
-              color:         '#fff',
+              fontWeight:    300,
+              color:         '#1A221E',
               letterSpacing: '-0.01em',
               lineHeight:    1.2,
               textAlign:     'center',
@@ -302,11 +294,10 @@ export default function ProjectsCarousel({ projects, onSelect, lang = 'bg' }: Pr
               {activeProject.title}
             </div>
 
-            {/* Excerpt */}
             {activeProject.excerpt && (
               <div style={{
                 fontSize:   10,
-                color:      'rgba(255,255,255,0.35)',
+                color:      'rgba(26,34,30,0.55)',
                 lineHeight: 1.55,
                 marginTop:  7,
                 textAlign:  'center',
@@ -317,7 +308,6 @@ export default function ProjectsCarousel({ projects, onSelect, lang = 'bg' }: Pr
               </div>
             )}
 
-            {/* CTA button */}
             <button
               type="button"
               onClick={() => onSelect(activeProject)}
@@ -326,26 +316,25 @@ export default function ProjectsCarousel({ projects, onSelect, lang = 'bg' }: Pr
                 fontSize:      8,
                 letterSpacing: '0.18em',
                 textTransform: 'uppercase',
-                color:         '#c8914a',
+                color:         '#4A5343',
                 background:    'transparent',
-                border:        '1px solid rgba(200,145,74,0.35)',
+                border:        '1px solid rgba(74,83,67,0.35)',
                 padding:       '4px 14px',
                 cursor:        'pointer',
                 transition:    'border-color .15s, color .15s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(200,145,74,0.7)'
-                e.currentTarget.style.color       = '#d4a060'
+                e.currentTarget.style.borderColor = 'rgba(74,83,67,0.7)'
+                e.currentTarget.style.color       = '#a8b8a4'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(200,145,74,0.35)'
-                e.currentTarget.style.color       = '#c8914a'
+                e.currentTarget.style.borderColor = 'rgba(74,83,67,0.35)'
+                e.currentTarget.style.color       = '#4A5343'
               }}
             >
               {lang === 'bg' ? 'Прочети повече' : 'Read More'}
             </button>
-          </motion.div>
-        </AnimatePresence>
+          </div>
       </div>
     </div>
   )
