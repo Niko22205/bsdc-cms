@@ -183,7 +183,7 @@ export default function ProjectsCarousel({ projects, onSelect, lang = 'bg' }: Pr
   if (n === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <span style={{ color: 'rgba(255,255,255,0.18)', fontSize: 13 }}>
+        <span style={{ color: 'rgba(26,34,30,0.40)', fontSize: 13 }}>
           {lang === 'bg' ? 'Няма проекти' : 'No projects yet'}
         </span>
       </div>

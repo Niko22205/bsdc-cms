@@ -69,7 +69,7 @@ export const SceneAbout = ({
                 {aboutStats.map((stat, i) => (
                   <div
                     key={i}
-                    className="flex flex-col items-center rounded border border-[#0F1411]/[0.15] bg-[#8A9A86]/[0.04] px-2 py-2.5 text-center"
+                    className="flex flex-col items-center rounded border border-[#1A221E]/[0.15] bg-[#8A9A86]/[0.04] px-2 py-2.5 text-center"
                   >
                     <div
                       data-stat-value={stat.value}
@@ -121,7 +121,7 @@ export const SceneAbout = ({
                   {certificates.slice(0, 6).map((cert) => (
                     <div
                       key={cert.id}
-                      className="relative border border-[#0F1411]/20 bg-[#8A9A86]/[0.04] px-3 py-2.5"
+                      className="relative border border-[#1A221E]/20 bg-[#8A9A86]/[0.04] px-3 py-2.5"
                     >
                       {/* Corner fold accent */}
                       <div
@@ -163,10 +163,10 @@ export const SceneAbout = ({
                     {timelineSection.label}
                   </span>
                 </div>
-                <ul className="space-y-3 border-l border-[#0F1411]/20 pl-4">
+                <ul className="space-y-3 border-l border-[#1A221E]/20 pl-4">
                   {timelineItems.map((item, i) => (
                     <li key={i} className="relative">
-                      <div className="absolute -left-[17px] top-1.5 h-2.5 w-2.5 rounded-full border border-[#0F1411] bg-[#8A9A86]/20" />
+                      <div className="absolute -left-[17px] top-1.5 h-2.5 w-2.5 rounded-full border border-[#1A221E] bg-[#8A9A86]/20" />
                       {item.year && (
                         <div className="text-[10px] font-light uppercase tracking-widest text-[#1A221E]">
                           {item.year}
