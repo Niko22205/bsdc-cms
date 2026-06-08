@@ -1,166 +1,259 @@
-# BSDC — DESIGN SYSTEM LOCK (v1 SINGLE LANGUAGE RULE)
-⚠️ ЦЕЛ
+# ENGINEERING_MAP_STRUCTURE.md
 
-Този документ заключва визуалния език на целия сайт.
+## BSDC FRONTEND V2 — ENGINEERING MAP CORE
 
-Той НЕ е за експерименти.
-Той НЕ се override-ва per scene.
-Той НЕ се “интерпретира”.
+Status: Implementation Blueprint (Claude Code Target Spec)
+Role: This document is the source of truth for spatial layout + scroll engine architecture.
 
-👉 Това е единственият allowed визуален слой.
+---
 
-1. ❌ ЗАБРАНЕНО (HARD RULES)
+# 1. SYSTEM OVERVIEW
 
-Следното е абсолютно забранено:
+Frontend V2 is a single continuous spatial scroll system.
 
-❌ различни стилове per scene
-❌ random gradients
-❌ “retro”, “glitch”, “80s”, “journal”, “brutalist mix” локално
-❌ черен фон като default решение за “драма”
-❌ font-bold / font-semibold (TOTAL BAN)
-❌ повече от 2 font families
-❌ custom colors извън palette
-❌ scene-specific design themes
-2. 🎨 ЕДИНСТВЕНА ЦВЕТОВА СИСТЕМА
-Primary surfaces
-Background Dark: #0F1411
-Background Secondary: #1A232A
-Surface Light: #F5F3EF
-Accents
-Primary Accent: #FFE500
-Secondary Accent (industrial): #B87333
-Text
-On dark: #F5F3EF
-On light: #0F1411
-3. 🧠 ВИЗУАЛНА ЛОГИКА
-ВСИЧКИ сцени = един продукт
+Not pages.
+Not sections.
+Not components.
 
-Разлики между сцени:
+It is a linear engineering route mapped onto a single SVG path.
 
-✔ content
-✔ layout density
-✔ media type
+User experience is driven by:
 
-❌ НЕ:
+- Scroll position
+- Node activation
+- Depth layering
+- Path progression
 
-стил
-фонова философия
-типографски език
-цветови експерименти
-4. 🔤 ТИПОГРАФИЯ (ЕДИНСТВЕНА СИСТЕМА)
-Display font
-Space Grotesk / Syne
-weight: ONLY 300 / 400
-Mono font
-Geist Mono
-RULES
-❌ no bold
-❌ no semibold
-❌ no mixed font systems per scene
-✔ hierarchy = size + spacing ONLY
-SCALE
-Headlines
-text-[3.5rem] md:text-[5.5rem]
-font-thin
-tracking-[-0.03em]
-leading-[0.95]
-Body
-text-[15px]
-font-light
-leading-[1.8]
-Labels
-text-[10px]
-uppercase
-tracking-[0.3em]
-font-mono
-Accents
-color: #FFE500 / #B87333
-NO decoration styles
-5. 🌍 BACKGROUND SYSTEM
-RULE
+---
 
-Background is NOT per scene design.
+# 2. GLOBAL ARCHITECTURE
 
-It is a system layer.
+## Core Concept
 
-Allowed:
+A single continuous scroll-driven world:
 
-solid color
-subtle gradient derived from palette
-global Three.js background (optional)
+- One Scroll Container (100% vertical flow)
+- One SVG Path (global route line)
+- Multiple Spatial Nodes (interactive clusters)
+- One Camera System (GSAP ScrollTrigger driven)
 
-❌ Forbidden:
+---
 
-image backgrounds per scene
-sepia scenes
-journal textures
-“creative overlays” per section
-6. 🎬 MOTION LANGUAGE (GSAP ONLY)
-Allowed motion types
-opacity fade
-transform translate
-scale subtle
-cross-dissolve scene switching
-GLOBAL RULE
+## Core Systems
 
-All scene transitions:
+### 2.1 Scroll Engine
+- GSAP ScrollTrigger
+- Single pinned master container
+- Scroll drives:
+  - path progress (0 → 1)
+  - node activation
+  - parallax depth shifts
 
-duration: 1.4s
-ease: power2.inOut
-overlap: TRUE
-Forbidden motion
-physics randomness
-per-scene animation styles
-inconsistent easings
-layout-based animation shifts
-7. 🧩 SCENE PRINCIPLE
+---
 
-Scenes are NOT design systems.
+### 2.2 SVG LINE SYSTEM (CRITICAL)
 
-Scenes are ONLY:
+There is ONE continuous SVG path:
 
-content containers
-layout arrangements
-media presentation modes
-Each scene must:
+- starts: HERO
+- ends: FOOTER
 
-✔ use same typography system
-✔ use same color system
-✔ use same motion system
-✔ differ only in structure
+It controls:
+- visual route drawing
+- navigation state
+- node activation thresholds
 
-8. 🧱 COMPONENT RULE
+Path is NOT decorative.
+It is the navigation backbone.
 
-All components MUST:
+---
 
-inherit global design tokens
-NOT define their own visual identity
-NOT override typography rules
-NOT introduce new accent colors
-9. 🧭 UX CONSISTENCY RULE
+### 2.3 NODE SYSTEM
 
-Navigation is not a UI feature.
+Nodes are spatial clusters, not sections.
 
-It is a control system.
+Each node has:
 
-goToScene() only
-no alternative routing logic
-no scroll behavior override variations
-10. ⚙️ FINAL ARCHITECTURE DEFINITION
+```ts
+type Node = {
+  id: string
+  position: number // 0.0 → 1.0 along path
+  depthLayers: {
+    background: number
+    midground: number
+    foreground: number
+  }
+  motionProfile: "parallax" | "focus" | "expand" | "network"
+  cmsSource: string
+}
+3. NODE MAP (LINEAR ROUTE)
+NODE 01 — HERO
 
-This system is:
+position: 0.0
 
-👉 One viewport
-👉 One motion engine
-👉 One design language
-👉 Multiple content scenes
+depth:
+background: low motion noise layers
+midground: technical curves
+foreground: title + logo
+motion:
+parallax + cursor response
+CMS:
+static + settings
+NODE 02 — ABOUT
 
-NOT:
+position: 0.15
 
-website
-page system
-UI playground
-design experiment
-11. 🧨 GOLDEN RULE (IMPORTANT)
+concept: temporal engineering map
+layers:
+background: timeline visuals
+mid: images
+foreground: text blocks
+motion:
+depth separation on scroll
+CMS:
+About page content
+NODE 03 — CERTIFICATES / CAPACITY
 
-If a visual idea cannot fit into this system — it does NOT exist.
+position: 0.30
+
+concept: engineering documents table
+layout:
+spatial document placement (NOT grid)
+motion:
+hover lift + depth pop
+CMS:
+Certificates CRUD
+NODE 04 — PARTNERS
+
+position: 0.42
+
+concept: route markers
+layout:
+point-based network nodes
+motion:
+subtle zoom on activation
+CMS:
+Partners CRUD
+NODE 05 — SERVICES HUB (CORE NODE)
+
+position: 0.60
+
+concept: central engineering hub
+structure:
+radial / network branching system
+
+services:
+
+Diving
+ROV
+Bathymetry
+Dams
+Construction
+Courses
+interaction:
+selecting service:
+→ becomes active route branch
+→ others fade
+→ camera focus shifts
+CMS:
+Services CRUD + gallery images
+NODE 06 — PROJECT RAIL
+
+position: 0.78
+
+concept: existing project system preserved
+structure:
+horizontal rail inside spatial world
+motion:
+scroll-driven rail progression
+CMS:
+Projects CRUD (unchanged logic)
+NODE 07 — CONTACT
+
+position: 0.93
+
+concept: terminal point
+layout:
+minimal spatial field
+motion:
+deceleration + settle
+CMS:
+Contact form system
+NODE 08 — FOOTER
+
+position: 1.0
+
+concept: endpoint marker
+static final state
+4. DEPTH SYSTEM
+
+Each node uses 3-layer rendering:
+
+Background Layer
+large shapes
+blurred geometry
+slow parallax
+Midground Layer
+structural content
+images
+informational blocks
+Foreground Layer
+text
+interactive UI
+focus elements
+5. MOTION ENGINE RULES
+
+ONLY GSAP:
+
+ScrollTrigger
+timeline-based transitions
+scrubbed animations
+
+FORBIDDEN:
+
+random animations
+floating UI gimmicks
+particle effects
+sci-fi HUD overlays
+6. CAMERA MODEL (VIRTUAL)
+
+The UI behaves like a camera:
+
+scroll = camera movement along path
+nodes = focus targets
+depth = z-axis illusion
+
+Rules:
+
+only one active focus node at a time
+others remain in peripheral depth
+7. CMS BINDING RULES
+
+Frontend must consume existing CMS only.
+
+Mappings:
+
+Services → NODE 05
+Projects → NODE 06
+Partners → NODE 04
+Certificates → NODE 03
+About → NODE 02
+Contact → NODE 07
+Settings → NODE 01
+
+NO schema changes allowed.
+
+8. PERFORMANCE RULES
+no layout thrashing
+GPU-friendly transforms only
+minimal DOM overdraw
+lazy load node content
+9. SUCCESS CRITERIA
+
+Frontend V2 is successful if:
+
+scroll feels like navigation in a physical map
+SVG line feels like structural backbone
+nodes feel like spatial objects
+no “website feel” remains
+CMS data appears naturally embedded in space

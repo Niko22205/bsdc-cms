@@ -1,0 +1,164 @@
+BSDC FRONTEND V2 — PERCEPTION LAYER SPEC
+
+This file defines VISUAL EXPERIENCE PRIORITY.
+
+It overrides all layout and structural decisions when perception conflicts exist.
+
+---
+
+# 1. CORE PRINCIPLE
+
+The system is NOT defined by layout.
+
+The system is defined by:
+
+> what the user’s eye is forced to perceive as dominant at any moment.
+
+---
+
+# 2. VISUAL DOMINANCE RULE (CRITICAL)
+
+At any scroll position:
+
+ONLY ONE PRIMARY DOMINANT OBJECT may exist.
+
+Everything else MUST behave as background perception noise.
+
+---
+
+# 3. DOMINANCE HIERARCHY
+
+Each node must enforce this hierarchy:
+
+## Tier 1 — PRIMARY MASS (Hero / Active Focus)
+- occupies visual gravity center
+- largest scale influence
+- highest contrast
+- sharpest clarity
+- slowest motion
+
+## Tier 2 — SECONDARY STRUCTURE
+- supports composition
+- visible but non-dominant
+- medium contrast
+- partial blur or reduced opacity
+- moderate motion
+
+## Tier 3 — PERIPHERAL FIELD
+- background geometry
+- environmental context only
+- low opacity (5–20%)
+- no readable UI importance
+
+---
+
+# 4. CONTRAST RULE (NO FLATNESS)
+
+Flatness = equal visual weight distribution.
+
+Forbidden state:
+
+- multiple elements same contrast
+- uniform opacity
+- uniform scale distribution
+
+Required state:
+
+- strong contrast separation between layers
+- clear focal point at all times
+
+---
+
+# 5. “ALIVENESS” DEFINITION
+
+A node is considered ALIVE ONLY IF:
+
+- it has internal visual tension (asymmetry or imbalance)
+- it has depth separation (foreground vs background conflict)
+- it has at least one non-centered dominant element
+- it reacts subtly to cursor without becoming UI-driven
+
+If none of the above exist → node is DEAD FLAT.
+
+---
+
+# 6. FOCAL LOCK SYSTEM
+
+At any scroll state:
+
+- ONE node is FOCUSED
+- ONE node is TRANSITIONING
+- ALL others are PERIPHERAL
+
+This is mandatory.
+
+No equal visibility allowed.
+
+---
+
+# 7. NODE EXPERIENCE RULE
+
+Each node must feel like:
+
+NOT:
+- section
+- screen
+- component
+
+BUT:
+- physical space with internal gravity
+
+---
+
+# 8. TYPOGRAPHY PERCEPTION RULE
+
+Text is NOT UI.
+
+Text is MASS.
+
+Rules:
+- headlines must behave like physical objects
+- must create directional force in composition
+- must never be centered by default unless intentional equilibrium is needed
+- must dominate local visual hierarchy
+
+---
+
+# 9. MOTION PERCEPTION RULE
+
+Motion is NOT animation.
+
+Motion is:
+
+- shift of attention
+- redistribution of visual weight
+- rebalancing of depth field
+
+No motion may exist without perceptual consequence.
+
+---
+
+# 10. VALIDATION CHECK
+
+Before output is accepted:
+
+Check:
+
+- Is there a clear visual dominant object?
+- Is there hierarchy between layers?
+- Does anything feel flat or equally weighted?
+
+If YES → INVALID RENDER
+
+---
+
+# 11. SUCCESS CRITERIA
+
+System is correct ONLY if:
+
+- user eye always lands on one dominant structure
+- background feels like environment, not UI
+- nodes feel physically different in weight
+- scrolling changes “attention gravity”, not layout
+
+END SPEC

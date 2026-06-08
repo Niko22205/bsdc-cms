@@ -13,11 +13,21 @@ type Props = {
 export function Navbar({ settings, lang }: Props) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [activeScene, setActiveScene] = useState(0)
+  const [currentScene, setCurrentScene] = useState(0)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setCurrentScene((e as CustomEvent<{ scene: number }>).detail.scene)
+    }
+    window.addEventListener('bsdc:navigate', handler)
+    return () => window.removeEventListener('bsdc:navigate', handler)
   }, [])
 
   const navLinks = [
@@ -36,19 +46,18 @@ export function Navbar({ settings, lang }: Props) {
     window.dispatchEvent(new CustomEvent("bsdc:enquiry"))
   }
 
+  const linkBase = "font-sans font-light text-[10px] uppercase tracking-[0.3em] transition-colors duration-200 cursor-pointer"
+
   return (
-    <header
-      className={`fixed left-0 right-0 top-0 z-[600] transition-all duration-300 ${
-        scrolled
-          ? "border-b border-white/[0.06] bg-[#020617]/95 backdrop-blur-md"
-          : "bg-transparent"
-      }`}
-    >
+    <header className="fixed left-0 right-0 top-0 z-[600]">
       <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-6">
-        {/* Logo */}
-        <Link href={`/${lang}`}>
-          <img src="/uploads/bsdc/logo-white.png" alt="BSDC" className="h-16 w-auto object-contain" />
-        </Link>
+
+        {/* Wordmark — hidden on hero (scene 0) */}
+        <div style={{ opacity: currentScene !== 0 ? 1 : 0, transition: 'opacity 0.6s ease', pointerEvents: currentScene !== 0 ? 'auto' : 'none' }}>
+          <Link href={`/${lang}`} className="font-serif font-light text-[14px] text-[rgba(245,243,239,0.8)] uppercase tracking-[0.08em]">
+            BSDC
+          </Link>
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden gap-8 sm:flex">
@@ -56,8 +65,12 @@ export function Navbar({ settings, lang }: Props) {
             <button
               key={l.scene}
               type="button"
-              onClick={() => navigate(l.scene)}
-              className="relative text-[11px] uppercase tracking-[0.18em] text-slate-400 transition-colors duration-300 after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:scale-x-0 after:bg-[#B87333] after:transition-transform after:duration-300 after:content-[''] hover:text-white hover:after:scale-x-100"
+              onClick={() => { navigate(l.scene); setActiveScene(l.scene) }}
+              className={`${linkBase} ${
+                activeScene === l.scene
+                  ? "text-brand-copper border-b border-brand-copper pb-px"
+                  : "text-brand-text-caption hover:text-brand-copper"
+              }`}
             >
               {l.label}
             </button>
@@ -66,35 +79,36 @@ export function Navbar({ settings, lang }: Props) {
 
         <div className="flex items-center gap-4">
           {/* Language toggle */}
-          <div className="hidden items-center gap-1.5 text-[11px] font-medium sm:flex">
+          <div className="hidden items-center gap-1.5 sm:flex">
             <Link
               href="/bg"
-              className={
+              className={`${linkBase} tracking-[0.2em] ${
                 lang === "bg"
-                  ? "font-semibold text-white"
-                  : "text-slate-500 transition-colors hover:text-slate-300"
-              }
+                  ? "text-[rgba(245,243,239,0.9)]"
+                  : "text-[rgba(245,243,239,0.4)] hover:text-[rgba(245,243,239,0.7)]"
+              }`}
             >
               BG
             </Link>
-            <span className="text-slate-600">/</span>
+            <span className="font-sans text-[10px] text-[rgba(245,243,239,0.2)]">/</span>
             <Link
               href="/en"
-              className={
+              className={`${linkBase} tracking-[0.2em] ${
                 lang === "en"
-                  ? "font-semibold text-white"
-                  : "text-slate-500 transition-colors hover:text-slate-300"
-              }
+                  ? "text-[rgba(245,243,239,0.9)]"
+                  : "text-[rgba(245,243,239,0.4)] hover:text-[rgba(245,243,239,0.7)]"
+              }`}
             >
               EN
             </Link>
           </div>
 
-          {/* CTA button */}
+          {/* CTA */}
           <button
             type="button"
             onClick={openEnquiry}
-            className="hidden border border-[#B87333] px-4 py-1.5 text-[11px] uppercase tracking-widest text-[#B87333] transition-all duration-300 hover:bg-[#B87333] hover:text-white sm:block"
+            className="hidden font-sans font-light text-[10px] uppercase tracking-[0.25em] px-6 py-2.5 border border-[rgba(245,243,239,0.25)] text-[rgba(245,243,239,0.8)] hover:border-brand-copper hover:text-brand-copper transition-colors duration-200 cursor-pointer sm:block"
+            style={{ borderRadius: '1px' }}
           >
             {lang === "en" ? "Enquiry" : "Запитване"}
           </button>
@@ -105,35 +119,27 @@ export function Navbar({ settings, lang }: Props) {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            <span
-              className={`block h-0.5 w-5 bg-white transition-all duration-200 ${
-                menuOpen ? "translate-y-2 rotate-45" : ""
-              }`}
-            />
-            <span
-              className={`block h-0.5 w-5 bg-white transition-all duration-200 ${
-                menuOpen ? "opacity-0" : ""
-              }`}
-            />
-            <span
-              className={`block h-0.5 w-5 bg-white transition-all duration-200 ${
-                menuOpen ? "-translate-y-2 -rotate-45" : ""
-              }`}
-            />
+            <span className={`block h-0.5 w-5 bg-white transition-all duration-200 ${menuOpen ? "translate-y-2 rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-white transition-all duration-200 ${menuOpen ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-5 bg-white transition-all duration-200 ${menuOpen ? "-translate-y-2 -rotate-45" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="bg-[#020617] px-6 py-2 sm:hidden">
-          <nav className="flex flex-col text-[11px] uppercase tracking-[0.18em] text-slate-400">
+        <div className="px-6 py-2 sm:hidden" style={{ background: '#0C0A08' }}>
+          <nav className="flex flex-col">
             {navLinks.map((l) => (
               <button
                 key={l.scene}
                 type="button"
-                onClick={() => { navigate(l.scene); setMenuOpen(false) }}
-                className="border-b border-white/5 py-3 text-left transition-colors hover:text-white"
+                onClick={() => { navigate(l.scene); setActiveScene(l.scene); setMenuOpen(false) }}
+                className={`${linkBase} border-b border-white/5 py-3 text-left ${
+                  activeScene === l.scene
+                    ? "text-brand-copper"
+                    : "text-brand-text-caption hover:text-[rgba(245,243,239,0.9)]"
+                }`}
               >
                 {l.label}
               </button>
@@ -141,15 +147,15 @@ export function Navbar({ settings, lang }: Props) {
             <div className="flex items-center gap-3 border-b border-white/5 py-3">
               <Link
                 href="/bg"
-                className={lang === "bg" ? "font-semibold text-white" : "text-slate-500"}
+                className={`${linkBase} tracking-[0.2em] ${lang === "bg" ? "text-[rgba(245,243,239,0.9)]" : "text-[rgba(245,243,239,0.4)]"}`}
                 onClick={() => setMenuOpen(false)}
               >
                 BG
               </Link>
-              <span className="text-slate-600">/</span>
+              <span className="font-sans text-[10px] text-[rgba(245,243,239,0.2)]">/</span>
               <Link
                 href="/en"
-                className={lang === "en" ? "font-semibold text-white" : "text-slate-500"}
+                className={`${linkBase} tracking-[0.2em] ${lang === "en" ? "text-[rgba(245,243,239,0.9)]" : "text-[rgba(245,243,239,0.4)]"}`}
                 onClick={() => setMenuOpen(false)}
               >
                 EN
@@ -158,7 +164,8 @@ export function Navbar({ settings, lang }: Props) {
             <button
               type="button"
               onClick={() => { openEnquiry(); setMenuOpen(false) }}
-              className="mb-2 mt-3 self-start border border-[#B87333] px-4 py-1.5 text-[11px] uppercase tracking-widest text-[#B87333]"
+              className="mb-2 mt-3 self-start font-sans font-light text-[10px] uppercase tracking-[0.25em] px-6 py-2.5 border border-[rgba(245,243,239,0.25)] text-[rgba(245,243,239,0.8)] hover:border-brand-copper hover:text-brand-copper transition-colors duration-200 cursor-pointer"
+              style={{ borderRadius: '1px' }}
             >
               {lang === "en" ? "Enquiry" : "Запитване"}
             </button>

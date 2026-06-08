@@ -1,22 +1,29 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
 import type {
   HomeContent, AboutContent, Service,
   SiteSetting, ProjectNewsItem, Partner, Certificate,
 } from '@/generated/prisma/client'
 
-import { NODE_MAP, type MapNode }      from './engine/NodeRegistry'
-import { resolveActiveNode }           from './engine/ActiveNodeResolver'
-import { computeCamera }               from './engine/CameraResolver'
-import { ExpeditionPath, type ExpeditionPathHandle } from './path/ExpeditionPath'
-import { WorldContainer }              from './WorldContainer'
+import { NODE_MAP, type MapNode }       from './engine/NodeRegistry'
+import { resolveActiveNode }             from './engine/ActiveNodeResolver'
+import { computeCamera, type CameraState } from './engine/CameraResolver'
+import { WorldContainer, type WorldContainerHandle } from './WorldContainer'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const SCROLL_HEIGHT_VH = 500
+const SCROLL_HEIGHT_VH = 600   // total scrollable height — 6 × 100vh
+const CAMERA_SCRUB     = 1.0   // seconds of scrub inertia
+
+// ── Camera apply ──────────────────────────────────────────────────────────────
+
+function applyCam(world: HTMLElement, cam: CameraState) {
+  world.style.transform = `matrix(${cam.scale},0,0,${cam.scale},${cam.tx},${cam.ty})`
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,88 +40,71 @@ interface Props {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-/**
- * CAMERA DRIVER.
- *
- * Responsibilities:
- *   1. Own the single GSAP ScrollTrigger (one source of scroll truth).
- *   2. On every tick: compute camera position → gsap.set(world, {x, y}).
- *   3. On node threshold crossing: update activeNodeId React state (depth cue only).
- *   4. Render WorldContainer (all nodes, always) + ExpeditionPath (fixed overlay).
- *
- * Does NOT contain any content or node-specific logic.
- * Does NOT conditionally mount or unmount nodes.
- */
 export default function ScrollEngineV2({
   home, about, services, certificates, partners, settings, projects, lang,
 }: Props) {
+  const isBg = lang === 'bg'
 
   const [activeNode, setActiveNode] = useState<MapNode>(NODE_MAP[0])
 
   const scrollDriverRef = useRef<HTMLDivElement>(null)
-  const worldRef        = useRef<HTMLDivElement>(null)
-  const pathRef         = useRef<ExpeditionPathHandle>(null)
+  const worldRef        = useRef<WorldContainerHandle>(null)
+  const camStateRef     = useRef<CameraState>({ tx: 0, ty: 0, scale: 0.60 })
 
-  // ── Scroll controller ─────────────────────────────────────────────────────
+  // ── Scroll → camera (single code path, no locks, no state machine) ─────────
 
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger)
+    gsap.registerPlugin(ScrollTrigger, ScrollToPlugin)
 
-    // Set initial camera position before first scroll tick
-    const vpW = window.innerWidth
-    const vpH = window.innerHeight
-    const init = computeCamera(0, vpW, vpH)
-    if (worldRef.current) gsap.set(worldRef.current, init)
+    const world = worldRef.current?.world
+    if (world) {
+      world.style.transformOrigin = '0 0'
+      const init = computeCamera(0, window.innerWidth, window.innerHeight)
+      Object.assign(camStateRef.current, init)
+      applyCam(world, init)
+    }
 
-    const trigger = ScrollTrigger.create({
+    ScrollTrigger.create({
+      id:      'v2-main',
       trigger: scrollDriverRef.current,
       start:   'top top',
       end:     'bottom bottom',
-      scrub:   true,
+      scrub:   CAMERA_SCRUB,
       onUpdate(self) {
-        const p   = self.progress
-        const vpW = window.innerWidth
-        const vpH = window.innerHeight
-
-        // ── Camera — direct DOM write, zero React ──────────────────
-        const cam = computeCamera(p, vpW, vpH)
-        if (worldRef.current) gsap.set(worldRef.current, cam)
-
-        // ── Path draw — direct DOM write, zero React ───────────────
-        pathRef.current?.setProgress(p)
-
-        // ── Node activation — React state, fires ≤4 times total ───
-        const next = resolveActiveNode(p)
-        setActiveNode(prev => (prev.id === next.id ? prev : next))
+        const cam = computeCamera(self.progress, window.innerWidth, window.innerHeight)
+        Object.assign(camStateRef.current, cam)
+        const w = worldRef.current?.world
+        if (w) applyCam(w, cam)
+        const nd = resolveActiveNode(self.progress)
+        setActiveNode(prev => prev.id === nd.id ? prev : nd)
       },
     })
 
-    return () => { trigger.kill() }
+    return () => { ScrollTrigger.getById('v2-main')?.kill() }
   }, [])
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Nav travel ─────────────────────────────────────────────────────────────
+
+  const travelTo = useCallback((at: number) => {
+    const totalPx = window.innerHeight * (SCROLL_HEIGHT_VH / 100)
+    gsap.to(window, {
+      scrollTo:  { y: at * totalPx },
+      duration:  1.8,
+      ease:      'power2.inOut',
+      overwrite: 'auto',
+    })
+  }, [])
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <>
-      {/* ── Fixed viewport (camera) — never moves ──────────────────────── */}
-      <div className="fixed inset-0 overflow-hidden bg-[#8A9A86]">
+      {/* Fixed viewport — never moves */}
+      <div className="fixed inset-0 overflow-hidden" style={{ background: '#060d0a' }}>
 
-        {/* Engineering grid — static reference plane */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: [
-              'linear-gradient(rgba(26,34,30,0.05) 1px, transparent 1px)',
-              'linear-gradient(90deg, rgba(26,34,30,0.05) 1px, transparent 1px)',
-            ].join(', '),
-            backgroundSize: '60px 60px',
-          }}
-        />
-
-        {/* WorldContainer — spatial canvas, moved by GSAP camera */}
+        {/* World canvas — the only moving element */}
         <WorldContainer
           ref={worldRef}
-          activeNodeId={activeNode.id}
           lang={lang}
           home={home}
           about={about}
@@ -125,56 +115,46 @@ export default function ScrollEngineV2({
           projects={projects}
         />
 
-        {/* Expedition path — fixed map overlay, does NOT move with world */}
-        <ExpeditionPath ref={pathRef} />
-
-        {/* Node navigation — fixed HUD */}
-        <nav className="fixed right-6 top-1/2 z-10 flex -translate-y-1/2 flex-col items-end gap-4">
+        {/* Nav dots — scroll anchors only, not section indicators */}
+        <nav
+          className="fixed right-5 top-1/2 z-10 flex -translate-y-1/2 flex-col items-center gap-[10px]"
+          aria-label={isBg ? 'Навигация' : 'Navigation'}
+        >
           {NODE_MAP.map(node => {
             const isActive = node.id === activeNode.id
             return (
               <button
                 key={node.id}
                 type="button"
-                aria-label={node.label[lang === 'bg' ? 'bg' : 'en']}
-                onClick={() => {
-                  const el = scrollDriverRef.current
-                  if (!el) return
-                  const totalPx = window.innerHeight * (SCROLL_HEIGHT_VH / 100)
-                  window.scrollTo({ top: node.at * totalPx, behavior: 'smooth' })
+                aria-label={node.label[isBg ? 'bg' : 'en']}
+                onClick={() => travelTo(node.at)}
+                style={{
+                  background:     'none',
+                  border:         'none',
+                  padding:        '4px',
+                  cursor:         'pointer',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  opacity:        isActive ? 1 : 0.22,
+                  transition:     'opacity 0.5s ease',
                 }}
-                className="flex items-center gap-2"
-                style={{ opacity: isActive ? 1 : 0.3, transition: 'opacity 0.4s ease' }}
               >
-                <span
-                  className="font-mono text-[9px] uppercase tracking-[0.3em] text-[#4A5343]"
-                  style={{ opacity: isActive ? 1 : 0, transition: 'opacity 0.4s ease' }}
-                >
-                  {node.label[lang === 'bg' ? 'bg' : 'en']}
-                </span>
-                <div
-                  className="rounded-full bg-[#4A5343]"
-                  style={{
-                    width:      isActive ? 8 : 6,
-                    height:     isActive ? 24 : 6,
-                    transition: 'all 0.4s ease',
-                  }}
-                />
+                <div style={{
+                  borderRadius: '9999px',
+                  background:   '#8A9A86',
+                  width:        isActive ? 6 : 4,
+                  height:       isActive ? 20 : 4,
+                  transition:   'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+                }} />
               </button>
             )
           })}
         </nav>
 
-        {/* Active node label — bottom left HUD */}
-        <div className="fixed bottom-6 left-8 z-10">
-          <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#4A5343]/40">
-            {activeNode.label[lang === 'bg' ? 'bg' : 'en']}
-          </span>
-        </div>
-
       </div>
 
-      {/* ── Scroll driver — makes page scrollable for GSAP ST ──────────── */}
+      {/* Scroll driver — provides scrollable height for GSAP ScrollTrigger */}
       <div ref={scrollDriverRef} style={{ height: `${SCROLL_HEIGHT_VH}vh` }} />
     </>
   )
